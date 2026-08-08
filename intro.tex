@@ -1,0 +1,159 @@
+\newgeometry{top=1in}
+\pagenumbering{gobble}
+\vspace*{1.3in}
+\begin{center}
+\large{\textbf{CERTIFICATE OF APPROVAL}}
+\end{center}
+\vspace{1cm}
+
+\noindent
+This is to certify that this minor project work entitled \textbf{``Nepali Handwritten Word Digitization Using Transformer Model''}, submitted by Anjila Dangol (KCE079BCT010), Arpita Rimal (KCE079BCT012), Ayusha Shrestha (KCE079BCT017) and Sneha Chaulagain (KCE079BCT042) has been examined and accepted as the partial fulfillment of the requirements for the degree of Bachelor in Computer Engineering. The project was carried out under special supervision and within the time frame prescribed by the syllabus.
+
+\vspace{2cm}
+
+\noindent
+\begin{minipage}[t]{0.45\textwidth}
+\centering
+..........................................\\
+\textbf{Er. Pratik Timalshena} \\
+External Examiner \\
+Senior Lecturer \\
+Department of Electronics and \\
+Computer Engineering \\
+Sagarmatha Engineering College
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\textwidth}
+\centering
+..........................................\\
+\textbf{Er. Anish Shilpakar} \\
+Project Supervisor \\
+Data Engineer \\
+Leapfrog Technology
+\end{minipage}
+
+\vspace{1.5cm}
+
+\vspace{0.5cm}
+\begin{center}
+..........................................\\
+\textbf{Er. Dinesh Gothe}\\
+Head of Department\\
+Department of Computer and Electronics Engineering\\
+Khwopa College of Engineering
+\end{center}
+\newpage
+
+\pagenumbering{roman}
+\addcontentsline{toc}{section}{Copyright}
+\begin{center}
+    {\Large\bfseries COPYRIGHT\copyright}
+\end{center}
+\vspace{1em}
+\normalsize
+\justify
+The author has agreed that the library of Khwopa College of Engineering may make this report freely available for inspection. Moreover, the author has agreed that permission for extensive copying of this project report for scholarly purposes may be granted by the supervisor who supervised the project work recorded herein or, in their absence, by the Head of the Department where the project report was completed. It is understood that recognition will be given to the author of the report and to the Department of Computer and Electronics Engineering, KhCE, for any use of the material in this project report. Copying, publication, or any other use of this report for financial gain without the approval of the department and the author's written permission is prohibited. Requests for permission to copy or make any other use of the material in this report, in whole or in part, should be addressed to:
+
+\vspace{1.5cm}
+\noindent\textbf{Head of Department} \\
+Department of Computer and Electronics Engineering \\
+Khwopa College of Engineering (KhCE) \\
+Libali-08, Bhaktapur, Nepal
+\newpage
+
+\addcontentsline{toc}{section}{Acknowledgement}
+\begin{center}
+    {\Large\bfseries ACKNOWLEDGEMENT}
+\end{center}
+\vspace{1.2cm}
+\normalsize
+\noindent
+We would like to express our deepest gratitude to our supervisor of the project, \textbf{Er.Anish Shilpakar}, for his immense support and guidance throughout the course of this project. His insightful advice, expertise, and unwavering support have been crucial to our work's successful completion. This project would not have been possible without his guidance and mentorship.
+
+\noindent We would also like to extend gratitude to our teachers \textbf{Er.Mukesh Kumar Pokharel} and \textbf{Er.Anish Baral} for their constructive feedback and unwavering support throughout the project. The expertise and analytical recommendations gave us fresh viewpoints, which were crucial for improving our project.
+
+\noindent A special thanks to \textbf{Er.Dinesh Gothe} for his encouragement and assistance. We have been greatly inspired by his encouragement, which has kept us dedicated and focused on the project.
+
+\noindent Furthermore, we are grateful to our institution faculty members, and peers for providing us with the necessary resources, facilities, and a conducive learning environment that greatly contributed to our work.
+
+\noindent Finally, we would like to thank everyone who has directly or indirectly assisted us in initiation of our project.
+
+\vspace{1.5cm}
+\begin{tabular}{l@{\hspace{3cm}}l}
+Anjila Dangol      & KCE079BCT010 \\
+Arpita Rimal       & KCE079BCT012 \\
+Ayusha Shrestha    & KCE079BCT017 \\
+Sneha Chaulagain   & KCE079BCT042 \\
+\end{tabular}
+\newpage
+
+\addcontentsline{toc}{section}{Abstract}
+\begin{center}
+    {\Large\bfseries ABSTRACT}
+\end{center}
+\vspace{1em}
+\normalsize
+\noindent
+Devanagari is the primary script used for writing the Nepali language and contains complex character structures, conjunct consonants, and vowel modifiers that make handwritten text recognition a challenging task. This project aims to develop a Transformer-based Optical Character Recognition (OCR) system for recognizing handwritten Nepali words and converting them into digital text.The proposed system adopts a TrOCR-inspired architecture that combines a pretrained Vision Transformer (ViT) encoder with a lightweight custom BERT-based Transformer decoder. The ViT encoder extracts contextual visual representations from handwritten word images, while the decoder, designed with a compact Transformer configuration and cross-attention mechanism, generates the corresponding Nepali word sequence in Unicode format. Both components are integrated using HuggingFace's VisionEncoderDecoderModel framework to enable end-to-end handwritten word recognition.Experimental results demonstrate that the proposed model achieves a Character Error Rate (CER) of 5.43\%, a Word Error Rate (WER) of 16.58\%, and an overall accuracy of 83.42\%, indicating its effectiveness in recognizing complex handwritten Nepali text. The developed system provides a promising approach for digitizing handwritten Nepali documents and supports the preservation and accessibility of Nepali written resources.
+
+\vspace{1em}
+\noindent
+\textbf{Keywords}: \textit{Nepali Handwritten Word Recognition, Optical Character Recognition, Vision Transformer encoder, TrOCR, BERT, Devanagari Script.}
+\newpage
+
+\tableofcontents
+\newpage
+
+\addcontentsline{toc}{section}{List of tables}
+\listoftables
+\newpage
+
+\addcontentsline{toc}{section}{List of figures}
+\listoffigures
+\newpage
+\addcontentsline{toc}{section}{List of Symbols and Abbreviation}
+\begin{center}
+    {\Large\bfseries List of Symbols and Abbreviation}
+\end{center}
+\vspace{0.5em}
+\setstretch{1.2}
+\noindent\begin{tabular}{ll}
+\hline
+\textbf{Abbreviation} & \textbf{Full Form} \\
+\hline
+AdamW   & Adaptive Moment Estimation with Weight Decay \\
+AI      & Artificial Intelligence \\
+BERT    & Bidirectional Encoder Representations from Transformers \\
+BiLSTM  & Bidirectional Long Short-Term Memory \\
+BOS     & Beginning of Sequence \\
+CER     & Character Error Rate \\
+CLS     & Classification Token \\
+CNN     & Convolutional Neural Network \\
+CTC     & Connectionist Temporal Classification \\
+CUDA    & Compute Unified Device Architecture \\
+EOS     & End of Sequence \\
+FFN     & Feedforward Neural Network \\
+fp16    & 16-bit Floating Point \\
+GELU    & Gaussian Error Linear Unit \\
+GPU     & Graphics Processing Unit \\
+HTR     & Handwritten Text Recognition \\
+HWR     & Handwritten Word Recognition \\
+IIIT    & International Institute of Information Technology \\
+LSTM    & Long Short-Term Memory \\
+MHA     & Multi-Head Attention \\
+ML      & Machine Learning \\
+NED     & Normalized Edit Distance \\
+NFC     & Unicode Normalization Form C \\
+NHWDTM  & Nepali Handwritten Word Digitization Using Transformer Model \\
+OCR     & Optical Character Recognition \\
+ReLU    & Rectified Linear Unit \\
+RNN     & Recurrent Neural Network \\
+SDLC    & Software Development Lifecycle \\
+SVM     & Support Vector Machines \\
+TrOCR   & Transformer-based Optical Character Recognition \\
+TTA     & Test-Time Augmentation \\
+UI      & User Interface \\
+ViT     & Vision Transformer \\
+WER     & Word Error Rate \\
+\hline
+\end{tabular}

@@ -1,0 +1,55 @@
+\chapter{INTRODUCTION}
+        \pagenumbering{arabic}
+        \section{Background Introduction}
+
+
+Handwritten text recognition (HTR) has gained significant attention in recent years due to its wide applications in document digitization, archival preservation, and human--computer interaction. Despite notable progress in optical character recognition (OCR) for printed text, recognizing handwritten scripts remains a challenging problem, particularly for complex writing systems such as Devanagari.
+
+\noindent Devanagari, the script used for the Nepali language and several other South Asian languages, exhibits high structural complexity. It consists of base characters, vowel modifiers (matras), conjunct consonants, and compound symbols formed by combining multiple glyphs into a single unit. This complexity is further amplified in handwritten form due to variations in individual writing styles, cursive connections, distortions, and inconsistent spacing between characters and words. These characteristics make segmentation and recognition tasks significantly more difficult compared to Latin-based scripts.
+
+\noindent Existing handwritten word recognition (HWR) systems for Nepali and Devanagari scripts have primarily relied on handcrafted feature extraction methods or convolutional neural networks (CNNs) \cite{baral2019handwritten, ghimire2020nepali, acharya2022nepali}. While CNN-based approaches have shown promising results in capturing local spatial features, they often struggle to model long-range dependencies and sequential context within text, which are crucial for accurate word-level recognition \cite{michael2019evaluating}. Furthermore, the scarcity of large-scale, diverse, and publicly available Nepali handwriting datasets limits the generalization capability and robustness of these models \cite{10.1007/978-3-030-86337-1_30}.
+
+\noindent Recent advances in deep learning, particularly Transformer-based architectures, have demonstrated superior performance in various vision and sequence modeling tasks. Vision Transformers (ViT) \cite{dosovitskiy2020image} and Transformer-based OCR models such as TrOCR \cite{li2023trocr} have shown strong capability in capturing global contextual relationships within images, making them well-suited for handwritten text recognition. Several recent studies have explored the application of Transformers for Indic scripts and multilingual OCR tasks, reporting improved accuracy over traditional CNN-based approaches.\cite{hasan2023optical, li2025htr,10.1007/978-3-031-93688-3_17}.
+
+\noindent These developments highlight the need for more robust and context-aware models for handwritten Nepali word recognition and digitization. In this work, we explore the use of Transformer-based Optical Character Recognization (TrOCR)-based architectures to effectively capture both visual features and contextual dependencies, aiming to improve performance for handwritten Nepali text and their digitization.
+
+
+        \section{Motivation}
+Recognizing handwritten Nepali text is challenging due to the complexity of the Devanagari script, which includes compound characters, vowel diacritics, and cursive variations. Manual digitization is time-consuming and error-prone, while existing systems based on handcrafted features or CNNs often fail to capture long-range dependencies and contextual relationships. Limited availability of large, diverse Nepali handwriting datasets further restricts model performance. Recent advances in Transformer-based architectures, such as TrOCR, provide an opportunity to develop an end-to-end system that can accurately recognize handwritten Nepali words, supporting efficient digitization and preservation of Nepali textual resources.
+
+        \section{Problem Statement}
+Nepali handwritten word recognition using Transformer-based models faces several key challenges:
+
+\begin{itemize}
+    \item \textbf{Structural complexity:} The Devanagari script contains conjunct consonants, vowel modifiers, and compound characters, making recognition difficult \cite{baral2019handwritten,ghimire2020nepali}.
+    
+    \item \textbf{Handwriting variation:} Diverse writing styles reduce segmentation and recognition accuracy \cite{michael2019evaluating}.
+    
+    \item \textbf{Limitations of existing methods:} CNN and handcrafted approaches capture local features but fail to model long-range dependencies and sequence context effectively \cite{dosovitskiy2020image,li2023trocr}.
+    
+    \item \textbf{Limited datasets:} A lack of large and diverse Nepali handwriting datasets restricts generalization \cite{10.1007/978-3-030-86337-1_30,anand2023devanagari,rajak_indic_data}.
+\end{itemize}
+
+Although Transformer-based OCR models like TrOCR and Vision Transformers improve global context learning, they still struggle with the linguistic complexity of Nepali handwritten text, highlighting the need for a robust end-to-end OCR system in Unicode format \cite{hasan2023optical,parres2023fine,li2025htr}.
+%         \section{Problem Statement}
+% \begin{itemize}
+%     \item Handwritten Nepali word recognition is challenging due to the complex Devanagari script, which includes conjunct consonants, vowel modifiers, and variations in individual handwriting styles \cite{baral2019handwritten,ghimire2020nepali}.
+%     \item Existing systems based on CNNs or handcrafted features struggle to capture long-range dependencies and sequential context, and the lack of large, diverse Nepali handwriting datasets limits model accuracy and generalization \cite{hasan2023optical,li2023trocr}.
+% \end{itemize}
+
+      \section{Objective} 
+The main objective of this project is:
+\begin{itemize}
+    \item To design and develop a Transformer-based OCR system that accurately recognizes and digitizes handwritten Nepali words in the Devanagari script.
+\end{itemize}
+
+\section{Scope of Project}
+The scope of this project includes:
+\begin{itemize}
+    \item Developing an end-to-end Transformer-based OCR system for recognition of handwritten Nepali words in Devanagari script.
+    \item Enhancing model generalization to handle diverse handwriting styles, complex conjunct consonants, and compound characters.
+    \item Facilitating digitization, preservation, and accessibility of handwritten Nepali documents for educational, cultural, and research purposes.
+\end{itemize}
+        %\section{Organization of project}
+    
+    
