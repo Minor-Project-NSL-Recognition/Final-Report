@@ -1,27 +1,56 @@
 \chapter{CONCLUSION}
+\label{ch:conclusion}
+
 \section{Conclusion}
-This project successfully developed a Transformer-based OCR system for recognizing handwritten Nepali words in the Devanagari script. The proposed architecture pairs a pre-trained Vision Transformer (ViT-Base) encoder with 
-a lightweight custom BERT-based decoder of approximately 4 million parameters, integrated using HuggingFace's VisionEncoderDecoderModel framework.The model was trained on the IIIT-HW-Dev dataset comprising 69,802 word images using a two-phase training strategy. Phase 1 trained only the decoder while keeping the encoder frozen, and Phase 2 performed full end-to-end 
-fine-tuning with differential learning rates. The best validation CER of \textbf{6.68\%} was achieved at epoch 52, and final evaluation on the held-out test set yielded a CER of 5.43\%, WER of 16.58\%, and Exact Match Accuracy of 83.42\%. These results demonstrate that the proposed model effectively handles the structural complexity of Devanagari handwriting, including conjunct consonants, vowel diacritics, and inter-writer variability.
+
+This project built a working recogniser for six Nepali Sign Language emergency phrases and delivered it as an application that displays and speaks the recognised phrase.
+
+The signed form of every phrase was established in person with Deaf experts at the Rehabilitation Centre for the Rural Deaf and the National Federation of the Deaf Nepal before any data was recorded, so the system recognises real NSL and not an approximation of it. Eight signers then contributed 840 clips, balanced at exactly 120 per class across the six phrases and a negative class for non-signing motion. No public dataset of NSL emergency phrases existed at the start of this work, and this one is the project's most durable output.
+
+Representing each frame as 225 pose and hand landmarks instead of pixels is what made a dataset of this size sufficient. Normalising against the shoulder midpoint and each wrist removes the signer's position and distance from the camera, and standardising every clip to 137 frames, the 95th percentile of the measured frame-count distribution, gives the classifier a fixed input without discarding the shape of the motion. A bidirectional LSTM of 192{,}007 parameters classifies the result and trains in minutes on a laptop processor.
+
+Under leave-one-signer-out evaluation the system reaches 96.52\% mean accuracy across eight folds and 96.67\% pooled, with per-class F1 between 0.963 and 0.996 for the six emergency phrases. The same architecture reaches 99.21\% under a random split, and reporting both is deliberate: the difference of 2.5 percentage points is a measurement of how much a random split overstates performance when clips from one person can appear on both sides of it. Published NSL recognition results are generally reported without this separation, so the lower figure here is the more comparable one to any future work that adopts the same protocol.
+
+Because a seven-way classifier will name a phrase for any input at all, the system adds a rejection gate that measures Mahalanobis distance to per-class prototypes in the model's embedding space and refuses inputs that lie far from all of them. The gate is checked before the confidence threshold, so a confident wrong answer can still be refused. For a tool whose output is a spoken emergency announcement, the ability to stay silent is a feature of the same standing as accuracy.
+
+The trained model was exported to TensorFlow Lite, verified against the original to a largest probability difference of $1.2 \times 10^{-7}$, and deployed behind a streaming inference server with an Android client. Recognition works end to end on a physical device.
 
 \section{Limitations}
-Despite the promising results, the system has the following limitations:
-\begin{itemize}
-    \item The model is trained and evaluated on a single dataset (IIIT-HW-Dev), which may limit its generalization to unseen handwriting styles and real-world scanned documents.
-    \item Recognition accuracy decreases for longer words ($\geq$13 characters) due to the increased complexity of conjunct 
-    consonant sequences in Devanagari.
-    \item The model was trained on Kaggle's NVIDIA Tesla T4 GPU, which limited exploration of larger architectures such as TrOCR-Large.
-    \item Confidence scores derived from beam search log-probabilities are approximate and may not reliably reflect true prediction certainty for all word forms.
-\end{itemize}
 
-\section{Future works}
-Based on the findings of this project, the following works can be achieved in future:
-\begin{itemize}
-    \item \textbf{Dataset expansion:} Collect and annotate a larger, more diverse Nepali handwriting dataset covering varied writing styles, age groups, and document types to improve generalization.
-    \item \textbf{Line and paragraph recognition:} Extend the system  by integrating a word segmentation module to enable recognition of full lines and paragraphs rather than isolated words.
-    \item \textbf{Data augmentation:} Explore more aggressive augmentation strategies such as elastic distortion and synthetic handwriting generation to further improve robustness.
-    \item \textbf{Larger decoder:} Investigate a medium-sized BERT-based decoder (4--6 layers) with sufficient GPU resources  to determine whether additional decoder capacity improves accuracy on complex conjunct words.
-    \item \textbf{Language model post-processing:} Incorporate a Nepali language model for post-correction of beam search outputs to reduce character-level errors caused by visually similar characters.
+\begin{enumerate}
+    \item \textbf{The system requires a network connection.} Recognition runs on the server, not the phone. The proposal stated that no server would be needed at use time, and the delivered system does not meet that. For an emergency tool this is the most consequential limitation in this list, and Section~\ref{sec:deploychange} gives the reason it was accepted.
 
-\end{itemize}
+    \item \textbf{Eight signers, four of them the authors.} Every accuracy reported rests on eight people. The standard deviation across folds is 2.41 percentage points and the range is seven, so the estimate of performance on a new signer carries real uncertainty. Four of the eight are not fluent NSL users; they reproduced the consultants' reference performance. The reported accuracy is therefore an accuracy on a mixture of fluent and learned signing.
 
+    \item \textbf{Six phrases.} The vocabulary is fixed and small. The system cannot express anything outside it, and a user with a need not on the list has no way to convey it.
+
+    \item \textbf{The negative class is the weakest class.} Recall on \texttt{none} is 0.892, and thirteen non-signs were classified as emergency phrases. How many of those the rejection gate would catch has not been measured.
+
+    \item \textbf{The rejection gate was validated on synthetic negatives.} Time-shuffled and spliced clips establish that the gate responds to destroyed temporal structure. They do not establish that it rejects arbitrary human motion, which is what it will actually encounter.
+
+    \item \textbf{Speech output is in English.} The client uses the device's text-to-speech voice, and Nepali is absent from most Android devices. The proposal specified pre-recorded Nepali audio, which was not implemented.
+
+    \item \textbf{Duration is only encoded below 137 frames.} Clips longer than the sequence length are uniformly subsampled, so signing longer than about 8.7 seconds is scale-normalised rather than measured.
+
+    \item \textbf{Facial expression is ignored.} The consultants confirmed no phrase in this set depends on it, so the exclusion is safe for these six phrases and would not hold for a larger vocabulary.
+
+    \item \textbf{One sign at a time.} The system recognises a single complete phrase per interaction and does not segment continuous signing or handle more than one person in frame.
+\end{enumerate}
+
+\section{Future Work}
+
+\begin{enumerate}
+    \item \textbf{Move inference onto the device.} This would remove the network dependency, the most serious limitation above. The obstacle is that the dataset was recorded with MediaPipe Holistic, which exists only as a Python pipeline, and an on-device implementation would use a different landmark source producing slightly different numbers. The comparison needed to settle whether a model trained on one source survives the other is implemented in the codebase but has not been run; it requires recording some 35 clips through both paths at once. That measurement is the correct next step, since it either unblocks on-device inference or establishes that re-recording the dataset is the price of it.
+
+    \item \textbf{Measure the rejection gate against real negatives.} Replaying the thirteen misclassified non-signs through the gate would establish how many it catches, and recording genuine non-signing motion from new people would give a far stronger evaluation than the synthetic inputs used here.
+
+    \item \textbf{Recruit more signers, prioritising fluent ones.} The clearest route to a more trustworthy accuracy figure is more people, and specifically more fluent NSL users. Doubling the signer count would narrow the confidence in the leave-one-signer-out estimate more than any change to the model.
+
+    \item \textbf{Record Nepali audio.} The phrase set is fixed at seven, so seven recordings by a fluent speaker would replace the English text-to-speech entirely.
+
+    \item \textbf{Extend the vocabulary.} The pipeline is not specific to these six phrases. Adding a phrase requires the consultation step, recordings, and a retrain, with no change to the preprocessing or the architecture.
+
+    \item \textbf{Handle continuous signing.} Recognising a phrase within a stream, with no taps to mark its boundaries, would remove the need for the user to mark the boundaries and is the main step from a proof of concept toward something usable without instruction.
+
+    \item \textbf{Reduce the confusion between \texttt{call\_police} and \texttt{cant\_breathe}.} Four of the six phrase-to-phrase errors are this one pair, which makes it a specific and tractable target.
+\end{enumerate}

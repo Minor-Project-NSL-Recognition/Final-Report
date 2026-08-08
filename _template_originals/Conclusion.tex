@@ -1,0 +1,27 @@
+\chapter{CONCLUSION}
+\section{Conclusion}
+This project successfully developed a Transformer-based OCR system for recognizing handwritten Nepali words in the Devanagari script. The proposed architecture pairs a pre-trained Vision Transformer (ViT-Base) encoder with 
+a lightweight custom BERT-based decoder of approximately 4 million parameters, integrated using HuggingFace's VisionEncoderDecoderModel framework.The model was trained on the IIIT-HW-Dev dataset comprising 69,802 word images using a two-phase training strategy. Phase 1 trained only the decoder while keeping the encoder frozen, and Phase 2 performed full end-to-end 
+fine-tuning with differential learning rates. The best validation CER of \textbf{6.68\%} was achieved at epoch 52, and final evaluation on the held-out test set yielded a CER of 5.43\%, WER of 16.58\%, and Exact Match Accuracy of 83.42\%. These results demonstrate that the proposed model effectively handles the structural complexity of Devanagari handwriting, including conjunct consonants, vowel diacritics, and inter-writer variability.
+
+\section{Limitations}
+Despite the promising results, the system has the following limitations:
+\begin{itemize}
+    \item The model is trained and evaluated on a single dataset (IIIT-HW-Dev), which may limit its generalization to unseen handwriting styles and real-world scanned documents.
+    \item Recognition accuracy decreases for longer words ($\geq$13 characters) due to the increased complexity of conjunct 
+    consonant sequences in Devanagari.
+    \item The model was trained on Kaggle's NVIDIA Tesla T4 GPU, which limited exploration of larger architectures such as TrOCR-Large.
+    \item Confidence scores derived from beam search log-probabilities are approximate and may not reliably reflect true prediction certainty for all word forms.
+\end{itemize}
+
+\section{Future works}
+Based on the findings of this project, the following works can be achieved in future:
+\begin{itemize}
+    \item \textbf{Dataset expansion:} Collect and annotate a larger, more diverse Nepali handwriting dataset covering varied writing styles, age groups, and document types to improve generalization.
+    \item \textbf{Line and paragraph recognition:} Extend the system  by integrating a word segmentation module to enable recognition of full lines and paragraphs rather than isolated words.
+    \item \textbf{Data augmentation:} Explore more aggressive augmentation strategies such as elastic distortion and synthetic handwriting generation to further improve robustness.
+    \item \textbf{Larger decoder:} Investigate a medium-sized BERT-based decoder (4--6 layers) with sufficient GPU resources  to determine whether additional decoder capacity improves accuracy on complex conjunct words.
+    \item \textbf{Language model post-processing:} Incorporate a Nepali language model for post-correction of beam search outputs to reduce character-level errors caused by visually similar characters.
+
+\end{itemize}
+

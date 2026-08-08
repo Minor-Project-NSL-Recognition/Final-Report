@@ -6,8 +6,10 @@
 \end{center}
 \vspace{1cm}
 
+\begin{sloppypar}
 \noindent
-This is to certify that this minor project work entitled \textbf{``Nepali Handwritten Word Digitization Using Transformer Model''}, submitted by Anjila Dangol (KCE079BCT010), Arpita Rimal (KCE079BCT012), Ayusha Shrestha (KCE079BCT017) and Sneha Chaulagain (KCE079BCT042) has been examined and accepted as the partial fulfillment of the requirements for the degree of Bachelor in Computer Engineering. The project was carried out under special supervision and within the time frame prescribed by the syllabus.
+This is to certify that this minor project work entitled \textbf{``Nepali Sign Language Recognition for Emergency Phrases''}, submitted by Asul Limbu (KCE080BCT005), Dipesh Singh (KCE080BCT008), Manee Das Shrestha (KCE080BCT013) and Sajan Sahikarmi (KCE080BCT035) has been examined and accepted as the partial fulfillment of the requirements for the degree of Bachelor in Computer Engineering. The project was carried out under special supervision and within the time frame prescribed by the syllabus.
+\end{sloppypar}
 
 \vspace{2cm}
 
@@ -15,21 +17,20 @@ This is to certify that this minor project work entitled \textbf{``Nepali Handwr
 \begin{minipage}[t]{0.45\textwidth}
 \centering
 ..........................................\\
-\textbf{Er. Pratik Timalshena} \\
+\textbf{\fillin{External Examiner Name}} \\
 External Examiner \\
-Senior Lecturer \\
-Department of Electronics and \\
-Computer Engineering \\
-Sagarmatha Engineering College
+\fillin{Designation} \\
+\fillin{Institution}
 \end{minipage}
 \hfill
 \begin{minipage}[t]{0.45\textwidth}
 \centering
 ..........................................\\
-\textbf{Er. Anish Shilpakar} \\
+\textbf{Er. Prakash Chandra Prasad} \\
 Project Supervisor \\
-Data Engineer \\
-Leapfrog Technology
+Department of Computer and \\
+Electronics Engineering \\
+Khwopa College of Engineering
 \end{minipage}
 
 \vspace{1.5cm}
@@ -37,7 +38,7 @@ Leapfrog Technology
 \vspace{0.5cm}
 \begin{center}
 ..........................................\\
-\textbf{Er. Dinesh Gothe}\\
+\textbf{Er. Dinesh Man Gothe}\\
 Head of Department\\
 Department of Computer and Electronics Engineering\\
 Khwopa College of Engineering
@@ -68,22 +69,20 @@ Libali-08, Bhaktapur, Nepal
 \vspace{1.2cm}
 \normalsize
 \noindent
-We would like to express our deepest gratitude to our supervisor of the project, \textbf{Er.Anish Shilpakar}, for his immense support and guidance throughout the course of this project. His insightful advice, expertise, and unwavering support have been crucial to our work's successful completion. This project would not have been possible without his guidance and mentorship.
+We are grateful to our project supervisor, \textbf{Er. Prakash Chandra Prasad}, for his guidance throughout this project. His questions about how we intended to evaluate the system, asked early and repeatedly, are the reason this report reports signer-independent accuracy instead of a number that would have looked better and meant less.
 
-\noindent We would also like to extend gratitude to our teachers \textbf{Er.Mukesh Kumar Pokharel} and \textbf{Er.Anish Baral} for their constructive feedback and unwavering support throughout the project. The expertise and analytical recommendations gave us fresh viewpoints, which were crucial for improving our project.
+\noindent We thank our Head of Department, \textbf{Er. Dinesh Man Gothe}, for his encouragement and for the departmental support that made the work possible.
 
-\noindent A special thanks to \textbf{Er.Dinesh Gothe} for his encouragement and assistance. We have been greatly inspired by his encouragement, which has kept us dedicated and focused on the project.
+\noindent This project could not have been built without the Deaf community of Bhaktapur. We thank \textbf{Yojana Sakha} and her colleagues at the \textbf{Rehabilitation Centre for the Rural Deaf (RCRD)}, and the resource persons at the \textbf{National Federation of the Deaf Nepal (NFDN)}, who gave us their time, taught us the correct signed form of every phrase in this report, and recorded reference clips for us. Any part of this system that works does so because they were willing to teach us first.
 
-\noindent Furthermore, we are grateful to our institution faculty members, and peers for providing us with the necessary resources, facilities, and a conducive learning environment that greatly contributed to our work.
-
-\noindent Finally, we would like to thank everyone who has directly or indirectly assisted us in initiation of our project.
+\noindent We also thank the Department of Computer and Electronics Engineering, Khwopa College of Engineering, for the resources and the environment in which this work was carried out, and our friends and families for their support.
 
 \vspace{1.5cm}
 \begin{tabular}{l@{\hspace{3cm}}l}
-Anjila Dangol      & KCE079BCT010 \\
-Arpita Rimal       & KCE079BCT012 \\
-Ayusha Shrestha    & KCE079BCT017 \\
-Sneha Chaulagain   & KCE079BCT042 \\
+Asul Limbu          & KCE080BCT005 \\
+Dipesh Singh        & KCE080BCT008 \\
+Manee Das Shrestha  & KCE080BCT013 \\
+Sajan Sahikarmi     & KCE080BCT035 \\
 \end{tabular}
 \newpage
 
@@ -94,11 +93,17 @@ Sneha Chaulagain   & KCE079BCT042 \\
 \vspace{1em}
 \normalsize
 \noindent
-Devanagari is the primary script used for writing the Nepali language and contains complex character structures, conjunct consonants, and vowel modifiers that make handwritten text recognition a challenging task. This project aims to develop a Transformer-based Optical Character Recognition (OCR) system for recognizing handwritten Nepali words and converting them into digital text.The proposed system adopts a TrOCR-inspired architecture that combines a pretrained Vision Transformer (ViT) encoder with a lightweight custom BERT-based Transformer decoder. The ViT encoder extracts contextual visual representations from handwritten word images, while the decoder, designed with a compact Transformer configuration and cross-attention mechanism, generates the corresponding Nepali word sequence in Unicode format. Both components are integrated using HuggingFace's VisionEncoderDecoderModel framework to enable end-to-end handwritten word recognition.Experimental results demonstrate that the proposed model achieves a Character Error Rate (CER) of 5.43\%, a Word Error Rate (WER) of 16.58\%, and an overall accuracy of 83.42\%, indicating its effectiveness in recognizing complex handwritten Nepali text. The developed system provides a promising approach for digitizing handwritten Nepali documents and supports the preservation and accessibility of Nepali written resources.
+Nepali Sign Language (NSL) is the first language of Nepal's deaf community, yet very few hearing people understand it. The gap is most dangerous in an emergency, when a deaf person needs to convey an urgent message immediately and no interpreter is present. This project built a system that recognises six NSL emergency phrases from an ordinary camera and delivers each one as on-screen text and speech.
+
+\noindent No public dataset of NSL emergency phrases exists, so one was recorded from scratch. The natural signed form of every phrase was established in person with Deaf experts at the Rehabilitation Centre for the Rural Deaf and the National Federation of the Deaf Nepal before any recording began. Eight signers then contributed 840 clips across seven classes: the six emergency phrases and a negative class covering non-signing motion.
+
+\noindent Each frame is reduced by MediaPipe Holistic to 225 landmark coordinates instead of being stored as video, which keeps the representation compact and independent of background and lighting. Landmarks are normalised against two anatomical anchors, the shoulder midpoint for the body and the wrist for each hand, and every clip is standardised to 137 frames, the 95th percentile of the recorded frame-count distribution. A bidirectional Long Short-Term Memory network classifies the resulting sequence.
+
+\noindent Evaluation used leave-one-signer-out folds, in which the model is scored only on a signer absent from its training data. Accuracy averaged 96.52\% over eight folds and 96.67\% pooled across all 840 predictions, with per-class F1 between 0.963 and 0.996 for the six emergency phrases. The same architecture reaches 99.21\% under a random split, and that gap of 2.5 percentage points is a measure of how much a random split overstates performance on this kind of data. A Mahalanobis distance gate fitted in the model's embedding space rejects inputs unlike any known sign, allowing the system to stay silent instead of announcing an emergency phrase for arbitrary motion. The trained network was exported to TensorFlow Lite and deployed behind a streaming inference server, with an Android client that captures the sign, displays the recognised phrase, and speaks it aloud.
 
 \vspace{1em}
 \noindent
-\textbf{Keywords}: \textit{Nepali Handwritten Word Recognition, Optical Character Recognition, Vision Transformer encoder, TrOCR, BERT, Devanagari Script.}
+\textbf{Keywords}: \textit{Nepali Sign Language, Emergency Phrases, Sign Language Recognition, MediaPipe Holistic, Hand Landmarks, BiLSTM, Signer-Independent Evaluation, Open-Set Recognition, Real-Time Recognition, Assistive Technology.}
 \newpage
 
 \tableofcontents
@@ -111,6 +116,7 @@ Devanagari is the primary script used for writing the Nepali language and contai
 \addcontentsline{toc}{section}{List of figures}
 \listoffigures
 \newpage
+
 \addcontentsline{toc}{section}{List of Symbols and Abbreviation}
 \begin{center}
     {\Large\bfseries List of Symbols and Abbreviation}
@@ -121,39 +127,38 @@ Devanagari is the primary script used for writing the Nepali language and contai
 \hline
 \textbf{Abbreviation} & \textbf{Full Form} \\
 \hline
-AdamW   & Adaptive Moment Estimation with Weight Decay \\
 AI      & Artificial Intelligence \\
-BERT    & Bidirectional Encoder Representations from Transformers \\
+API     & Application Programming Interface \\
+APK     & Android Package Kit \\
+ASL     & American Sign Language \\
+AUROC   & Area Under the Receiver Operating Characteristic Curve \\
 BiLSTM  & Bidirectional Long Short-Term Memory \\
-BOS     & Beginning of Sequence \\
-CER     & Character Error Rate \\
-CLS     & Classification Token \\
 CNN     & Convolutional Neural Network \\
-CTC     & Connectionist Temporal Classification \\
-CUDA    & Compute Unified Device Architecture \\
-EOS     & End of Sequence \\
-FFN     & Feedforward Neural Network \\
-fp16    & 16-bit Floating Point \\
-GELU    & Gaussian Error Linear Unit \\
+CPU     & Central Processing Unit \\
+DFD     & Data Flow Diagram \\
+F1      & F1 Score, the harmonic mean of precision and recall \\
+FPS     & Frames Per Second \\
 GPU     & Graphics Processing Unit \\
-HTR     & Handwritten Text Recognition \\
-HWR     & Handwritten Word Recognition \\
-IIIT    & International Institute of Information Technology \\
+HMAC    & Hash-Based Message Authentication Code \\
+HTTP    & Hypertext Transfer Protocol \\
+ISL     & Indian Sign Language \\
+JPEG    & Joint Photographic Experts Group \\
+JSON    & JavaScript Object Notation \\
+LOSO    & Leave-One-Signer-Out \\
 LSTM    & Long Short-Term Memory \\
-MHA     & Multi-Head Attention \\
-ML      & Machine Learning \\
-NED     & Normalized Edit Distance \\
-NFC     & Unicode Normalization Form C \\
-NHWDTM  & Nepali Handwritten Word Digitization Using Transformer Model \\
-OCR     & Optical Character Recognition \\
+MCP     & Metacarpophalangeal (finger knuckle joint) \\
+NFDN    & National Federation of the Deaf Nepal \\
+NSL     & Nepali Sign Language \\
+OOD     & Out of Distribution \\
+RCRD    & Rehabilitation Centre for the Rural Deaf \\
 ReLU    & Rectified Linear Unit \\
 RNN     & Recurrent Neural Network \\
-SDLC    & Software Development Lifecycle \\
-SVM     & Support Vector Machines \\
-TrOCR   & Transformer-based Optical Character Recognition \\
-TTA     & Test-Time Augmentation \\
+SDLC    & Software Development Life Cycle \\
+TFLite  & TensorFlow Lite \\
+TTS     & Text to Speech \\
 UI      & User Interface \\
-ViT     & Vision Transformer \\
-WER     & Word Error Rate \\
+WS      & WebSocket \\
+WSS     & WebSocket Secure \\
+YUV     & Luminance and Chrominance Colour Encoding \\
 \hline
 \end{tabular}

@@ -1,19 +1,30 @@
-%Khwopa college of Engineering Latex Template
-%Prepared by Mukesh Kumar Pokharel for Project Proposal as references.
+% Khwopa College of Engineering LaTeX Template
+% Original template prepared by Mukesh Kumar Pokharel.
 
 \documentclass[12pt, a4paper, oneside, openany]{report}
 
 % ── Encoding ──────────────────────────────────────────────────────────────────
 \usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{202F}{\,}
 
 % ── Page Layout ───────────────────────────────────────────────────────────────
-\usepackage[left=1.2in, right=1in, top=1.2in, bottom=1in, 
+\usepackage[left=1.2in, right=1in, top=1.2in, bottom=1in,
             headheight=6pt, a4paper]{geometry}
 
 % ── Graphics & Figures ────────────────────────────────────────────────────────
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage{float}
+
+% ── Diagrams ──────────────────────────────────────────────────────────────────
+\usepackage{tikz}
+\usetikzlibrary{positioning, fit, arrows.meta, shapes.geometric, shapes.multipart,
+                backgrounds, calc}
+\usepackage{xcolor}
+\definecolor{dgrey}{HTML}{4A4A4A}
+\definecolor{dfill}{HTML}{ECECEC}
+\definecolor{dfilla}{HTML}{DCDCDC}
+\definecolor{dline}{HTML}{8A8A8A}
 
 % ── Math ──────────────────────────────────────────────────────────────────────
 \usepackage{amsmath, amssymb, amsfonts}
@@ -22,20 +33,18 @@
 % ── Tables ────────────────────────────────────────────────────────────────────
 \usepackage{array}
 \usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{multirow}
 
 % ── Text & Formatting ─────────────────────────────────────────────────────────
 \usepackage{ragged2e}
-\usepackage{lipsum}
 \usepackage{emptypage}
-\let\cleardoublepage\clearpage 
+\usepackage{url}
+\let\cleardoublepage\clearpage
 \usepackage{placeins}
 \setlength{\parskip}{0pt}
 \renewcommand{\baselinestretch}{1.5}
 \raggedbottom
-\usepackage{cleveref}
-
-% ── Bibliography ──────────────────────────────────────────────────────────────
-\usepackage{cite}
 
 % ── Section Title Formatting ──────────────────────────────────────────────────
 \usepackage{titlesec}
@@ -58,7 +67,27 @@
 \setcounter{tocdepth}{3}
 \setcounter{secnumdepth}{3}
 
-% ── Hyperref LAST — removes red boxes, enables clickable TOC ──────────────────
+% ── Bibliography ──────────────────────────────────────────────────────────────
+\usepackage{cite}
+
+% ── Marker for numbers still to be filled in from a re-run ────────────────────
+% Every occurrence must be resolved before submission. Search for "fillin".
+\newcommand{\fillin}[1]{\textbf{[#1]}}
+
+% ── Loud banner for work that must happen before submission ───────────────────
+% DELETE the \mustdo{...} call once the action it describes has been carried out.
+\newcommand{\mustdo}[1]{%
+    \begin{center}
+    \fboxsep=8pt\fboxrule=1.2pt%
+    \fbox{\begin{minipage}{0.9\linewidth}
+        \setstretch{1.15}\small
+        \textbf{BEFORE SUBMISSION -- DELETE THIS BOX}\\[3pt]
+        #1
+    \end{minipage}}
+    \end{center}%
+}
+
+% ── Hyperref LAST ─────────────────────────────────────────────────────────────
 \usepackage{hyperref}
 \hypersetup{
     colorlinks=false,
@@ -67,6 +96,7 @@
     citebordercolor={0 0 0},
     urlbordercolor={0 0 0}
 }
+\usepackage{cleveref}
 
 % ══════════════════════════════════════════════════════════════════════════════
 \begin{document}
@@ -78,12 +108,12 @@
     \input{intro}
 
     % ── Chapters ──────────────────────────────────────────────────────────────
-    \input{chapter/chapter_1}
+    \input{chapter/introduction}
     \input{chapter/litreview}
-    \input{chapter/METHODOLOGY}
-    \input{chapter/System_Design}
-    \input{chapter/Result and discussion}
-    \input{chapter/Conclusion}
+    \input{chapter/methodology}
+    \input{chapter/systemdesign}
+    \input{chapter/results}
+    \input{chapter/conclusion}
 
     % ── References ────────────────────────────────────────────────────────────
     \newpage

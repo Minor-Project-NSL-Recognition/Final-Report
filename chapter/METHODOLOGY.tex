@@ -1,453 +1,280 @@
-\chapter{METHODOLOGY}    
+\chapter{METHODOLOGY}
+\label{ch:methodology}
 
-\section{NHWDTM System Workflow Diagram}
-      \begin{figure}[H]
-        \centering
-        \includegraphics[scale=0.35]{img/system.png}
-        \caption{Stages of NHWDTM System}
-        \label{fig:blockdiagram}
-    \end{figure}
+This chapter describes how the system was built, in the order the work was carried out. The pipeline runs from establishing the signed form of each phrase with Deaf experts, through recording and preprocessing a custom dataset, to training the classifier, evaluating it, and deploying it. The evaluation protocol and the deployment path are described at the end, since both differ from what the proposal anticipated.
 
-\section{Description of Working Flow of the System}
-    \begin{enumerate}
-  \subsection{Data Collection:}
-Initially, the project was focused on character-level recognition for which,a Devanagari Character Dataset \cite{anand2023devanagari} was used.And,since matras (diacritics) were not well represented, an additional matra dataset was manually created and curated. However, due to lower accuracy and limitations at the character level, the approach was later shifted to word-level recognition using the IIIT-HW-Dev dataset\cite{rajak_indic_data}\Appendices~\ref{app:A.1}.It contains segmented word-level images along with their corresponding Unicode labels. The dataset was obtained from Kaggle and divided into the following splits:
-\begin{itemize}
-    \item \textbf{Training set:} 69,802 images
-    \item \textbf{Validation set:} 12,713 images
-    \item \textbf{Test set:} 12,865 images
-\end{itemize}
-\noindent Each dataset entry includes an image file and its corresponding Unicode label. In total, 108 unique Devanagari characters were identified, including consonants, matras, and compound characters. The maximum label length observed was 23 characters. This dataset provides a diverse and realistic base for training the handwritten word recognition model.
-\newpage
-  \subsection{Image Pre-processing Pipeline:}\\
-   Each image is passed through a multi-step pre-processing pipeline before being fed to the model. The steps are applied in the following order:
-  \begin{figure}[H]
-        \centering
-        \includegraphics[scale=0.75]{img/Processing.png}
-        \caption{Image Pre-processing pipeline}
-        \label{fig:processingdiagram}
-    \end{figure}
-      \begin{itemize}
-      \item \textbf{Grayscale conversion and denoising:} The image is converted to grayscale and smoothed with a $3 \times 3$ Gaussian blur to suppress noise while preserving stroke edges.
-      \item \textbf{Adaptive binarisation:} An adaptive Gaussian threshold (block size 25, constant $C = 15$) converts the smoothed image to a binary foreground-background representation. This handles uneven
-      backgrounds more robustly than global Otsu thresholding.
-      \newpage
-   \item \textbf{Morphological closing:} A $2 \times 2$ rectangular kernel is used to close small gaps in Devanagari stroke connections, particularly the shirorekha(headline stroke).
-      \item \textbf{Deskewing:} Skew angle is estimated using the minimum area bounding rectangle of foreground pixels. Corrections are applied only for angles in the range $[0.5°, 10°]$; larger rotations are ignored to avoid misidentifying vertical strokes as tilt.
-      \item \textbf{Tight cropping:} The image is cropped to the bounding box of ink pixels with 8 pixels of padding on each side. Crops smaller than $10 \times 10$ pixels revert to the uncropped image.
-      \item \textbf{Letterbox padding and resize:} The cropped image is centred on a white square canvas, then resized to $128 \times 128$ pixels using area interpolation to preserve structural detail.
-      \item \textbf{Conversion to RGB and ViT normalisation:} The
-      grayscale image is converted to three-channel RGB and passed to
-      ViTImageProcessor, which rescales it to $384 \times 384$
-      pixels and normalises pixel values to the ViT pre-training
-      distribution (mean~$= 0.5$, std~$= 0.5$ per channel).
-  \end{itemize}
-  All pre-processed images are cached to disk before training to avoid
-  repeated computation.
-  Detailed before/after visuals for each step are provided in 
-Appendices~\ref{app:B1}--\ref{app:B7}
-.
+\section{Software Development Approach}
 
-  \subsection{Training Data Augmentation:}\\
-  During training only, an additional augmentation pipeline is applied on-the-fly after loading the pre-processed image from cache. The augmentations simulate realistic handwriting variation:
-  \begin{itemize}
-      \item Gaussian blur ($p = 0.4$, $\sigma \in [0.1, 1.0]$)
-      \item Random affine transform: rotation $\pm 7°$, translation
-      $\pm 7\%$, scale $[0.85, 1.15]$, shear $\pm 5°$
-      \item Colour jitter: brightness $\pm 0.4$, contrast $\pm 0.4$,
-      saturation $\pm 0.1$
-      \item Random perspective distortion ($p = 0.3$,
-      distortion scale $= 0.15$)
-      \item Random autocontrast ($p = 0.2$)
-      \item Random erasing ($p = 0.3$, erased area $2\%$--$12\%$ of
-      image)
-  \end{itemize}
-  Validation and test images are \emph{not} augmented.
-\newpage
-  \subsection{Custom Tokenizer Construction:}\\
-  A character-level tokenizer is built to handle the Devanagari script
-  vocabulary. Key properties are:
-  \begin{itemize}
-      \item \textbf{Vocabulary:} 112 tokens in total ; four special tokens
-      (\texttt{<pad>}, \texttt{<s>}, \texttt{</s>}, \texttt{<unk>}) plus
-      108 unique Devanagari characters extracted from the training and
-      validation labels.
-      \item \textbf{Tokenizer model:} A WordLevel model with Unicode code-point-level pre-tokenisation, treating each character as an independent token.
-      \item \textbf{Post-processing:} TemplateProcessing
-automatically prepends the BOS token \texttt{<s>} and appends the EOS token \texttt{</s>} to every encoded sequence.
-   \item \textbf{Decoder:} A Fuse decoder concatenates tokens without whitespace to reconstruct valid Devanagari word forms.
-      \item \textbf{Wrapping:} The tokenizer is wrapped in
-      HuggingFace's PreTrainedTokenizerFast with
-      model\_max\_length = 64.
-  \end{itemize}
+Agile incremental development was adopted because several parameters could not be fixed in advance. The sequence length depended on how long signers actually took to perform each phrase, the normalisation scheme had to be validated against real recordings, and the deployment target changed once the recognition results were in hand. Each increment delivered a working module: phrase verification, the recorder, the preprocessing core, the trained model, the inference server, and the mobile client.
 
-  \subsection{ViT Encoder (Visual Feature Extraction):}\\
-  The encoder is a pre-trained Vision Transformer loaded from
- microsoft/trocr-base-handwritten. Its architecture is:
-  \begin{itemize}
-      \item \textbf{Patch embedding:} The $384 \times 384$ input is
-      divided into non-overlapping $16 \times 16$ patches (576 patches),
-      each linearly projected to a 768-dimensional vector.
-      \item \textbf{Positional encoding:} A learnable positional embedding
-      is added to each patch, and a special \texttt{[CLS]} token is
-      prepended, giving a sequence of length 577.
-      \item \textbf{Transformer layers:} 12 stacked blocks of multi-head
-      self-attention (12 heads, $d_k = 64$), layer normalisation, and a
-      feed-forward network (hidden dim 3072, GELU activation).
-      \item \textbf{Output:} A contextual feature matrix of shape
-      $[B, 577, 768]$ encoding rich spatial and semantic information.
-  \end{itemize}
-
-  \subsection{Custom BERT-Based Transformer Decoder (Text
-  Generation):}\\
-  A lightweight BERT-based decoder is built from scratch using BertConfig and BertLMHeadModel. Its actual
-  configuration is:
-  \begin{itemize}
-      \item \textbf{Architecture:} 2 transformer layers, 4 attention
-      heads, hidden size 256, intermediate (FFN) size 512, dropout 0.1,
-      maximum position embeddings 128.
-      \item \textbf{Token embedding:} Input token IDs are embedded into
-      256-dimensional space.
-      \item \textbf{Masked self-attention:} Causal left-to-right masking
-      ensures each generated token attends only to prior tokens.
-      \item \textbf{Cross-attention:} The decoder attends to the ViT
-      encoder output ($[B, 577, 768]$) as keys and values, with its own hidden states as queries. 
-      \item \textbf{Output projection:} A linear layer maps hidden states
-      to logits over the 112-token vocabulary.
-  \end{itemize}
-
-  \subsection{End-to-End Model Integration:}\\
-  The encoder and decoder are combined via HuggingFace's
-  VisionEncoderDecoderModel with following configuration:
-  \begin{itemize}
-      \item Decoder start token set to \texttt{<s>} (BOS).
-      \item Padding token set to \texttt{<pad>}; padding positions are
-      masked with $-100$ in label tensors to exclude them from loss
-      computation.
-      \item Cross-attention enabled via
-      
-      \item Mixed-precision training (fp16) via GradScaler.
-      \item Gradient accumulation over 4 steps (effective batch size 32).
-  \end{itemize}
-
-  \subsection{Token Prediction and Beam Search Decoding:}\\
-  At inference time, the model generates predictions using beam search
-  with the following settings:
-  \begin{itemize}
-    \item \textbf{Beam width:} \texttt{num\_beams} $= 4$
-    \item \textbf{Candidates returned:} The top 3 scoring sequences are 
-    returned as alternative predictions.
-    \item \textbf{Termination:} Each beam ends at the \texttt{</s>} (EOS) 
-    token or the maximum sequence length of 27 tokens.
-    \item \textbf{Output selection:} The highest-scoring beam sequence is 
-    chosen as the primary prediction.
-    \item \textbf{Detokenisation:} Token IDs are decoded back to Unicode 
-    Devanagari text; special tokens (\texttt{<s>}, \texttt{</s>}, 
-    \texttt{<pad>}) are stripped.
-    \item \textbf{NFC normalisation:} Predicted and ground-truth strings 
-    are Unicode NFC-normalised before computing CER and WER to avoid 
-    spurious character-level mismatches from equivalent code-point 
-    sequences.
-\end{itemize}
-
-\end{enumerate}
-     \newpage
-\section{Model Architecture}
-
-The NHWDTM system adopts a TrOCR-inspired encoder--decoder architecture
-that pairs a pre-trained Vision Transformer (ViT) with a lightweight
-custom BERT-based decoder. The two components are integrated using HuggingFace's Vision Transformer Encoder and Decoder Model framework, enabling end-to-end training with cross-modal attention between the visual and linguistic modalities.
+The riskiest unknown was addressed first. Before any large-scale recording, a small set of clips was captured to confirm that MediaPipe Holistic produces stable landmarks for multi-sign NSL phrases performed at natural speed. Had it not, the entire landmark-based approach would have needed reconsideration while there was still time to change it.
 
 \begin{figure}[H]
-  \centering
-  \includegraphics[width=0.80\textwidth]{img/trocr.png}
-  \caption{Model Architecture of TrOCR EncoderDecoder Model}
-  \label{fig:trocr}
+    \centering
+    \includegraphics[width=0.7\textwidth]{img/sdlc.png}
+    \caption{Agile incremental development approach}
+    \label{fig:agile}
 \end{figure}
 
-\subsection{ViT Encoder}
+\section{Phase 0: Establishing the Signed Form of Each Phrase}
 
-The encoder is a Vision Transformer of the vit-base-patch16-384 variant, with pre-trained weights sourced from microsoft/trocr-base-handwritten;a checkpoint already fine-tuned on handwritten document recognition tasks. This choice provides the model with strong visual priors for cursive and handwritten scripts without requiring training from scratch.
+No standard published gloss exists for the six target emergency phrases, so the natural signed form of each had to be established with the Deaf community before recording could begin. Two consultations were held in person in Bhaktapur: with Yojana Sakha and colleagues at the Rehabilitation Centre for the Rural Deaf, and with a resource person at the National Federation of the Deaf Nepal.
 
-\noindent Each input image is resized to $384 \times 384$ pixels and partitioned
-into non-overlapping patches of $16 \times 16$ pixels, yielding 576
-patches. Each patch is linearly projected into a 768-dimensional
-embedding vector. A learnable \texttt{[CLS]} token is prepended to
-the patch sequence, and learnable positional embeddings are added to
-each position to preserve spatial structure, resulting in a final
-sequence length of 577.
+Each consultant was asked to demonstrate how the idea would be signed in an actual emergency, as concisely as possible, and not to sign the English sentence word by word. Each demonstration was discussed for regional variation, recorded as a reference, and confirmed as the form every signer would reproduce. Because the experts' time was limited, they also contributed roughly ten clips per phrase, which anchor the dataset to an authentic performance. Photographs from the consultations appear in Appendix~\ref{app:fieldwork}.
 
-\noindent The sequence is then processed through 12 stacked Transformer blocks.
-Each block consists of multi-head self-attention with 12 heads
-($d_k = 64$ per head), layer normalisation, residual connections, and
-a position-wise feed-forward network with a hidden dimensionality of
-3072 and GELU activation. The encoder produces a contextual feature
-matrix of shape $[B, 577, 768]$, where $B$ is the batch size. This
-output encodes rich spatial and semantic information from the
-handwritten word image and serves as the key--value input for the
-decoder's cross-attention mechanism.
+The consultants were also asked directly whether facial expression changes or adds meaning for any of the six phrases. They confirmed it does not for this phrase set, which settled the exclusion of the 468 face landmarks from the feature vector.
 
-\subsection{Custom BERT-Based Decoder}
-
-The decoder is a lightweight, custom-built Transformer decoder
-constructed using HuggingFace's BertConfig and
-BertLMHeadMode. It is intentionally compacted to approximately 4 million parameters for avoiding overfitting on the moderately sized Devanagari training corpus of approximately 70,000 word images.
-
-\noindent The decoder comprises 2 Transformer layers, each with 4 attention
-heads and a hidden dimensionality of 256. The feed-forward sub-layer
-within each block has an intermediate size of 512 and uses GELU
-activation. Dropout with probability 0.1 is applied to both attention
-weights and hidden representations for regularisation. The maximum
-supported sequence length is 128 token positions.
-
-\noindent At each decoding step, the previously generated token identifiers are
-embedded into a 256-dimensional space via a learned token embedding
-layer. A causal (left-to-right) masked self-attention mechanism then
-allows each position to attend only to prior positions, enforcing
-autoregressive generation. Cross-attention is subsequently applied
-over the full encoder output, using the encoder's feature matrix as
-keys and values and the decoder's current hidden states as queries.
-This mechanism enables the decoder to selectively attend to visually
-relevant regions of the input image at each character generation step.
-
-\noindent A final linear projection layer maps the decoder's hidden states to
-logits over the 112-token vocabulary, from which the most probable
-token is selected at each step.
-
-\subsection{Model Integration}
-
-The encoder and decoder are combined into a single trainable model
-via VisionEncoderDecoderModel. The decoder start token is
-set to \texttt{<s>} (BOS), the padding token to \texttt{<pad>}, and padding positions are masked with $-100$ in the label tensor to exclude them from loss computation. Cross-attention is explicitly enabled in the decoder configuration via the
-add\_cross\_attention flag.
-
-Table~\ref{tab:arch} summarises the architectural configuration of
-both components.
+Table~\ref{tab:phrases} lists the six phrases and the situation each covers. Phrase 6 replaced an earthquake phrase considered at proposal stage. The consultants advised that a request to use the toilet is a far more frequent communication failure for deaf people in institutional settings than an earthquake report, and the change was approved at the mid-term defence.
 
 \begin{table}[H]
-\centering
-\caption{Model architecture summary}
-\label{tab:arch}
-\begin{tabular}{lll}
-\hline
-\textbf{Component} & \textbf{Parameter} & \textbf{Value} \\
-\hline
-ViT Encoder & Input resolution       & $384 \times 384$ \\
-            & Patch size             & $16 \times 16$ \\
-            & Sequence length        & 577 (576 patches + CLS) \\
-            & Hidden size            & 768 \\
-            & Transformer layers     & 12 \\
-            & Attention heads        & 12 \\
-            & FFN hidden size        & 3072 \\
-            & Pre-trained checkpoint & \texttt{trocr-base-handwritten} \\
-\hline
-BERT Decoder & Transformer layers      & 2 \\
-             & Attention heads         & 4 \\
-             & Hidden size             & 256 \\
-             & FFN intermediate size   & 512 \\
-             & Dropout                 & 0.1 \\
-             & Max position embeddings & 128 \\
-             & Vocabulary size         & 112 \\
-             & Initialisation          & Random (from scratch) \\
-\hline
-\end{tabular}
+    \centering
+    \caption{Target emergency phrases and their categories}
+    \label{tab:phrases}
+    \begin{tabular}{|c|p{6cm}|l|l|}
+        \hline
+        \textbf{\#} & \textbf{English phrase} & \textbf{Category} & \textbf{Class key} \\
+        \hline
+        1 & I can't breathe            & Medical           & \texttt{cant\_breathe} \\
+        \hline
+        2 & The building is on fire    & Fire              & \texttt{building\_on\_fire} \\
+        \hline
+        3 & Call the police            & Crime             & \texttt{call\_police} \\
+        \hline
+        4 & I need an ambulance        & Medical           & \texttt{need\_ambulance} \\
+        \hline
+        5 & Help me / I am in danger   & Generic emergency & \texttt{help\_danger} \\
+        \hline
+        6 & I need to go to the toilet & Basic need        & \texttt{need\_toilet} \\
+        \hline
+        7 & Not one of the above       & Negative class    & \texttt{none} \\
+        \hline
+    \end{tabular}
 \end{table}
 
-% ────────────────────────────────────────────────────────────────────
-\section{Hyperparameters}
+\subsection{The Negative Class}
 
-The training configuration was designed to accommodate the two-phase training strategy;an initial decoder-only phase followed by full end-to-end fine-tuning while maintaining training stability through mixed-precision arithmetic, gradient accumulation, and cosine
-annealing scheduling.
+The seventh class was added during development and is not in the original proposal. A classifier over six phrases assigns one of those six to every input it receives, so a signer adjusting their glasses would be reported as an emergency. For a system whose output is a spoken emergency announcement, that is the worst available failure mode.
 
-\subsection{Optimiser}
+The \texttt{none} class holds deliberate non-examples: resting, idle movement, gestures outside the target set, and partial or abandoned signs. Giving the model explicit negatives lets it learn a decision boundary around the six real phrases instead of partitioning the whole input space among them. A second, independent rejection mechanism is described in Section~\ref{sec:oodgate}.
 
-The AdamW optimiser was used throughout
-training, with momentum coefficients $\beta_1 = 0.9$ and
-$\beta_2 = 0.999$ and a numerical stability constant of
-$\epsilon = 10^{-8}$.
+\section{Phase 1: Dataset Collection}
 
-\noindent During Phase~1 (decoder-only training), the encoder parameters were
-frozen and only decoder parameters were updated, using a learning rate
-of $5 \times 10^{-4}$ with weight decay $10^{-3}$. During Phase~2
-(full fine-tuning), differential learning rates were applied:
-$5 \times 10^{-7}$ for the encoder, which was already well
-pre-trained and required only gentle adaptation, and $5 \times
-10^{-5}$ for the decoder. This differential strategy prevents
-catastrophic forgetting of the encoder's pre-trained visual
-representations while allowing the decoder to continue improving.
+Because no public dataset of NSL emergency phrases exists, one was recorded from scratch. This was the most consequential phase of the project: the ceiling on recognition accuracy is set by the quality and variety of the recordings.
 
-\subsection{Learning Rate Scheduler}
+\subsection{The Recorder Application}
 
-A CosineAnnealingWarmRestarts scheduler was applied with a
-restart period of $T_0 = 10$ epochs, a restart multiplier of
-$T_{\text{mult}} = 1$, and a minimum learning rate of $\eta_{\min} =
-10^{-8}$. The periodic warm restarts help the model escape local
-minima and explore the loss surface more effectively over longer
-training runs.
+A purpose-built recorder was written for the task. It runs MediaPipe Holistic live on a webcam feed and, for every frame, extracts a 225-value vector: 33 pose landmarks, 21 left-hand landmarks, and 21 right-hand landmarks, each with $x$, $y$, and $z$ coordinates. The operator selects a signer identity and a phrase, then starts and stops each recording explicitly, so every clip corresponds to one deliberate performance of one phrase.
 
-\subsection{Loss Function}
+Every frame is mirrored horizontally before detection. This is recorded here because it is a constraint on everything downstream: the landmarks in the dataset describe a mirrored image, and any inference path that does not reproduce the same flip will present the model with the signer's hands swapped. Screenshots of the recorder in use appear in Appendix~\ref{app:recorder}.
 
-Label-smoothed cross-entropy loss was used with a smoothing coefficient
-of 0.1. Smoothing distributes a small fraction of the probability mass
-uniformly across the vocabulary rather than concentrating it entirely
-on the ground-truth token, which discourages the model from becoming
-overconfident and improves generalisation to unseen character sequences.
-Token positions corresponding to padding (label value $= -100$) are
-excluded from the loss computation.
+Frames in which a hand or the pose is not detected are zero-filled for that block and the detection rate is recorded. The frame is not dropped. Each clip is therefore accompanied by a JSON sidecar holding its frame count, duration, and per-block detection rates, which made it possible to identify weak recordings without replaying them.
 
-\subsection{Training Efficiency}
+\subsection{Recording Setup and Variation}
 
-Mixed-precision training (fp16) was employed via PyTorch's GradScaler to reduce memory consumption and accelerate computation on GPU hardware. Gradient accumulation over 4 steps was
-applied, giving an effective batch size of 32 while keeping the per-step memory footprint manageable. Gradient clipping at a maximum norm of 1.0 was applied before each optimiser step to prevent destabilising gradient explosions during early training.
+Variation was introduced deliberately so the model would not learn a single recording condition:
 
-\subsection{Regularisation and Augmentation}
+\begin{itemize}
+    \item Lighting: bright, dim, and mixed daylight near a window.
+    \item Background: plain wall, cluttered room, and several different rooms.
+    \item Distance: close to the camera and at arm's length or further.
+    \item Signers: eight people, differing in body size, hand size, and signing speed.
+    \item Speed: each signer performed each phrase somewhat faster and somewhat slower across takes.
+\end{itemize}
 
-In addition to label smoothing and dropout within the decoder (0.1),
-on-the-fly data augmentation was applied exclusively to the training
-set to improve robustness to handwriting variation. The augmentation
-pipeline comprised Gaussian blur ($p = 0.4$, $\sigma \in [0.1,
-1.0]$), random affine transformations (rotation $\pm 7°$, translation
-$\pm 7\%$, scale $[0.85, 1.15]$, shear $\pm 5°$), colour jitter
-(brightness and contrast $\pm 0.4$, saturation $\pm 0.1$), random
-perspective distortion ($p = 0.3$, distortion scale $0.15$), random
-autocontrast ($p = 0.2$), and random erasing ($p = 0.3$, erased area
-$2\%$--$12\%$ of image area).
+Each clip is saved as \texttt{<phrase>\_\_<signer>\_\_<index>.npy}. Encoding the signer in the filename is what makes signer-independent evaluation possible later, and it was the reason for adopting the convention.
 
-\subsection{Early Stopping and Checkpointing}
+\subsection{Storing Landmarks Instead of Video}
 
-Validation was performed every 2 epochs on the held-out validation
-set. The best model checkpoint was saved whenever a new minimum
-validation CER was achieved. Training was terminated early if no
-improvement was observed for 10 consecutive validation rounds
-(patience $= 10$), corresponding to a maximum of 20 epochs without
-progress.
+The recorder saves only the per-frame landmark vectors. Video is never written to disk. This keeps the dataset small, removes a slow reprocessing step from every later stage, and means no video of any signer is stored or transmitted.
 
-\noindent Table~\ref{tab:hparams} provides a consolidated summary of all
-hyperparameter values used during training.
+The cost is worth stating plainly. Because no video was kept, the landmark representation cannot be recomputed. Changing the landmark source, for example to run detection on a phone instead of a server, cannot be evaluated against the existing data and would require re-recording every clip.
+
+\subsection{Aggregation Across Signers}
+
+The eight signers recorded independently on separate machines. Git was used to merge each contribution into one shared repository instead of copying files by hand, which gave a reviewable history of what each signer added and caught duplicate and misnamed clips before they entered the combined set. Screenshots of the merged repository and the resulting directory layout appear in Appendix~\ref{app:dataorg}.
+
+After aggregation the dataset held 840 clips: exactly 120 in each of the seven classes, contributed by eight signers. The composition is reported in full in Section~\ref{sec:datasetcomposition}.
+
+\section{Phase 2: Feature Extraction}
+
+Every frame of every clip is reduced to the same 225-dimensional vector, concatenated in a fixed order:
+
+\begin{itemize}
+    \item 33 pose landmarks $\times\ (x, y, z)$ = 99 values, at indices 0 to 98.
+    \item 21 left-hand landmarks $\times\ (x, y, z)$ = 63 values, at indices 99 to 161.
+    \item 21 right-hand landmarks $\times\ (x, y, z)$ = 63 values, at indices 162 to 224.
+\end{itemize}
+
+\noindent A clip is therefore a $(n_{\text{frames}}, 225)$ array of 32-bit floats, with $n_{\text{frames}}$ varying between clips. This layout, the normalisation anchors, and the sequence length are held as constants in a single module that both the training code and the inference server import, so the two cannot drift apart.
+
+\section{Phase 3: Determining the Sequence Length}
+
+The classifier requires a fixed number of time steps, but raw clip lengths vary because signers take different amounts of time. The value was measured from the data rather than chosen.
+
+Across the 840 clips, frame counts ranged from 18 to 217, with a median of 89 and a mean of 90.1. The 95th percentile of this distribution gives $\textsc{seq\_len} = 137$ frames. The distribution and the cutoff are shown in Figure~\ref{fig:seqlen} in Chapter~\ref{ch:results}. The value is written to a metadata file that every later stage reads, so no stage recomputes or assumes it.
+
+An observation from the same metadata turned out to matter more than expected. The recorder never locked a frame rate; it ran as fast as the interface and MediaPipe allowed, giving a median capture rate of 15.7 frames per second across a range of 10.8 to 21.2. Since the model receives a fixed-length sequence with no explicit time axis, it reads frame count as duration. The capture rate is therefore a property of the training data that any real-time path has to reproduce, and Section~\ref{sec:framerate} describes how.
+
+\section{Phase 4: Normalisation and Standardisation}
+
+Each clip is normalised and then standardised to \textsc{seq\_len}, in that order.
+
+Normalisation applies the dual-anchor scheme of Section~2.4.3 to each frame, treating the three landmark blocks independently. The pose block is re-centred on the shoulder midpoint and divided by shoulder width; each hand block is re-centred on its wrist and divided by the wrist-to-middle-knuckle distance. Normalising per block keeps the position of a hand relative to the body while removing the signer's position and distance from the camera.
+
+Standardisation then forces the clip to exactly 137 frames in one of three ways. A clip already at 137 frames is used unchanged. A longer clip is subsampled at 137 evenly spaced positions spanning its full duration, so the whole performance is represented instead of the first 137 frames. A shorter clip is zero-padded at the end, and a boolean mask records which frames are real.
+
+The order is what makes the padding safe. Both normalisation formulas map a zero input to zero output, so an undetected block stays zero through normalisation, and padding added afterwards is also exactly zero. The classifier's masking layer then skips any all-zero time step at no cost. Padding after normalising would have produced non-zero padded frames that the model would read as signal.
+
+The compiled dataset is stored as three aligned arrays: the normalised sequences with shape $(840, 137, 225)$, the integer labels with shape $(840,)$, and the padding mask with shape $(840, 137)$. A manifest records the class, signer, source file, and original frame count for every row, which keeps each compiled clip traceable to the recording it came from.
+
+\section{Phase 5: Model Training}
+
+\subsection{Architecture}
+
+The classifier is a bidirectional LSTM built with TensorFlow and Keras:
 
 \begin{table}[H]
-\centering
-\caption{Training hyperparameter summary}
-\label{tab:hparams}
-\begin{tabular}{lll}
-\hline
-\textbf{Category} & \textbf{Hyperparameter} & \textbf{Value} \\
-\hline
-Optimiser & Algorithm            & AdamW \\
-          & $\beta_1$, $\beta_2$ & 0.9, 0.999 \\
-          & $\epsilon$           & $10^{-8}$ \\
-          & Weight decay (Phase 1) & $10^{-3}$ \\
-\hline
-Learning rate & Phase 1 (decoder only) & $5 \times 10^{-4}$ \\
-              & Phase 2 encoder LR     & $5 \times 10^{-7}$ \\
-              & Phase 2 decoder LR     & $5 \times 10^{-5}$ \\
-\hline
-Scheduler & Type                     & CosineAnnealingWarmRestarts \\
-          & Restart period $T_0$     & 10 epochs \\
-          & Minimum LR $\eta_{\min}$ & $10^{-8}$ \\
-\hline
-Training & Batch size (per step)      & 8 \\
-         & Gradient accumulation      & 4 steps (effective batch 32) \\
-         & Gradient clip norm         & 1.0 \\
-         & Max epochs                 & 52 \\
-         & Validation frequency       & Every 2 epochs \\
-         & Early stopping patience    & 10 validation rounds \\
-         & Precision                  & fp16 (mixed precision) \\
-\hline
-Loss & Function        & Cross-entropy \\
-     & Label smoothing & 0.1 \\
-\hline
-Inference & Decoding strategy & Beam search \\
-          & Beam width        & 4 \\
-\hline
-\end{tabular}
+    \centering
+    \caption{Classifier architecture}
+    \label{tab:architecture}
+    \begin{tabular}{|l|l|}
+        \hline
+        \textbf{Layer} & \textbf{Purpose} \\
+        \hline
+        Input $(137, 225)$              & one normalised clip \\
+        \hline
+        Masking (mask value 0.0)        & skips zero-padded and undetected frames \\
+        \hline
+        Bidirectional LSTM, 64 units    & reads the motion in both directions \\
+        \hline
+        Dropout 0.3                     & regularisation \cite{srivastava2014dropout} \\
+        \hline
+        Bidirectional LSTM, 32 units    & summarises the sequence \\
+        \hline
+        Dropout 0.3                     & regularisation \\
+        \hline
+        Dense 32, ReLU                  & embedding used by the rejection gate \\
+        \hline
+        Dense 7, softmax                & probability over the seven classes \\
+        \hline
+    \end{tabular}
 \end{table}
 
+\noindent The network has 192{,}007 trainable parameters, which is small enough to train on a laptop CPU in minutes.
 
-\newpage
-\section{Performance Evaluation Metrics}
+The 32-unit dense layer does double duty. It is the penultimate feature layer of the classifier, and it is also the space in which the open-set rejection gate measures distance. This is why the exported model has two outputs, not one.
 
-The model was evaluated on the held-out test set of 12,865 word 
-images using the following metrics. All string comparisons were 
-performed after Unicode NFC normalisation of both predicted and 
-ground-truth strings.
+\subsection{Why This Model and Not a Larger Pretrained One}
 
-\subsection{Character Error Rate (CER)}
-CER measures the minimum number of character-level edit operations 
-where S,I and D stands for substitutions (S), deletions (D), and insertions (I) required to transform the predicted string into the ground-truth string, 
-normalised by the total number of characters $N$ in the ground 
-truth. It is computed using the Levenshtein edit distance algorithm. 
-A CER of 0 indicates perfect character-level recognition, and it 
-served as the primary metric for model selection during training.
+A dataset of 840 clips is small for a network trained from scratch, which raises the
+question of whether a pretrained model should carry more of the work. The answer is that
+one already does, and that the division of labour is where the data efficiency comes from.
 
-\[
-\text{CER} = \frac{S + D + I}{N}
-\]
+MediaPipe Holistic is the pretrained component. It was trained on far more human pose and
+hand data than this project could ever collect, and it performs the part of the task that
+needs that scale: locating a body and two hands in an arbitrary image under arbitrary
+lighting. What reaches the BiLSTM is not an image but 225 already-interpreted coordinates,
+so the only thing left to learn is how those coordinates move over time for each phrase.
+That is a much smaller problem, and 192{,}007 parameters is a proportionate model for it.
 
-\subsection{Word Error Rate (WER)}
-WER measures the proportion of test samples for which the predicted 
-transcription does not exactly match the ground-truth word label. 
-Since each sample in the IIIT-HW-Dev dataset corresponds to a 
-single segmented word image, WER directly reflects the rate of 
-completely incorrect predictions.
+A pretrained video classifier operating on pixels was considered and rejected for two
+reasons. It would need the raw video, which was deliberately never stored, so adopting one
+would mean re-recording the entire dataset. It would also be too large for the deployment
+target, where the whole exported model is 879 kilobytes and runs without a GPU.
 
-\[
-\text{WER} = \frac{\text{Number of incorrectly predicted words}}
-                  {\text{Total number of test words}}
-\]
+The dataset was also enlarged during development in preference to adding model capacity,
+growing from four signers and 570 clips at the mid-term to eight signers and 840 clips.
+For a landmark-based classifier at this vocabulary size, additional signers buy more than
+additional parameters, because the quantity in short supply is variation between people and
+not model expressiveness.
 
-\subsection{Exact Match Accuracy}
-Exact Match Accuracy measures the proportion of test samples for 
-which the model produces a transcription that is identical to the 
-ground-truth label in its entirety. It is the complement of WER 
-and provides an intuitive measure of end-to-end recognition 
-performance.
+\subsection{Training Configuration}
 
-\[
-\text{Exact Match Accuracy} = 
-\frac{\text{Number of exactly matched words}}
-     {\text{Total number of test words}} \times 100\%
-\]
+Training minimises sparse categorical cross-entropy with the Adam optimiser \cite{kingma2015adam} at a batch size of 16, for at most 200 epochs. Class weights are computed to be inversely proportional to class frequency, which matters more for the folds than for the whole dataset, since the classes are balanced overall but a held-out signer's contribution is not always uniform.
 
-\subsection{Normalised Edit Distance (NED)}
-NED provides a length-normalised measure of string similarity 
-between the predicted and ground-truth transcriptions. Unlike CER, 
-which is normalised by the ground-truth length only, NED normalises 
-by the longer of the two strings, making it more robust when 
-predicted sequences are significantly shorter or longer than the 
-reference. It ranges from 0 (identical strings) to 1 (completely 
-dissimilar strings).
+Two callbacks control the schedule. Early stopping monitors validation loss with a patience of 15 epochs and restores the best weights. Its minimum-improvement threshold is set to $10^{-3}$ and not left at zero, because with a threshold of zero any improvement at all resets the patience counter, including a change in the fourth decimal place. Once validation loss approaches zero it keeps setting negligible new records, so training does not end on convergence; it ends whenever an optimiser instability finally breaks the streak. That made the epoch count a record of when a random fluctuation occurred instead of a property of the fit.
 
-\[
-\text{NED} = 
-\frac{\text{Levenshtein distance}(\hat{y},\, y)}
-     {\max\!\left(\lvert\hat{y}\rvert,\,\lvert y\rvert\right)}
-\]
+Learning rate reduction on plateau addresses the cause of those fluctuations, halving the learning rate after 6 epochs without improvement, down to a floor of $10^{-5}$. Its patience is kept well below the early-stopping patience so that the reduced rate has a chance to take effect before training halts.
 
-\noindent where $\hat{y}$ is the predicted string and $y$ is the 
-ground-truth string.
+Reproducibility required more than fixing the random seed. TensorFlow's parallel CPU reductions vary between runs, and on identical data this moved per-fold accuracy by up to 2.7 percentage points. Deterministic operations are therefore enabled explicitly, at some cost in speed, so that a reported fold accuracy is a property of the data and the recipe, not of one particular run.
 
+\subsection{Fitting the Open-Set Rejection Gate}
+\label{sec:oodgate}
 
-\section{Model Variants Explored}
- 
-In addition to the NHWDTM system architecture described in Section~3.3, three alternative model configurations were trained on the same dataset and under the same conditions to guide design decisions. The proposed model (v3) was selected as the primary configuration based on its superior downstream performance. Table~\ref{tab:model_variants_ch3} summarises the key
-architectural differences across all four variants; quantitative results are reported in \hyperref[chap:Result and Discussion]{Section~5.1}. 
+After the deployable model is trained, the rejection gate of Section~2.4.8 is fitted on the same data. Every clip is passed through the network to obtain its 32-dimensional embedding. One prototype is computed per class as the mean embedding of that class, and a single covariance matrix shared across classes is estimated from the within-class deviations using Ledoit--Wolf shrinkage \cite{ledoit2004shrinkage}. The rejection threshold is set at the 99th percentile of the resulting in-distribution Mahalanobis distances, which for the committed model is 15.34. By construction, one per cent of genuine training clips fall beyond it.
 
+The gate is then checked against out-of-distribution inputs, which is harder than it sounds because no dataset of things-that-are-not-NSL-emergency-phrases exists. Three hundred synthetic inputs are fabricated from the real clips instead. Half are time-shuffled, with the frame order randomised so the poses are individually valid but the motion is destroyed. The other half are cross-class splices, taking the first half of one phrase and the second half of a different one, which produces a clip that is locally plausible everywhere and globally not a sign. The separation between genuine and synthetic distances is measured as an AUROC.
 
-\begin{table}[h!]
-\centering
-\renewcommand{\arraystretch}{1.8} % Increases row height significantly
-\large % <--- This increases the base font size for the table
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|p{3cm}|p{4cm}|p{4cm}|p{2.5cm}|p{5cm}|} % Fixed widths allow text to wrap
-\hline
-\textbf{Model} & \textbf{Encoder} & \textbf{Decoder} & \textbf{Dec. Params} & \textbf{Key Difference} \\ \hline
-Baseline & ViT-Base \textit{(trocr-base-handwritten)} & RoBERTa (extended Devanagari vocab) & $\sim$125M & Standard fine-tuning; no custom decoder \\ \hline
-TrOCR-Small & ViT-Small \textit{(trocr-small-handwritten)} & Custom BERT (2L / 4H / 256 d) & $\sim$4M & Lighter encoder; faster training \\ \hline
-TrOCR-Large & ViT-Large \textit{(trocr-large-handwritten)} & Custom BERT (4L / 8H / 512 d) & $\sim$13M & Maximum encoder capacity \\ \hline
-\textbf{Proposed TrOCR base with custom decoder} & \textbf{ViT-Base \textit{(trocr-base-handwritten)}} & \textbf{Custom BERT (2L / 4H / 256 d)} & \textbf{$\sim$4M} & \textbf{Best balance of capacity and efficiency} \\ \hline
-\end{tabular}
-}
-\caption{Model variants explored during development}
-\label{tab:model_variants_ch3}
-\end{table}
+Synthetic negatives are a weaker test than real ones. They establish that the gate responds to destroyed temporal structure, which is not the same as establishing that it rejects arbitrary human motion, and this limitation is revisited in Chapter~\ref{ch:conclusion}.
+
+\section{Phase 6: Evaluation Methodology}
+
+\subsection{Leave-One-Signer-Out}
+
+The headline metric is leave-one-signer-out accuracy. For each signer eligible to be held out, the model is trained from scratch on every clip from the other signers and tested only on that signer's clips. Within each fold, 15\% of the training clips are set aside as a stratified validation split for early stopping, so the held-out signer influences neither the fitted weights nor the stopping point.
+
+A signer is eligible for holdout only if removing their clips leaves every class present in the remainder. All eight signers satisfied this, giving eight folds. Two figures are reported: the mean accuracy across folds, which estimates performance on a new person, and the pooled accuracy over all 840 predictions, where each clip is scored exactly once by a model that never saw its signer.
+
+\subsection{The Random-Split Contrast}
+
+A stratified 70/15/15 random split is also trained and reported. It is not an additional performance measure. Its purpose is to quantify what the signer-independent protocol is protecting against: under a random split, clips from the same person appear in both training and test, and the model can score well by recognising individuals. The gap between the two protocols is the size of that effect on this dataset, and it is discussed in Section~\ref{sec:leakage}.
+
+\subsection{Metrics}
+
+Overall accuracy is reported alongside per-class precision, recall, and F1:
+\begin{equation}
+    \text{Precision} = \frac{TP}{TP+FP}, \quad
+    \text{Recall} = \frac{TP}{TP+FN}, \quad
+    \text{F1} = \frac{2\,\text{Precision}\cdot\text{Recall}}{\text{Precision}+\text{Recall}}.
+\end{equation}
+A confusion matrix pooled over all folds identifies which classes are mutually confusable. For an emergency system the two directions of error are not equivalent: failing to recognise a real phrase leaves the user without help, while announcing a phrase for a non-sign produces a false alarm. Both appear in the matrix and are discussed separately.
+
+\section{Phase 7: Deployment}
+
+\subsection{Revision of the Deployment Approach}
+\label{sec:deploychange}
+
+The proposal specified a browser application built with Next.js, running the model in the visitor's browser through TensorFlow.js, with no server involved. The delivered system is an Android application that streams frames to an inference server. Two separate decisions produced that change and they are worth separating.
+
+The first is the choice of device. A phone is what a person has with them when an emergency happens; a laptop with a browser open is not. For a tool whose value depends on being available at the moment of need, the phone is the correct target, and this was decided on those grounds. The browser route was not attempted. The change was recorded as a task deviation in the project log and accepted by the supervisor before the client was built.
+
+The second decision concerns where inference runs, and it carries a real cost. MediaPipe Holistic, the exact landmark extractor the dataset was recorded with, exists as a Python pipeline. Running recognition on the device would mean reimplementing the 225-feature extraction and the dual-anchor normalisation against a different landmark source, and a numerical difference between the two implementations does not raise an error. It produces confident wrong answers, because the model receives numbers unlike anything it was trained on. Serving from Python means the inference path imports the same preprocessing module that the reported accuracy was measured with, so the correspondence between measured and deployed behaviour is structural, not something that had to be verified.
+
+The cost is that the delivered system requires a network connection at use time, which the proposal stated it would not. For an emergency tool this is a genuine weakness and not a neutral trade. It is listed among the limitations in Chapter~\ref{ch:conclusion}, along with the work that would remove it.
+
+\subsection{Model Export}
+
+The trained model is converted to TensorFlow Lite \cite{tflite2024} so the server can run it without a full TensorFlow installation, reducing the deployed image from about three gigabytes to one. The conversion required a workaround: on the pinned TensorFlow and Keras versions used here, the standard converter entry points abort the host process inside the compiler backend instead of raising a catchable exception. Freezing the model's variables to constants before conversion avoids the failure.
+
+Because a silent conversion error would be indistinguishable from a model that simply performs worse, the export is verified and not assumed. The converted model and the original are run on 30 real clips and compared; the export is rejected if they disagree. The measured agreement is reported in Section~\ref{sec:exportverify}.
+
+\subsection{Inference Server}
+
+The server is a FastAPI application exposing a WebSocket endpoint. A client opens a session, streams JPEG frames while the user signs, and sends a completion message; the server replies with the decision. Landmark extraction costs about 38 milliseconds per frame and accounts for almost the entire pipeline cost, so streaming frames during signing overlaps that work with the signing itself. When the client signals completion, only normalisation, standardisation, and the forward pass remain, which together take about 15 milliseconds. Uploading a finished recording instead would have serialised the two and added several seconds of silence before every result.
+
+Each session holds its own MediaPipe graph, which occupies about 150 megabytes, so concurrency is bounded by memory, not processor time. A semaphore caps simultaneous sessions and refuses further connections with an explicit error instead of allowing the process to be killed for exhausting memory. Requests are authenticated with a shared key compared using a constant-time function, so that a wrong key cannot be narrowed down by timing the response. The health endpoint is left unauthenticated so that container health checks and the client's reachability test continue to work.
+
+\subsection{Frame Rate as a Correctness Constraint}
+\label{sec:framerate}
+
+Because the model reads frame count as duration, a client capturing at 30 frames per second produces twice as many frames for the same sign as the training data contained, and presents the model with a temporal scale it has never seen. The server therefore discards incoming frames down to the 15.7 frames per second of the training data before running detection, using an accumulator that tracks when the next frame is due. A simpler test of whether enough time has elapsed since the last accepted frame aliases a 16 frames-per-second client down to 8. The client caps its own send rate at 16 frames per second, slightly above the target so that jitter does not starve the server below it.
+
+\subsection{Mobile Client}
+
+The Android client performs no recognition. It captures camera frames, encodes them, sends them, and speaks the result.
+
+Frame encoding is the client's bottleneck, since it is pure Dart. Colour conversion, rotation, and downscaling are folded into a single pass over the output pixels, avoiding the intermediate full-resolution buffers a naive implementation allocates. Frames are downscaled to 320 pixels wide and encoded with chroma subsampling, on the grounds that landmarks are derived from luminance structure and not chroma resolution. The work runs on a persistent background isolate. When a frame is already in flight the next one is dropped instead of queued, since the server discards surplus frames anyway and a queue would only add latency.
+
+Two details are recorded because they are easy to get wrong. The application is locked to portrait orientation and rotates each frame by the camera's sensor orientation before sending, because Android delivers frames in sensor orientation and MediaPipe detects nothing at all in an image of a person lying sideways. Frames are sent unmirrored with a flag instructing the server to apply the same horizontal flip the recorder used, and the flag is set for both front and rear cameras: the lens faces the signer either way, so the signer's right hand appears on the image-left in both cases, and making the flag depend on the camera would swap the two hand blocks in the feature vector for one of them.
+
+\subsection{The Decision Rule}
+
+Three outcomes are possible, and the order of the checks matters:
+
+\begin{enumerate}
+    \item If the Mahalanobis distance to the nearest class prototype exceeds the threshold, the result is \texttt{unknown}. Nothing is displayed as a recognised phrase and nothing is spoken.
+    \item Otherwise, if the softmax confidence reaches 0.75, the result is \texttt{accepted}. The phrase is displayed and spoken.
+    \item Otherwise the result is \texttt{low\_confidence}. The user is told the input was not recognised clearly, and nothing is spoken.
+\end{enumerate}
+
+\noindent The rejection gate is checked before confidence, so a clip that the softmax assigns to one phrase with high probability is still refused if its embedding sits far from every prototype. The confidence threshold was lowered from the 0.85 proposed to 0.75 once the gate was in place, since the gate handles the failure mode the higher threshold was guarding against, and 0.85 was rejecting genuine signs. The best guess and the top three probabilities are returned in every case, including refusals, which is what makes a failure diagnosable during a demonstration.

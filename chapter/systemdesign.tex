@@ -1,0 +1,493 @@
+\chapter{SYSTEM DESIGN}
+\label{ch:systemdesign}
+
+This chapter records the requirements the system was built against, the feasibility assessment made before construction, and the design of the delivered system. The diagrams describe what was built and not what was proposed; the block diagram in particular differs from the one in the proposal, for the reasons given in Section~\ref{sec:deploychange}.
+
+\section{Requirement Specification}
+
+\subsection{Software Requirements}
+
+\begin{table}[H]
+    \centering
+    \caption{Software used, and the role of each component}
+    \label{tab:software}
+    \small
+    \begin{tabular}{|p{3.4cm}|p{9.6cm}|}
+        \hline
+        \textbf{Component} & \textbf{Role in the system} \\
+        \hline
+        Python 3.11 & Recording, preprocessing, training, and the inference server. The version is pinned because MediaPipe and TensorFlow resolve to a compatible set only on 3.11. \\
+        \hline
+        MediaPipe Holistic & Pretrained pose and hand tracking. Produces the 225 landmark values per frame, offline during recording and again on the server at inference. \\
+        \hline
+        OpenCV & Camera capture, frame decoding, colour conversion, and the horizontal mirror applied before detection. \\
+        \hline
+        TensorFlow / Keras & Building and training the BiLSTM, and exporting it. \\
+        \hline
+        NumPy & Landmark arrays, normalisation arithmetic, and the compiled dataset tensors. \\
+        \hline
+        scikit-learn & Stratified splits, class weights, the confusion matrix and classification report, and the Ledoit--Wolf covariance estimate used by the rejection gate. \\
+        \hline
+        Matplotlib & Training curves, the confusion matrix, and the frame-count histogram. \\
+        \hline
+        TensorFlow Lite & The deployed model format. Runs on the server through a runtime that does not require full TensorFlow. \\
+        \hline
+        FastAPI and Uvicorn & The inference service and its WebSocket endpoint. \\
+        \hline
+        Docker & Packaging the server with its model and runtime so deployment does not depend on the host environment. \\
+        \hline
+        Flutter and Dart & The Android client: camera capture, frame encoding, the WebSocket protocol, and speech output. \\
+        \hline
+        Git and GitHub & Version control for the code, and the mechanism by which eight signers' recordings were merged into one dataset. \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Hardware Requirements}
+
+Training and evaluation ran on an ordinary laptop with no GPU. The model has 192{,}007 parameters and each evaluation fold completes in minutes on a processor alone, so no accelerator was required at any stage. Data collection needed only a webcam. At use time the system needs an Android phone with a camera and a network connection, and a machine to run the server container.
+
+\subsection{Functional Requirements}
+
+\begin{enumerate}
+    \item \textbf{Dataset recording.} The system shall record clips of each target phrase, extract 225 landmark values per frame, and store each clip with its class, signer identity, frame count, and per-block detection rates.
+    \item \textbf{Preprocessing.} The system shall normalise every clip against the shoulder-midpoint and wrist anchors and standardise it to the fixed sequence length, using one implementation shared by the training and inference paths.
+    \item \textbf{Phrase recognition.} Given a captured sequence, the system shall produce a probability distribution over the seven classes.
+    \item \textbf{Rejection of unknown input.} The system shall measure the distance from the input to each class prototype in the model's embedding space and report the input as unknown when it lies beyond the fitted threshold, irrespective of the classifier's confidence.
+    \item \textbf{Confidence thresholding.} The system shall emit a phrase only when confidence reaches the configured threshold, and shall remain silent otherwise.
+    \item \textbf{Text and speech output.} On an accepted recognition the system shall display the phrase on screen and speak it aloud.
+    \item \textbf{Live capture.} The client shall stream frames while the user signs and present the result when signing ends, without the user needing to time or trim the recording.
+    \item \textbf{Evaluation reporting.} The system shall report signer-independent accuracy, a pooled confusion matrix, and per-class precision, recall, and F1.
+\end{enumerate}
+
+\subsection{Non-Functional Requirements}
+
+\begin{enumerate}
+    \item \textbf{Response time.} A result shall be returned promptly enough that the interaction feels immediate, which requires overlapping landmark extraction with signing instead of performing it after capture.
+    \item \textbf{Silence over error.} A wrong announcement is more harmful than no announcement. The system shall prefer refusing to answer.
+    \item \textbf{Train and serve equivalence.} Preprocessing at inference shall be the same code as preprocessing at training time, so that measured accuracy describes the deployed system.
+    \item \textbf{Cost.} The system shall use only free and open-source components and shall require no GPU or paid service.
+    \item \textbf{Privacy.} No video of any signer shall be stored. The dataset holds landmark coordinates only.
+    \item \textbf{Usability under stress.} The interface shall need one action to start and one to finish, with large readable output and no configuration at use time.
+    \item \textbf{Diagnosability.} The client shall display what the server observes per frame, so that a failure during use can be attributed instead of guessed at.
+    \item \textbf{Maintainability.} The feature layout, normalisation anchors, sequence length, and thresholds shall be defined in one place and imported everywhere else.
+\end{enumerate}
+
+\section{Feasibility Assessment}
+
+\subsection{Economic Feasibility}
+Every component is free and open-source. Development used laptops the team already owned, and no GPU, paid dataset, or cloud service was purchased at any point. The one recurring cost of the delivered system is running the server container, which for a demonstration is a laptop and for wider use would be a small virtual machine.
+
+\subsection{Technical Feasibility}
+The enabling technologies are mature. MediaPipe Holistic provides pretrained tracking that needs no training data of its own, and the BiLSTM is a well-understood architecture for sequence classification. Reducing each frame to 225 coordinates lowers the dimensionality enough that a few hundred clips suffice, which is what made a custom dataset viable within the project timeline. The principal risk was never the model; it was whether an authentic dataset could be collected at all, which depended on access to the Deaf community.
+
+\subsection{Operational Feasibility}
+The interaction is two taps: one to begin signing and one to end. The system needs no specialised hardware on the user's side beyond a phone, addresses a need the Deaf organisations consulted during this project confirmed is real, and can be demonstrated live. The network dependency is the main operational weakness and is recorded as such in Chapter~\ref{ch:conclusion}.
+
+\section{Use Case Diagram}
+
+Figure~\ref{fig:usecase} shows the actors and their interactions. The Deaf Signer starts a session and performs an emergency phrase. The Hearing Person is the recipient of the output, reading the displayed phrase and hearing it spoken; they do not operate the system. The Developer role covers the offline work: recording and labelling the dataset, training and evaluating the model, and deploying the server.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{img/usecase.png}
+    \caption{Use case diagram of the NSL emergency-phrase recognition system}
+    \label{fig:usecase}
+\end{figure}
+
+\section{System Block Diagram}
+
+The system has three parts. An offline path builds the model, a server reproduces the offline preprocessing at inference time, and a client captures the sign and presents the result. Figure~\ref{fig:blockdiagram} shows all three and the shared preprocessing core that connects them.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[
+        box/.style={rectangle, rounded corners=2pt, fill=dfill, draw=dline,
+                    text width=2.3cm, align=center, font=\sffamily\scriptsize,
+                    minimum height=1.15cm, inner sep=3pt},
+        store/.style={box, fill=white, draw=dgrey, dashed},
+        shared/.style={box, fill=dfilla, draw=dgrey, thick},
+        lane/.style={font=\sffamily\small\bfseries, text=dgrey},
+        arr/.style={-{Stealth[length=2mm]}, dline, line width=.7pt}
+    ]
+    \hyphenpenalty=10000 \exhyphenpenalty=10000
+
+    % ---------------- offline lane ----------------
+    \node[lane] at (-2.2, 0) {OFFLINE};
+    \node[box]   (rec)  at (0.6, 0)  {Recorder\\ \scriptsize webcam + Holistic};
+    \node[store] (raw)  at (3.6, 0)  {\texttt{data/raw}\\ \scriptsize 840 clips, 8 signers};
+    \node[box]   (len)  at (6.6, 0)  {Frame-count analysis\\ \scriptsize p95 $\rightarrow$ 137};
+    \node[shared](pre1) at (9.6, 0)  {Normalise\\ + standardise};
+    \node[box]   (trn)  at (12.6, 0) {Train BiLSTM\\ \scriptsize + fit reject gate};
+    \node[store] (art)  at (15.6, 0) {\texttt{model.tflite}\\ \scriptsize + gate statistics};
+
+    \draw[arr] (rec) -- (raw);
+    \draw[arr] (raw) -- (len);
+    \draw[arr] (len) -- (pre1);
+    \draw[arr] (pre1) -- (trn);
+    \draw[arr] (trn) -- (art);
+
+    % ---------------- server lane ----------------
+    \node[lane] at (-2.2, -3.4) {SERVER};
+    \node[box]   (dec)  at (0.6, -3.4)  {Decimate\\ \scriptsize to 15.7 fps};
+    \node[box]   (hol)  at (3.6, -3.4)  {MediaPipe Holistic\\ \scriptsize 225 values/frame};
+    \node[box]   (buf)  at (6.6, -3.4)  {Frame buffer\\ \scriptsize one clip};
+    \node[shared](pre2) at (9.6, -3.4)  {Normalise\\ + standardise};
+    \node[box]   (inf)  at (12.6, -3.4) {TFLite\\ forward pass\\ \scriptsize probs + embedding};
+    \node[box]   (dcs)  at (15.6, -3.4) {Decision\\ \scriptsize accept / low / unknown};
+
+    \draw[arr] (dec) -- (hol);
+    \draw[arr] (hol) -- (buf);
+    \draw[arr] (buf) -- (pre2);
+    \draw[arr] (pre2) -- (inf);
+    \draw[arr] (inf) -- (dcs);
+    \draw[arr] (art) -- node[right, font=\sffamily\scriptsize, text=dgrey] {loaded} (inf);
+
+    % ---------------- client lane ----------------
+    \node[lane] at (-2.2, -6.6) {CLIENT};
+    \node[box] (cam) at (0.6, -6.6)  {Camera\\ \scriptsize portrait locked};
+    \node[box] (enc) at (3.6, -6.6)  {Encode JPEG\\ \scriptsize isolate, 320 px};
+    \node[box] (out) at (15.6, -6.6) {Display text\\ + speak};
+
+    \draw[arr] (cam) -- (enc);
+    \draw[arr] (enc) -- node[above, font=\sffamily\scriptsize, text=dgrey] {frames over WebSocket} (dec);
+    \draw[arr] (dcs) -- node[right, font=\sffamily\scriptsize, text=dgrey] {result} (out);
+
+    % ---------------- shared core annotation ----------------
+    \node[draw=dgrey, dashed, thick, rounded corners=3pt, inner sep=5pt,
+          fit=(pre1)(pre2),
+          label={[font=\sffamily\scriptsize, text=dgrey]south:one implementation, imported by both}] {};
+
+    \end{tikzpicture}%
+    }
+    \caption{System block diagram. The offline path builds the model; the server reproduces the same preprocessing at inference; the client only captures and presents.}
+    \label{fig:blockdiagram}
+\end{figure}
+
+\noindent The shared preprocessing core is the load-bearing element of the design. It is a single module that the training scripts and the server both import, so the numbers the model sees at inference are produced by the code the accuracy was measured with.
+
+\section{Data Flow Diagrams}
+
+\subsection{Level 0}
+
+Figure~\ref{fig:dfd0} shows the system as one process with its external entities. The signer supplies gestures and receives text and speech. The hearing recipient receives the same output. The developer supplies labelled recordings and the trained artefacts.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        ent/.style={rectangle, draw=dgrey, fill=dfill, text width=2.2cm,
+                    align=center, font=\sffamily\scriptsize, minimum height=1cm},
+        proc/.style={circle, draw=dgrey, fill=dfilla, text width=2.1cm,
+                     align=center, font=\sffamily\scriptsize, minimum size=2.9cm},
+        arr/.style={-{Stealth[length=2mm]}, dline, line width=.7pt},
+        font=\sffamily\scriptsize
+    ]
+    \hyphenpenalty=10000 \exhyphenpenalty=10000
+    \node[proc] (sys) at (0,0) {\textbf{0}\\ NSL emergency\\ phrase recognition\\ system};
+    \node[ent] (sig) at (-5.2, 1.6) {Deaf signer};
+    \node[ent] (hear) at (5.2, 1.6) {Hearing recipient};
+    \node[ent] (dev) at (0, -3.8) {Developer};
+
+    \draw[arr] (sig) -- node[above, sloped] {gesture frames} (sys);
+    \draw[arr] (sys) -- node[above, sloped] {phrase, confidence} (hear);
+    \draw[arr] (sys.west) -- node[below, sloped] {recognised phrase, status} (sig.south east);
+    \draw[arr] (dev) -- node[right] {labelled clips, trained model} (sys);
+    \end{tikzpicture}
+    \caption{Level 0 data flow diagram}
+    \label{fig:dfd0}
+\end{figure}
+
+\subsection{Level 1}
+
+Figure~\ref{fig:dfd1} decomposes the system into the processes that carry out recognition, and shows the two data stores.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.96\textwidth}{!}{%
+    \begin{tikzpicture}[
+        ent/.style={rectangle, draw=dgrey, fill=dfill, text width=1.9cm,
+                    align=center, font=\sffamily\small, minimum height=0.95cm},
+        proc/.style={circle, draw=dgrey, fill=dfilla, text width=1.9cm,
+                     align=center, font=\sffamily\small, minimum size=2.6cm},
+        stor/.style={rectangle, draw=dgrey, fill=white, text width=2.3cm,
+                     align=center, font=\sffamily\small, minimum height=0.95cm},
+        arr/.style={-{Stealth[length=2mm]}, dline, line width=.7pt},
+        font=\sffamily\small
+    ]
+    \hyphenpenalty=10000 \exhyphenpenalty=10000
+    % ---- top row ----
+    \node[ent]  (sig) at (0, 0)      {Deaf signer};
+    \node[proc] (p1)  at (4.3, 0)    {\textbf{1}\\ Capture\\ and encode};
+    \node[proc] (p2)  at (9.0, 0)    {\textbf{2}\\ Extract\\ landmarks};
+    \node[proc] (p3)  at (13.7, 0)   {\textbf{3}\\ Normalise and\\ standardise};
+    \node[stor] (d1)  at (18.0, 0)   {D1\\ locked constants};
+
+    % ---- bottom row ----
+    \node[proc] (p4)  at (4.3, -4.8)  {\textbf{4}\\ Classify\\ and gate};
+    \node[proc] (p5)  at (9.0, -4.8)  {\textbf{5}\\ Present\\ result};
+    \node[ent]  (hear) at (13.7, -4.8) {Hearing recipient};
+    \node[stor] (d2)  at (18.0, -4.8) {D2\\ model and gate statistics};
+
+    \draw[arr] (sig) -- node[above] {gesture} (p1);
+    \draw[arr] (p1) -- node[above] {JPEG frames} (p2);
+    \draw[arr] (p2) -- node[above] {225-vectors} (p3);
+    \draw[arr] (d1) -- node[above] {constants} (p3);
+
+    % ---- row transition ----
+    \draw[arr] (p3.south) -- (13.7,-2.4) -- node[above] {$137 \times 225$ tensor} (4.3,-2.4) -- (p4.north);
+
+    \draw[arr] (p4) -- node[above] {status, phrase} (p5);
+    \draw[arr] (p5) -- node[above] {text, speech} (hear);
+    \draw[arr] (d2.south) -- (18.0,-6.6) -- node[below] {weights, prototypes, threshold} (4.3,-6.6) -- (p4.south);
+    \end{tikzpicture}%
+    }
+    \caption{Level 1 data flow diagram}
+    \label{fig:dfd1}
+\end{figure}
+
+\section{Sequence Diagram}
+
+Figure~\ref{fig:sequence} shows one recognition from the tap that starts it to the spoken result. The loop is the important part: frames are extracted while the user is still signing, so the cost of landmark extraction is paid during the sign and not after it.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.95\textwidth}{!}{%
+    \begin{tikzpicture}[
+        font=\sffamily\scriptsize,
+        head/.style={rectangle, draw=dgrey, fill=dfill, text width=2.1cm,
+                     align=center, minimum height=0.8cm},
+        arr/.style={-{Stealth[length=1.8mm]}, dline, line width=.7pt},
+        ret/.style={-{Stealth[length=1.8mm]}, dline, line width=.7pt, dashed}
+    ]
+    \hyphenpenalty=10000 \exhyphenpenalty=10000
+    \def\ya{0}
+    \def\yb{-11.4}
+    \node[head] (u)  at (0, \ya)   {Signer};
+    \node[head] (c)  at (3.4, \ya) {Client};
+    \node[head] (s)  at (7.4, \ya) {Server};
+    \node[head] (m)  at (11.4, \ya){MediaPipe};
+    \node[head] (p)  at (15, \ya)  {Predictor};
+
+    \foreach \n in {u,c,s,m,p} { \draw[dline, dashed] (\n) -- ++(0, \yb); }
+
+    \draw[arr] (0,-1.1) -- node[above] {tap to sign} (3.4,-1.1);
+    \draw[arr] (3.4,-1.9) -- node[above] {reset session} (7.4,-1.9);
+    \draw[ret] (7.4,-2.6) -- node[above] {ready} (3.4,-2.6);
+
+    \draw[dgrey, thick] (2.55,-3.3) rectangle (16.2,-6.9);
+    \node[anchor=south west, text=dgrey] at (2.6,-3.25) {\textbf{loop} while signing, capped at 16 fps};
+
+    \draw[arr] (3.4,-4.0) -- node[above] {JPEG frame} (7.4,-4.0);
+    \draw[arr] (7.4,-4.7) -- node[above] {frame, if due at 15.7 fps} (11.4,-4.7);
+    \draw[ret] (11.4,-5.5) -- node[above] {225 landmark values} (7.4,-5.5);
+    \draw[ret] (7.4,-6.3) -- node[above] {ack: pose, hands, count} (3.4,-6.3);
+
+    \draw[arr] (0,-7.7) -- node[above] {tap to finish} (3.4,-7.7);
+    \draw[arr] (3.4,-8.4) -- node[above] {done} (7.4,-8.4);
+    \draw[arr] (7.4,-9.1) -- node[above] {clip $(n, 225)$} (15,-9.1);
+    \draw[ret] (15,-9.8) -- node[above] {status, phrase, distance, top three} (7.4,-9.8);
+    \draw[ret] (7.4,-10.5) -- node[above] {result} (3.4,-10.5);
+    \draw[arr] (3.4,-11.2) -- node[above] {display; speak if accepted} (0,-11.2);
+    \end{tikzpicture}%
+    }
+    \caption{Sequence diagram for one recognition}
+    \label{fig:sequence}
+\end{figure}
+
+\section{Class Diagram}
+
+Figure~\ref{fig:classdiagram} shows the principal modules and classes. The shared package on the left is imported by both the training scripts and the server, which is the structural expression of the train-and-serve equivalence requirement.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{\textwidth}{!}{%
+    \begin{tikzpicture}[
+        font=\sffamily\scriptsize,
+        cls/.style={rectangle split, rectangle split parts=2, draw=dgrey,
+                    fill=dfill, align=left, text width=3.3cm, inner sep=4pt},
+        arr/.style={-{Stealth[length=2mm]}, dline, line width=.7pt},
+        dep/.style={-{Stealth[length=2mm]}, dline, line width=.7pt, dashed}
+    ]
+    \hyphenpenalty=10000 \exhyphenpenalty=10000
+
+    \node[cls] (cfg) at (0,0) {%
+        \textbf{config}
+        \nodepart{two}
+        FEATURE\_DIM = 225 \\
+        POSE\_SLICE, HAND\_SLICEs \\
+        anchor indices \\
+        CLASSES \\
+        TRAIN\_CAPTURE\_FPS};
+
+    \node[cls] (pp) at (0,-3.4) {%
+        \textbf{preprocess}
+        \nodepart{two}
+        normalize\_pose\_block() \\
+        normalize\_hand\_block() \\
+        normalize\_clip() \\
+        standardize\_length() \\
+        load\_seq\_len()};
+
+    \node[cls] (lm) at (0,-6.4) {%
+        \textbf{landmarks}
+        \nodepart{two}
+        extract\_frame\_vector()};
+
+    \node[cls] (md) at (0,-8.2) {%
+        \textbf{model}
+        \nodepart{two}
+        build\_bilstm()};
+
+    \node[cls] (od) at (0,-10.5) {%
+        \textbf{ood}
+        \nodepart{two}
+        fit\_prototypes() \\
+        mahalanobis\_min() \\
+        save\_stats(), load\_stats()};
+
+    \node[cls] (ds) at (5.8,-1.4) {%
+        \textbf{dataset}
+        \nodepart{two}
+        compile\_dataset() \\
+        load\_processed() \\
+        eligible\_test\_signers()};
+
+    \node[cls] (tr) at (5.8,-5.6) {%
+        \textbf{training scripts}
+        \nodepart{two}
+        record.py \\
+        find\_seq\_len.py \\
+        build\_dataset.py \\
+        train\_eval.py \\
+        train\_model.py \\
+        export\_tflite.py};
+
+    \node[cls] (pr) at (11.6,-1.4) {%
+        \textbf{Predictor}
+        \nodepart{two}
+        interpreter : TFLite \\
+        means, precision \\
+        ood\_threshold \\
+        confidence\_threshold \\
+        predict(clip) : Result};
+
+    \node[cls] (ss) at (11.6,-5.6) {%
+        \textbf{StreamSession}
+        \nodepart{two}
+        holistic : Holistic \\
+        frames : list \\
+        next\_due : float \\
+        add\_jpeg(bytes) : Ack \\
+        clip() : ndarray \\
+        reset(), close()};
+
+    \node[cls] (ap) at (11.6,-9.8) {%
+        \textbf{app (FastAPI)}
+        \nodepart{two}
+        GET /health, /classes \\
+        POST /predict/landmarks \\
+        POST /predict/npy \\
+        WS /ws/stream};
+
+    \node[cls] (nc) at (17.4,-2.0) {%
+        \textbf{NslClient}
+        \nodepart{two}
+        socket : WebSocket \\
+        connect(), reset() \\
+        sendFrame(bytes) \\
+        finish() : NslResult};
+
+    \node[cls] (fe) at (17.4,-6.0) {%
+        \textbf{FrameEncoder}
+        \nodepart{two}
+        isolate : Isolate \\
+        maxWidth = 320 \\
+        encode(image) \\
+        \quad : EncodedFrame};
+
+    \node[cls] (sp) at (17.4,-9.8) {%
+        \textbf{SignPage}
+        \nodepart{two}
+        camera : \\
+        \quad CameraController \\
+        tts : FlutterTts \\
+        onTap(), onResult()};
+
+    \draw[arr] (cfg) -- (pp);
+    \draw[arr] (cfg.west) -- ++(-0.8,0) |- (lm.west);
+    \draw[arr] (pp) -- (ds);
+    \draw[arr] (lm) -- (ds);
+    \draw[dep] (ds) -- (tr);
+    \draw[dep] (md) -- (tr);
+    \draw[dep] (od) -- (tr);
+    \draw[dep] (pp.east) -- (pr.west);
+    \draw[dep] (od.east) -- (pr.south west);
+    \draw[dep] (lm.east) -- (ss.west);
+    \draw[arr] (ss) -- (pr);
+    \draw[arr] (ap) -- (ss);
+    \draw[arr] (ap.east) -- ++(0.6,0) |- (pr.east);
+    \draw[arr] (sp) -- (nc);
+    \draw[arr] (sp) -- (fe);
+    \draw[dep] (nc.west) -- node[above, sloped] {WebSocket} (ap.east);
+    \end{tikzpicture}%
+    }
+    \caption{Class and module diagram. Solid arrows are use relationships; dashed arrows are imports of the shared package.}
+    \label{fig:classdiagram}
+\end{figure}
+
+\section{Activity Diagram}
+
+Figure~\ref{fig:activity} shows the control flow of one recognition attempt, including the two decision points that can end it without output.
+
+\begin{figure}[H]
+    \centering
+    \resizebox{0.62\textwidth}{!}{%
+    \begin{tikzpicture}[
+        font=\sffamily\scriptsize,
+        act/.style={rectangle, rounded corners=5pt, draw=dgrey, fill=dfill,
+                    text width=3.4cm, align=center, minimum height=0.85cm},
+        dia/.style={diamond, draw=dgrey, fill=dfilla, aspect=2.4,
+                    text width=2.4cm, align=center, inner sep=1pt},
+        term/.style={rectangle, rounded corners=10pt, draw=dgrey, fill=white,
+                     text width=2.4cm, align=center, minimum height=0.7cm},
+        arr/.style={-{Stealth[length=2mm]}, dline, line width=.7pt}
+    ]
+    \hyphenpenalty=10000 \exhyphenpenalty=10000
+    \node[term] (st)  at (0,0)      {Start};
+    \node[act]  (a1)  at (0,-1.4)   {Open session,\\ wait for ready};
+    \node[act]  (a2)  at (0,-2.9)   {Capture and send frame};
+    \node[dia]  (d1)  at (0,-4.7)   {frame due\\ at 15.7 fps?};
+    \node[act]  (a3)  at (0,-6.6)   {Extract 225 landmark\\ values, append to clip};
+    \node[dia]  (d2)  at (0,-8.6)   {user still signing?};
+    \node[act]  (a4)  at (0,-10.5)  {Normalise, standardise\\ to 137 frames};
+    \node[act]  (a5)  at (0,-12.0)  {Forward pass:\\ probabilities, embedding};
+    \node[dia]  (d3)  at (0,-14.0)  {distance within\\ threshold?};
+    \node[dia]  (d4)  at (0,-16.4)  {confidence $\geq 0.75$?};
+    \node[act]  (a6)  at (0,-18.3)  {Display phrase\\ and speak it};
+    \node[act]  (a7)  at (5.8,-14.0){Report unknown,\\ stay silent};
+    \node[act]  (a8)  at (5.8,-16.4){Report low confidence,\\ stay silent};
+    \node[term] (en)  at (0,-19.9)  {End};
+
+    \draw[arr] (st) -- (a1);
+    \draw[arr] (a1) -- (a2);
+    \draw[arr] (a2) -- (d1);
+    \draw[arr] (d1) -- node[right] {yes} (a3);
+    \draw[arr] (d1.west) -- node[above] {no, drop} ++(-2.6,0) |- (a2.west);
+    \draw[arr] (a3) -- (d2);
+    \draw[arr] (d2.east) -- node[above] {yes} ++(2.6,0) |- (a2.east);
+    \draw[arr] (d2) -- node[right] {no} (a4);
+    \draw[arr] (a4) -- (a5);
+    \draw[arr] (a5) -- (d3);
+    \draw[arr] (d3) -- node[right] {yes} (d4);
+    \draw[arr] (d3) -- node[above] {no} (a7);
+    \draw[arr] (d4) -- node[right] {yes} (a6);
+    \draw[arr] (d4) -- node[above] {no} (a8);
+    \draw[arr] (a6) -- (en);
+    \draw[arr] (a7.south) -- (a8.north);
+    \draw[arr] (a8.south) -- ++(0,-2.5) -| (en.east);
+    \end{tikzpicture}%
+    }
+    \caption{Activity diagram for one recognition attempt}
+    \label{fig:activity}
+\end{figure}

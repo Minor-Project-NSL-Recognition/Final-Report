@@ -1,0 +1,49 @@
+\chapter{INTRODUCTION}
+\pagenumbering{arabic}
+
+\section{Background Introduction}
+
+Sign languages are complete natural languages with their own vocabulary and grammar. They are not signed versions of spoken languages, and they do not translate word for word into them. Nepali Sign Language (NSL) is the language of the deaf community in Nepal and differs substantially from American, British, or Indian sign languages. It grew within Nepal's deaf community after the first deaf school opened in Kathmandu in the 1960s, and the standard gesture set is published by the National Federation of the Deaf Nepal \cite{acharya2003nsldict, sunuwar2024nsl23}.
+
+\noindent The community that uses it is larger than official figures suggest. The 2011 national census recorded roughly 80{,}000 deaf or hard-of-hearing Nepalis. The National Federation of the Deaf Nepal puts the real figure above 300{,}000 and attributes the difference to the undercounting of a condition that is not visible to an enumerator \cite{nepalitimes2022, hi2023}. For most of these people sign language is the primary means of communication, and almost none of the hearing population can understand it.
+
+\noindent This gap is inconvenient in ordinary life and dangerous in an emergency. A deaf person who needs to report a fire, ask for an ambulance, or tell a bystander that they cannot breathe has no reliable way to do so if no interpreter is present, and interpreters are scarce and cannot be summoned on demand. The time spent failing to communicate is time that matters.
+
+\noindent Recognition technology has advanced quickly for well-resourced sign languages, particularly American Sign Language, but NSL has received very little of that attention. Only one public NSL dataset exists and it covers the fingerspelling alphabet \cite{sunuwar2024nsl23}. The handful of published NSL recognition systems target individual letters or static handshapes \cite{mali2018nsl, shrestha2024nsl, poudel2025nsl}. Nothing published addresses emergency communication, and nothing addresses whole phrases, which are what a person actually needs to sign under pressure.
+
+\noindent Two developments make a lightweight system practical. Pretrained hand and body tracking such as MediaPipe \cite{zhang2020mediapipe} extracts the geometry of a signing person from an ordinary camera without gloves or depth sensors, and reduces each video frame to a few hundred numbers. Sequence models such as the bidirectional Long Short-Term Memory network \cite{hochreiter1997lstm, graves2005bilstm} classify the resulting motion directly. Together they allow a recognition system to be trained from a few hundred recordings and to run on hardware people already own.
+
+\noindent This project applies that combination to a narrow, high-value problem: recognising six NSL emergency phrases in real time and delivering each as on-screen text and speech. The six phrases are \textit{I can't breathe}, \textit{The building is on fire}, \textit{Call the police}, \textit{I need an ambulance}, \textit{Help me / I am in danger}, and \textit{I need to go to the toilet}. They span medical, fire, crime, and basic-need situations. Their signed form was established with Deaf experts before any data was recorded, so what the system recognises is real NSL and not an invention of the authors.
+
+\section{Problem Statement}
+
+In an emergency, clear communication is the difference between help arriving and help not arriving. Deaf and hard-of-hearing people in Nepal are at a disadvantage in exactly those moments:
+
+\begin{itemize}
+    \item Most hearing people, including first responders and bystanders, do not understand Nepali Sign Language.
+    \item Human interpreters are scarce and are almost never present when an emergency begins.
+    \item Existing sign language recognition systems are built for high-resource sign languages. No system or dataset exists for NSL emergency communication \cite{sunuwar2024nsl23, shrestha2024nsl, poudel2025nsl}.
+\end{itemize}
+
+\noindent A deaf person in an emergency may therefore be unable to convey an urgent need to the people around them. What is missing is an accessible, low-cost tool that recognises essential NSL emergency phrases as they are signed and presents them in a form a hearing person understands immediately.
+
+\section{Objectives}
+
+The primary objective was to design and implement a system that recognises six Nepali Sign Language emergency phrases and outputs them as text and audio. The specific objectives were:
+
+\begin{itemize}
+    \item To establish the natural signed form of each of the six target phrases with NSL experts, so that the recorded data reflects how the phrases are actually signed.
+    \item To build a custom dataset of NSL emergency phrases across multiple signers and recording conditions, since no suitable public dataset exists.
+    \item To develop a landmark-based recognition pipeline using MediaPipe Holistic, representing each frame as 225 pose and hand coordinates.
+    \item To normalise landmarks against anatomical anchors and standardise every clip to a fixed length derived from the recorded data.
+    \item To train a bidirectional LSTM classifier and evaluate it on signers absent from its training data.
+    \item To deploy the trained model in a real-time application that displays the recognised phrase and speaks it aloud, and to withhold output when the system is not confident.
+\end{itemize}
+
+\section{Scope of the Project}
+
+The system recognises exactly seven classes: the six emergency phrases listed above and a seventh negative class covering non-signing motion, idle movement, and gestures outside the target set. Each input is one complete phrase performed once. Recognition works from an ordinary camera with no gloves, markers, or depth sensors, and the model runs without a GPU.
+
+\noindent The seventh class deserves a note, because it is not in the original proposal. A classifier trained on six phrases will assign one of those six to any input it receives, including someone scratching their head. For a system whose output is an emergency announcement, that behaviour is unacceptable. The negative class gives the model examples of what is not a sign, and a second rejection mechanism described in Chapter~\ref{ch:methodology} handles inputs unlike anything in training.
+
+\noindent Outside the scope are sentence-level or conversational translation, the full NSL vocabulary, recognition of more than one person at a time, and facial expression. Facial landmarks were excluded after the NSL consultants confirmed that none of the six target phrases depends on facial expression to be understood. The system is a proof of concept for a fixed phrase set and is built so that phrases, signers, and deployment targets can be added later.
