@@ -228,12 +228,12 @@ The desktop recogniser imports the training-time preprocessing module rather tha
     \label{fig:ui-desktop}
 \end{figure}
 
-\noindent Recording is started and stopped from the keyboard, so one clip corresponds to one deliberate performance, as in the recorder of Appendix~\ref{app:recorder}. Displaying the top three classes rather than only the winner was deliberate: a confident wrong answer and a genuine near-tie look identical when only the winning label is shown, and the two call for different responses.
+\noindent Recording is started and stopped from the keyboard, so one clip corresponds to one deliberate performance, as in the recorder of Appendix~\ref{app:recorder}. Displaying the top three classes rather than only the winner was deliberate: a confident wrong answer and a genuine near-tie look identical when only the winning label is shown, and the two call for different responses. It plays the same Nepali recordings the client ships, described in Section~\ref{sec:audio}, but shows no Nepali text: the image library in the pinned training environment is built without the shaping support Devanagari needs, so matras and conjuncts would be drawn in the wrong places. The client, which has a shaping engine, displays the script properly.
 
 \section{Android Client}
 \label{app:ui-client}
 
-The client presents one of three outcomes for every attempt: an accepted phrase, which is displayed and spoken; an unrecognised result, when the classifier positively identifies the input as not being one of the six phrases; or a low-confidence result, when the top class is a phrase but the model will not commit to it. Only the first produces speech. Figure~\ref{fig:ui-client} shows two accepted results, one from each of two phrase categories.
+The client presents one of three outcomes for every attempt: an accepted phrase, which is displayed in Nepali and English and spoken from the bundled Nepali recording; an unrecognised result, when the classifier positively identifies the input as not being one of the six phrases; or a low-confidence result, when the top class is a phrase but the model will not commit to it. Only the first produces speech, and only the first displays any phrase text at all. Figure~\ref{fig:ui-client} shows two accepted results, one from each of two phrase categories.
 
 \begin{figure}[H]
     \centering

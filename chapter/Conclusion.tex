@@ -3,7 +3,7 @@
 
 \section{Conclusion}
 
-This project built a working recogniser for six Nepali Sign Language emergency phrases and delivered it as an application that displays and speaks the recognised phrase.
+This project built a working recogniser for six Nepali Sign Language emergency phrases and delivered it as an application that displays the recognised phrase and speaks it in Nepali.
 
 The signed form of every phrase was established in person with Deaf experts at the Rehabilitation Centre for the Rural Deaf and the National Federation of the Deaf Nepal before any data was recorded, so the system recognises real NSL and not an approximation of it. Eight signers then contributed 840 clips, balanced at exactly 120 per class across the six phrases and a negative class for non-signing motion. No public dataset of NSL emergency phrases existed at the start of this work, and this one is the project's most durable output.
 
@@ -26,8 +26,6 @@ The trained model was exported to TensorFlow Lite, verified against the original
 
     \item \textbf{The negative class is the weakest class.} Recall on \texttt{none} is 0.833, and twenty non-signs were classified as emergency phrases, each a case where the system would announce an emergency that nobody signed. These are just over half of all errors, and more than twice the nine cases in which one phrase is confused with another. The fix is a broader negative class rather than a stricter threshold, though how many of the twenty cleared the threshold has not been measured.
 
-    \item \textbf{Speech output is in English.} The client uses the device's text-to-speech voice, and Nepali is absent from most Android devices. The proposal specified pre-recorded Nepali audio, which was not implemented.
-
     \item \textbf{Duration is only encoded below 146 frames.} Clips longer than the sequence length are uniformly subsampled, so signing longer than about 9.3 seconds is scale-normalised rather than measured.
 
     \item \textbf{Facial expression is ignored.} The consultants confirmed no phrase in this set depends on it, so the exclusion is safe for these six phrases and would not hold for a larger vocabulary.
@@ -46,9 +44,7 @@ The trained model was exported to TensorFlow Lite, verified against the original
 
     \item \textbf{Recruit more signers, prioritising fluent ones.} The clearest route to a more trustworthy accuracy figure is more people, and specifically more fluent NSL users. Doubling the signer count would narrow the confidence in the leave-one-signer-out estimate more than any change to the model. Section~\ref{sec:ablation} supports that ordering with a measurement rather than an argument: six architectures spanning a sevenfold range of parameter counts differ from one another by less than the spread between signers, so architecture search has little left to give while signer coverage has a great deal.
 
-    \item \textbf{Record Nepali audio.} The phrase set is fixed at seven, so seven recordings by a fluent speaker would replace the English text-to-speech entirely.
-
-    \item \textbf{Extend the vocabulary.} The pipeline is not specific to these six phrases. Adding a phrase requires the consultation step, recordings, and a retrain, with no change to the preprocessing or the architecture.
+    \item \textbf{Extend the vocabulary.} The pipeline is not specific to these six phrases. Adding a phrase requires the consultation step, clip recordings, a spoken Nepali recording for the announcement, and a retrain, with no change to the preprocessing or the architecture.
 
     \item \textbf{Handle continuous signing.} Recognising a phrase within a stream, with no taps to mark its boundaries, would remove the need for the user to mark the boundaries and is the main step from a proof of concept toward something usable without instruction.
 

@@ -5,17 +5,29 @@ This chapter records the requirements the system was built against, the feasibil
 
 \section{Requirement Specification}
 
+The requirements are separated by what each one constrains. The software and hardware subsections record what the system depends on, and they distinguish the offline stages, which ran on the team's own laptops, from what a user's device has to supply at the moment of use. The functional subsection states what the system does; the non-functional subsection states the properties it has to hold while doing it, and two of those --- silence in place of a wrong answer, and preprocessing that is identical in training and in deployment --- shaped the design more than any functional entry did. Each requirement is phrased so that it names something checkable against the evidence in Chapter~\ref{ch:results} rather than an intention.
+
 \subsection{Software Requirements}
 
-\begin{table}[H]
-    \centering
-    \caption{Software used, and the role of each component}
-    \label{tab:software}
-    \small
-    \begin{tabular}{|p{3.4cm}|p{9.6cm}|}
+\begingroup
+\small
+\begin{longtable}{|p{3.4cm}|p{9.6cm}|}
+        \caption{Software used, and the role of each component}
+        \label{tab:software} \\
         \hline
         \textbf{Component} & \textbf{Role in the system} \\
         \hline
+        \endfirsthead
+        \multicolumn{2}{l}{\itshape Table \thetable\ (continued from previous page)} \\
+        \hline
+        \textbf{Component} & \textbf{Role in the system} \\
+        \hline
+        \endhead
+        \hline
+        \multicolumn{2}{r}{\itshape continued on next page} \\
+        \endfoot
+        \hline
+        \endlastfoot
         Python 3.11 & Recording, preprocessing, training, and the inference server. The version is pinned because MediaPipe and TensorFlow resolve to a compatible set only on 3.11. \\
         \hline
         MediaPipe Holistic & Pretrained pose and hand tracking. Produces the 225 landmark values per frame, offline during recording and again on the fallback server at inference. \\
@@ -38,14 +50,15 @@ This chapter records the requirements the system was built against, the feasibil
         \hline
         Docker & Packaging the server with its model and runtime so deployment does not depend on the host environment. \\
         \hline
-        Flutter and Dart & The Android client: camera capture, frame conversion, the ported preprocessing, the WebSocket protocol for the fallback path, and speech output. \\
+        Flutter and Dart & The Android client: camera capture, frame conversion, the ported preprocessing, the WebSocket protocol for the fallback path, and playback of the recorded Nepali phrase through \texttt{just\_audio}. \\
+        \hline
+        FFmpeg & Preparing the Nepali voice recordings: silence trimming, loudness normalisation, and conversion to the single audio format every playback target accepts. Used offline by a build script, not at run time. \\
         \hline
         Kotlin & The Android bridge that runs the two landmark models and assembles the 225-vector on the device. \\
         \hline
         Git and GitHub & Version control for the code, and the mechanism by which eight signers' recordings were merged into one dataset. \\
-        \hline
-    \end{tabular}
-\end{table}
+\end{longtable}
+\endgroup
 
 \subsection{Hardware Requirements}
 
@@ -60,7 +73,7 @@ Training and evaluation ran on an ordinary laptop with no GPU. The model has 192
     \item \textbf{On-device operation.} The system shall perform landmark extraction and classification on the user's phone, so that recognition does not depend on a network connection at the moment of use.
     \item \textbf{Rejection of unknown input.} The system shall be trained with an explicit negative class covering non-signing motion, so that an input unlike any of the six target phrases has a class to be assigned to instead of being forced into one of them, and shall report such an input as unrecognised rather than announcing it.
     \item \textbf{Confidence thresholding.} The system shall emit a phrase only when confidence reaches the configured threshold, and shall remain silent otherwise.
-    \item \textbf{Text and speech output.} On an accepted recognition the system shall display the phrase on screen and speak it aloud.
+    \item \textbf{Text and speech output.} On an accepted recognition the system shall display the phrase on screen in English and Nepali and play the recorded Nepali phrase aloud, using audio bundled with the application so that output does not depend on a voice being installed on the device.
     \item \textbf{Live capture.} The client shall process frames while the user signs and present the result when signing ends, without the user needing to time or trim the recording.
     \item \textbf{Evaluation reporting.} The system shall report signer-independent accuracy, a pooled confusion matrix, and per-class precision, recall, and F1.
 \end{enumerate}
@@ -417,8 +430,16 @@ Figure~\ref{fig:classdiagram} shows the principal modules and classes. The Pytho
         \nodepart{two}
         camera : CameraController \\
         converter : RgbaConverter \\
-        tts : FlutterTts \\
+        voice : NepaliVoice \\
         onTap(), onResult()};
+
+    \node[cls] (nv) at (17.4,-14.8) {%
+        \textbf{NepaliVoice}
+        \nodepart{two}
+        players : AudioPlayer \\
+        missing : unrecorded keys \\
+        load(classNames) \\
+        textFor(key), play(key)};
 
     \node[cls] (nc) at (11.6,-13.0) {%
         \textbf{NslClient} \scriptsize(fallback)
@@ -447,6 +468,7 @@ Figure~\ref{fig:classdiagram} shows the principal modules and classes. The Pytho
     \draw[arr] (ap.east) -- ++(0.6,0) |- (pr.east);
     \draw[arr] (sp) -- (lr);
     \draw[arr] (sp) -- (lk);
+    \draw[arr] (sp) -- (nv);
     \draw[arr] (lr) -- (np);
     \draw[arr] (sp.west) -- ++(-1.2,0) |- (nc.east);
     \draw[dep] (nc.north) -- node[right, font=\sffamily\scriptsize] {WebSocket} (ap.south);

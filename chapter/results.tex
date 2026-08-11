@@ -465,7 +465,7 @@ The difference between the two paths is where the extraction runs, and the phone
 
 \noindent Concurrency on that path is bounded by memory, not processor time, since each session holds its own MediaPipe graph. The session limit sheds load with an explicit error instead of allowing the process to be terminated for exhausting memory. The on-device path has no equivalent constraint, since each phone serves exactly one user.
 
-The application was built and installed on a physical device, and recognition works end to end with the network disabled: the user taps to begin, performs a phrase, taps to finish, and the recognised phrase appears and is spoken. The client reports its own costs as it runs, so the quantities in Table~\ref{tab:clientmeasurements} are read from the device rather than estimated.
+The application was built and installed on a physical device, and recognition works end to end with the network disabled: the user taps to begin, performs a phrase, taps to finish, and the recognised phrase appears on screen and is spoken in Nepali from the bundled recording. The client reports its own costs as it runs, so the quantities in Table~\ref{tab:clientmeasurements} are read from the device rather than estimated.
 
 \begin{table}[H]
     \centering
@@ -475,7 +475,7 @@ The application was built and installed on a physical device, and recognition wo
         \toprule
         \textbf{Quantity} & \textbf{Value} \\
         \midrule
-        Test device & OnePlus CPH2569, Qualcomm SM7325 \\
+        Test device & \begin{tabular}[t]{@{}c@{}}OnePlus CPH2569, \\ Qualcomm SM7325\end{tabular} \\
         Capture resolution, source to upright & $720 \times 480$ to $480 \times 720$ \\
         Sustained landmarking rate while signing & 5.7--6.2 per second \\
         Per-frame conversion cost & 6--7 ms \\
@@ -493,13 +493,13 @@ Landmark extraction on the phone is therefore about four times the cost of the s
 
 \section{Development Process}
 
-The work proceeded in eight increments, each delivering a module that could be exercised before the next began. Table~\ref{tab:sprints} records what each produced and what it changed about the plan, since several increments revised decisions made earlier.
+The work proceeded in nine increments, each delivering a module that could be exercised before the next began. Table~\ref{tab:sprints} records what each produced and what it changed about the plan, since several increments revised decisions made earlier.
 
 \begin{table}[H]
     \centering
     \caption{Development increments}
     \label{tab:sprints}
-    \small
+    \footnotesize
     \begin{tabular}{|p{0.9cm}|p{4.2cm}|p{8.1cm}|}
         \hline
         \textbf{No.} & \textbf{Increment} & \textbf{Outcome and revisions to the plan} \\
@@ -519,6 +519,8 @@ The work proceeded in eight increments, each delivering a module that could be e
         7 & Export and server deployment & TensorFlow Lite export with verification, inference server, and Android client. The deployment target changed from a browser to a phone at this stage, for the reasons in Section~\ref{sec:deploychange}. \\
         \hline
         8 & On-device recognition & Landmark extraction and classification moved onto the phone, removing the network dependency the previous increment had introduced. The preprocessing was ported and pinned to the Python implementation by generated fixtures, and two distortions specific to the phone (frame aspect ratio and an unattainable capture rate) were found and corrected. The server was retained as a fallback. \\
+        \hline
+        9 & Nepali output & The device text-to-speech engine was replaced by recorded Nepali audio, one clip per phrase, after a \texttt{ne-NP} voice proved absent from most devices. The recognised phrase is now displayed in Nepali as well, and the recordings are shared with the desktop demonstration. \\
         \hline
     \end{tabular}
 \end{table}

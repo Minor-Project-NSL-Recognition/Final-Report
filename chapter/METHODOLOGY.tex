@@ -44,11 +44,11 @@ Table~\ref{tab:phrases} lists the six phrases and the situation each covers. Phr
         \hline
         2 & The building is on fire    & \nepali{घरमा आगो लाग्यो।} & Fire              & \texttt{building\_on\_fire} \\
         \hline
-        3 & Call the police            & \nepali{प्रहरीलाई बोलाउनुहोस्।} & Crime             & \texttt{call\_police} \\
+        3 & Call the police            & \nepali{प्रहरीलाई बोलाऊ।} & Crime             & \texttt{call\_police} \\
         \hline
         4 & I need an ambulance        & \nepali{मलाई एम्बुलेन्स चाहियो।} & Medical           & \texttt{need\_ambulance} \\
         \hline
-        5 & Help me / I am in danger   & \nepali{मलाई मद्दत गर्नुहोस्।} & Generic emergency & \texttt{help\_danger} \\
+        5 & Help me / I am in danger   & \nepali{मलाई मद्दत गर्नुहोस्, म खतरामा छु।} & Generic emergency & \texttt{help\_danger} \\
         \hline
         6 & I need to go to the toilet & \nepali{मलाई शौचालय जानु छ।} & Basic need        & \texttt{need\_toilet} \\
         \hline
@@ -294,7 +294,7 @@ On the device the problem is the reverse: landmark extraction is the bottleneck 
 
 \subsection{Mobile Client}
 
-The Android client captures camera frames, converts them, runs the recogniser, and speaks the result. In the fallback server mode it encodes and transmits frames instead of recognising them.
+The Android client captures camera frames, converts them, runs the recogniser, and speaks the result in Nepali. In the fallback server mode it encodes and transmits frames instead of recognising them, and speaks the result the same way.
 
 Frame conversion is the client's bottleneck, since it is pure Dart. Colour conversion, rotation, mirroring, and downscaling are folded into a single pass over the output pixels, avoiding the intermediate full-resolution buffers a naive implementation allocates. The work runs on a persistent background isolate. When a frame is already in flight the next one is dropped instead of queued, since a queue would only add latency to a result the user is waiting for. On the on-device path each frame becomes a 480-pixel-wide raw image handed to the landmarkers; on the server path it is downscaled to 320 pixels and encoded as JPEG with chroma subsampling, on the grounds that landmarks are derived from luminance structure and not chroma resolution.
 
@@ -302,13 +302,26 @@ Two details are recorded because they are easy to get wrong. The application is 
 
 The client also writes the raw landmark clip for each attempt to device storage. The recorder saved landmarks so that a bad recording could be inspected afterwards; the phone originally did not, and that is precisely what made the two distortions of Section~\ref{sec:ondevice} difficult to locate. Both were diagnosed by pulling a clip off the device and running it through the Python pipeline beside a recorded one.
 
+\subsection{Spoken Output in Nepali}
+\label{sec:audio}
+
+An accepted phrase is spoken in Nepali from a recording bundled with the application, one clip per phrase, and is displayed in Nepali with the English wording beneath it. The device's text-to-speech engine was used first and then removed. A \texttt{ne-NP} voice is absent from most Android devices, so the engine either said nothing or handed Devanagari to an English voice, and it read the interface label rather than the phrase, announcing the class index and category along with the words. A closed vocabulary does not need synthesis at all: six recordings cover it completely, they sound identical on every handset, they need no engine to start up, and they are offline by construction.
+
+Each clip is named by its class key, so the file name is the mapping and no label string sits between the classifier and the audio. The negative class has no clip, and both the phone and the desktop demonstration skip the key explicitly as well, so there is no path by which a rejected input can be announced aloud. The Nepali and English wording of every phrase lives in the same file that defines the class list for the Python code and the client, which is what keeps the text on screen, the text in Table~\ref{tab:phrases}, and the words in the recordings from drifting apart.
+
+The recordings were made on a phone and are prepared for shipping by a build script rather than by hand, because two of the steps are tedious to do repeatably and invisible when skipped. Silence is trimmed from both ends, since leading silence is pure added latency between the sign finishing and the phrase being heard. Loudness is then normalised to $-16$ LUFS, the usual target for speech on mobile, from a two-pass EBU R128 measurement: the first four takes spanned 11 loudness units, \texttt{call\_police} at $-28.4$ against \texttt{building\_on\_fire} at $-17.0$, which in an emergency application means one phrase is inaudible in exactly the situations that matter. Peak normalisation would not have fixed it, as the quiet take also had a low peak. A speech-levelling filter is applied before the measurement, because a phrase recorded on a handset carries a crest factor of roughly 18 decibels and every take hit the peak ceiling two to four decibels short of the loudness target, the gain for the whole clip being rationed on behalf of two plosives.
+
+The output format is 16-bit mono PCM at 48 kilohertz, about 1.4 megabytes for the six phrases, and it is dictated by the players rather than chosen for quality. The phone recordings arrive as Opus in Ogg, which iOS decodes in neither container nor codec, and the desktop demonstration plays audio through a standard-library module that accepts uncompressed WAV and nothing else; one format therefore serves every target without adding a decoder dependency. A test in the client suite pins the whole contract, since every way it can break is silent at run time: that each class the model can emit has wording, that only the negative class lacks Nepali text and a clip, and that every clip is uncompressed mono 48 kilohertz.
+
+Playback itself is arranged around three failure modes. All clips are decoded when the page opens, so the first phrase of a session is no slower to speak than the rest. The audio session is configured as speech, which makes the phrase audible on iOS when the ringer switch is muted, the moment at which a user is most likely to be relying on the application, and takes transient focus on Android so that other audio ducks rather than competes. A phrase arriving while another is still playing restarts rather than overlaps, and playback is not awaited, so the interface is not blocked for the few seconds of audio. A phrase whose recording is missing displays its text and stays silent instead of preventing the application from starting, and the client reports which keys are missing, because silence is otherwise indistinguishable from the model declining to answer.
+
 \subsection{The Decision Rule}
 \label{sec:decisionrule}
 
 Three outcomes are possible:
 
 \begin{enumerate}
-    \item If the predicted class is one of the six emergency phrases and the softmax confidence reaches 0.75, the result is \texttt{accepted}. The phrase is displayed and spoken.
+    \item If the predicted class is one of the six emergency phrases and the softmax confidence reaches 0.75, the result is \texttt{accepted}. The phrase is displayed and its Nepali recording is played.
     \item If the predicted class is \texttt{none}, the result is \texttt{unknown}. The classifier has positively identified the input as not being one of the six phrases, which is a different statement from being unsure, and the user is told so.
     \item Otherwise the result is \texttt{low\_confidence}: the top class is an emergency phrase but the model does not carry enough probability on it, and the user is told the input was not recognised clearly.
 \end{enumerate}
