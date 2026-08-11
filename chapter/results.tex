@@ -1,30 +1,6 @@
 \chapter{RESULT AND DISCUSSION}
 \label{ch:results}
 
-\mustdo{%
-Every number and figure in this chapter comes from \texttt{results/metrics.json},
-\texttt{results/model\_meta.json} and \texttt{data/processed/}, at
-\textsc{seq\_len}~=~146 over 840 clips, and the four generated figures have been
-refreshed from that same run. One defect in the source data is worth knowing about.
-
-\texttt{results/metrics.json} carries a malformed \texttt{confusion\_matrix}: the
-\texttt{call\_police} row sums to 121 against a support of 120, and the
-\texttt{cant\_breathe} row has nine columns instead of seven. Neither can come
-from the code that writes the file, so it has been hand edited at some point.
-Table~\ref{tab:confusion} was therefore reconstructed from the per-class
-precision and recall figures, which are self-consistent and pin every column sum,
-and it agrees cell for cell with Figure~\ref{fig:confusion}, which was rendered
-directly from the run. Do not patch the JSON --- re-run the pipeline and take the
-matrix from the fresh output.
-
-On the final retrain, run in this order --- \texttt{find\_seq\_len.py},
-\texttt{build\_dataset.py}, \texttt{train\_eval.py}, \texttt{train\_model.py},
-\texttt{export\_tflite.py} --- then copy the three model assets into
-\texttt{app/assets/models/} and re-run the client test suite, or the phone will
-carry a model that does not match this chapter. Then copy the four regenerated
-figures into \texttt{img/} and update every number here, in the abstract, and in
-Chapter~6.}
-
 This chapter reports what the system achieves and where it fails. The dataset is described first, then the recognition results under the signer-independent protocol, then the deployment measurements, and a discussion of the remaining weaknesses.
 
 \section{Experiment Setup}
@@ -56,16 +32,16 @@ The final dataset holds 840 clips, distributed exactly evenly at 120 clips in ea
         help\_danger       & 20 & 20 & 20 & 20 & 10 & 10 & 10 & 10 & 120 \\
         need\_ambulance    & 20 & 20 & 20 & 20 & 10 & 10 & 10 & 10 & 120 \\
         need\_toilet       & 20 & 20 & 20 & 20 & 10 & 10 & 10 & 10 & 120 \\
-        none               & 20 & 20 & 20 & 20 & 0  & 20 & 10 & 10 & 120 \\
+        none               & 20 & 20 & 20 & 20 & 10 & 10 & 10 & 10 & 120 \\
         \midrule
-        \textbf{Total} & 140 & 140 & 140 & 140 & 60 & 80 & 70 & 70 & \textbf{840} \\
+        \textbf{Total} & 140 & 140 & 140 & 140 & 70 & 70 & 70 & 70 & \textbf{840} \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 \noindent The four signers who recorded 20 clips per class were team members, who could record repeatedly. The four who recorded 10 per class include the Deaf consultants and additional volunteers, whose available time was shorter. Class balance across the seven classes was maintained deliberately, since an imbalanced set would have let the classifier gain accuracy by favouring whichever class was most common.
 
-The \texttt{none} row is the one departure from the otherwise regular pattern. Signer 05 recorded no negatives and signer 06 recorded twice the usual number, so the class total still comes to 120 while those two signers contribute 60 and 80 clips overall rather than 70 each. This matters for one thing only, and it is worth stating before the fold results: signer 05's held-out fold is scored on six classes, not seven, because that signer has no \texttt{none} clips to be tested on. Since \texttt{none} is the hardest class, that fold is measured on a slightly easier problem than the other seven.
+The table has no exceptions to that pattern, and this matters for reading the fold results that follow. Every signer contributes the same number of clips in every class, including \texttt{none}, so each held-out fold is scored on all seven classes in the same proportions. Fold accuracies are therefore directly comparable with one another, and the only quantity that differs between them is which person was withheld. An earlier version of this dataset was uneven in the \texttt{none} row, which made two of the eight folds measure a slightly different problem from the rest; the missing and surplus negatives were re-recorded and the results below come from the corrected set.
 
 Eight signers is a small number, and it is the principal limitation on how much the reported accuracy can be trusted to generalise. This is discussed in Section~\ref{sec:discussion}.
 
@@ -103,7 +79,7 @@ Frame counts across the 840 clips range from 30 to 217, with a median of 89.5 an
 
 \section{Training Behaviour}
 
-Every fold converged and stopped on the early-stopping criterion before exhausting the 200-epoch budget. Table~\ref{tab:folds} reports where each fold stopped alongside its accuracy. The spread from 29 to 45 epochs reflects how quickly validation loss stopped improving on each training subset.
+Every fold converged and stopped on the early-stopping criterion before exhausting the 200-epoch budget. Table~\ref{tab:folds} reports where each fold stopped alongside its accuracy. The spread from 29 to 71 epochs reflects how quickly validation loss stopped improving on each training subset.
 
 Figure~\ref{fig:curves} shows accuracy per epoch for all eight folds and Figure~\ref{fig:losscurves} the corresponding losses. Each accuracy panel carries a dashed line at that fold's held-out score. The gap between the training and validation curves, both drawn from signers inside the training set, and that dashed line is the cost of meeting a signer the model has never seen. Presenting all eight folds shows whether the folds behaved consistently, which a single representative curve cannot.
 
@@ -133,26 +109,26 @@ All eight signers were eligible for holdout, since removing any one of them left
         \toprule
         \textbf{Held-out signer} & \textbf{Test clips} & \textbf{Accuracy} & \textbf{Epochs to stop} \\
         \midrule
-        signer01 & 140 & 0.9500 & 44 \\
-        signer02 & 140 & 0.9786 & 43 \\
-        signer03 & 140 & 0.9929 & 39 \\
-        signer04 & 140 & 0.9643 & 29 \\
-        signer05 & 60  & 0.9833 & 30 \\
-        signer06 & 80  & 0.9000 & 36 \\
-        signer07 & 70  & 0.9000 & 34 \\
-        signer08 & 70  & 0.9714 & 45 \\
+        signer01 & 140 & 0.9429 & 31 \\
+        signer02 & 140 & 0.9571 & 37 \\
+        signer03 & 140 & 0.9857 & 37 \\
+        signer04 & 140 & 0.9429 & 40 \\
+        signer05 & 70  & 0.9714 & 44 \\
+        signer06 & 70  & 0.9429 & 71 \\
+        signer07 & 70  & 0.9286 & 29 \\
+        signer08 & 70  & 0.9429 & 39 \\
         \midrule
-        \multicolumn{2}{l}{\textbf{Mean across folds}}      & \textbf{0.9551} $\pm$ 0.0340 & \\
-        \multicolumn{2}{l}{\textbf{Pooled over 840 clips}}  & \textbf{0.9595} & \\
+        \multicolumn{2}{l}{\textbf{Mean across folds}}      & \textbf{0.9518} $\pm$ 0.0174 & \\
+        \multicolumn{2}{l}{\textbf{Pooled over 840 clips}}  & \textbf{0.9536} & \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\noindent Mean accuracy across folds is 95.51\% with a standard deviation of 3.40 percentage points. Pooling all 840 predictions, each made by a model that had not seen its signer, gives 95.95\%.
+\noindent Mean accuracy across folds is 95.18\% with a standard deviation of 1.74 percentage points. Pooling all 840 predictions, each made by a model that had not seen its signer, gives 95.36\%.
 
-The spread between folds is more informative than the mean. The best fold reaches 99.29\% and the two worst sit at 90.00\%, a range of 9.3 points. Since each fold differs only in which signer was withheld, that spread is a direct measurement of how much recognition quality depends on the individual. Reporting the mean alone would hide this; a system deployed to the public will meet signers at both ends of that range.
+The spread between folds is more informative than the mean. The best fold reaches 98.57\% and the worst 92.86\%, a range of 5.7 points, with four of the eight folds sitting together at 94.29\%. Since each fold differs only in which signer was withheld, that spread is a direct measurement of how much recognition quality depends on the individual. Reporting the mean alone would hide this; a system deployed to the public will meet signers at both ends of that range.
 
-Two of the folds need a caveat rather than a straight reading. Signer 05 scores 98.33\%, but on 60 clips that carry no \texttt{none} examples, so that fold never faces the hardest class; it is the least comparable number in the table. Signer 06 scores 90.00\% on 80 clips, of which 20 are negatives rather than the usual 10, so that fold faces the hardest class twice as often as most. The two effects push in opposite directions and both trace back to the same irregularity in Table~\ref{tab:composition}. Signer 07, at the same 90.00\% on a conventional 70 clips, is the more honest worst case.
+No fold needs a caveat attached to it. Every signer contributes clips in all seven classes in the same proportions, so each fold is scored on the same problem and the accuracies in Table~\ref{tab:folds} can be compared against one another directly. Signer 07 at 92.86\% is the worst case and signer 03 at 98.57\% the best, and both are measured on the full seven-way task. The one fold that stands out on a different axis is signer 06, which needed 71 epochs to converge against a median of 38; it still lands on the same 94.29\% as three others, so the slower convergence cost accuracy nothing.
 
 \subsection{Per-Class Performance}
 
@@ -166,20 +142,20 @@ Table~\ref{tab:perclass} gives precision, recall, and F1 for each class, pooled 
         \toprule
         \textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Support} \\
         \midrule
-        \texttt{building\_on\_fire} & 0.9500 & 0.9500 & 0.9500 & 120 \\
-        \texttt{call\_police}       & 0.9836 & 1.0000 & 0.9917 & 120 \\
-        \texttt{cant\_breathe}      & 0.9520 & 0.9917 & 0.9714 & 120 \\
-        \texttt{help\_danger}       & 0.9672 & 0.9833 & 0.9752 & 120 \\
-        \texttt{need\_ambulance}    & 0.9524 & 1.0000 & 0.9756 & 120 \\
-        \texttt{need\_toilet}       & 0.9833 & 0.9833 & 0.9833 & 120 \\
-        \texttt{none}               & 0.9238 & 0.8083 & 0.8622 & 120 \\
+        \texttt{building\_on\_fire} & 0.9421 & 0.9500 & 0.9461 & 120 \\
+        \texttt{call\_police}       & 0.9370 & 0.9917 & 0.9636 & 120 \\
+        \texttt{cant\_breathe}      & 0.9661 & 0.9500 & 0.9580 & 120 \\
+        \texttt{help\_danger}       & 0.9752 & 0.9833 & 0.9793 & 120 \\
+        \texttt{need\_ambulance}    & 0.9590 & 0.9750 & 0.9669 & 120 \\
+        \texttt{need\_toilet}       & 0.9835 & 0.9917 & 0.9876 & 120 \\
+        \texttt{none}               & 0.9091 & 0.8333 & 0.8696 & 120 \\
         \midrule
-        \textbf{Macro average}      & 0.9589 & 0.9595 & 0.9585 & 840 \\
+        \textbf{Macro average}      & 0.9531 & 0.9536 & 0.9530 & 840 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\noindent The six emergency phrases achieve F1 between 0.950 and 0.992. Two of them, \texttt{call\_police} and \texttt{need\_ambulance}, are never missed at all: every one of their 240 clips was recognised, and what costs them precision is other classes being read as them rather than any failure of their own. The negative class is clearly the weakest at 0.862, with a recall of 0.808.
+\noindent The six emergency phrases achieve F1 between 0.946 and 0.988. Recall on all six is at least 0.950, and for two of them, \texttt{call\_police} and \texttt{need\_toilet}, only a single clip in 120 is missed. What separates the six on F1 is mostly precision rather than recall: \texttt{call\_police} and \texttt{building\_on\_fire} sit lowest at 0.937 and 0.942 because other classes are read as them, not because they fail on their own clips. The negative class is clearly the weakest at 0.870, with a recall of 0.833.
 
 That asymmetry is expected. The six phrases are each a specific, repeatable performance, and the model has 120 examples of each. The \texttt{none} class is not a phrase; it is everything else, sampled 120 times from an unbounded space of possible non-signs. No number of examples makes that category as learnable as the six, and its recall would be expected to remain the lowest even with far more data.
 
@@ -194,22 +170,22 @@ Errors are easiest to read from the pooled confusion matrix in Figure~\ref{fig:c
     \label{fig:confusion}
 \end{figure}
 
-\noindent Thirty-four of the 840 predictions are wrong, and they fall into three groups that carry very different consequences.
+\noindent Thirty-nine of the 840 predictions are wrong, and they fall into three groups that carry very different consequences.
 
-Twenty-three errors are non-signs predicted as emergency phrases, in the bottom row. These are the most serious errors the system can make, because each one is an occasion where the system would announce an emergency that nobody signed, and they account for two thirds of all the errors in the matrix. They are spread across all six phrases, which suggests the cause is a genuine resemblance between some non-signing motion and the opening of a phrase rather than one specific confusable pair. This single row is where the system's remaining weakness lives, and Section~\ref{sec:discussion} returns to it.
+Twenty errors are non-signs predicted as emergency phrases, in the bottom row. These are the most serious errors the system can make, because each one is an occasion where the system would announce an emergency that nobody signed, and they account for just over half of all the errors in the matrix. They are spread across all six phrases (four as \texttt{building\_on\_fire}, four as \texttt{cant\_breathe}, five as \texttt{need\_ambulance}, three each as \texttt{call\_police} and \texttt{help\_danger}, one as \texttt{need\_toilet}), which suggests the cause is a genuine resemblance between some non-signing motion and the opening of a phrase rather than one specific confusable pair. This single row is where the system's remaining weakness lives, and Section~\ref{sec:discussion} returns to it.
 
-Eight errors are emergency phrases predicted as \texttt{none}, in the last column: six for \texttt{building\_on\_fire}, one for \texttt{help\_danger}, and one for \texttt{need\_toilet}. Here the system stays silent when the user did sign. This leaves the user without help, though it does not produce a false alarm, and in a real deployment the user would notice the absence of a response and sign again.
+Ten errors are emergency phrases predicted as \texttt{none}, in the last column: six for \texttt{building\_on\_fire}, two for \texttt{cant\_breathe}, one for \texttt{call\_police}, and one for \texttt{need\_toilet}. Here the system stays silent when the user did sign. This leaves the user without help, though it does not produce a false alarm, and in a real deployment the user would notice the absence of a response and sign again.
 
-Three errors are one emergency phrase confused with another, and each is isolated: one \texttt{cant\_breathe} read as \texttt{call\_police}, one \texttt{help\_danger} as \texttt{need\_toilet}, and one \texttt{need\_toilet} as \texttt{help\_danger}. A wrong phrase is worse than silence, because it sends the wrong help, so it is worth recording that this category is now the smallest of the three and contains no repeated pair. Confusion between the six phrases themselves is close to solved on this dataset; distinguishing them from everything that is not a sign is not.
+Nine errors are one emergency phrase confused with another, and they fall on only four of the twenty-one possible pairs: four \texttt{cant\_breathe} clips read as \texttt{call\_police}, three \texttt{need\_ambulance} clips as \texttt{building\_on\_fire}, one \texttt{help\_danger} as \texttt{call\_police}, and one \texttt{help\_danger} as \texttt{need\_toilet}. A wrong phrase is worse than silence, because it sends the wrong help, so this is the group whose composition matters most. Two of the four pairs are directional and repeated rather than isolated: \texttt{cant\_breathe} leaks into \texttt{call\_police} and \texttt{need\_ambulance} into \texttt{building\_on\_fire}, never the reverse. Together those two pairs account for seven of the nine, and they are the only place in the matrix where confusion between phrases looks systematic rather than incidental.
 
-Notably, no phrase is confused with any other in more than one clip, and \texttt{call\_police} and \texttt{need\_ambulance} are never missed at all. Every error in their columns is a non-sign or another phrase arriving from elsewhere.
+Seventeen of the twenty-one phrase pairs are never confused in either direction, so phrase-to-phrase separation is largely but not entirely solved on this dataset. Distinguishing the phrases from everything that is not a sign remains the harder of the two problems, at more than twice as many errors.
 
 \section{What the Random Split Shows}
 \label{sec:leakage}
 
-Under a stratified 70/15/15 random split, the same architecture and the same training recipe reach 98.41\% accuracy on 126 held-out clips. This is 2.5 percentage points above the pooled signer-independent figure, and 2.9 points above the mean across folds.
+Under a stratified 70/15/15 random split, the same architecture and the same training recipe reach 97.62\% accuracy on 126 held-out clips. This is 2.3 percentage points above the pooled signer-independent figure, and 2.4 points above the mean across folds.
 
-That gap is the point of reporting the number. Under a random split, clips from the same person appear in both training and test, so the model can score well by recognising the individual as much as the sign. The signer-independent protocol removes that possibility, and the accuracy falls. The 98.41\% figure describes how well the system recognises phrases performed by people it has already been trained on, which is not the situation any real user is in.
+That gap is the point of reporting the number. Under a random split, clips from the same person appear in both training and test, so the model can score well by recognising the individual as much as the sign. The signer-independent protocol removes that possibility, and the accuracy falls. The 97.62\% figure describes how well the system recognises phrases performed by people it has already been trained on, which is not the situation any real user is in.
 
 \begin{table}[H]
     \centering
@@ -219,14 +195,14 @@ That gap is the point of reporting the number. Under a random split, clips from 
         \toprule
         \textbf{Protocol} & \textbf{Accuracy} & \textbf{What it measures} \\
         \midrule
-        Random split, stratified 70/15/15 & 0.9841 & performance on known signers \\
-        Signer-independent, mean of 8 folds & 0.9551 & performance on a new signer \\
-        Signer-independent, pooled & 0.9595 & performance on a new signer \\
+        Random split, stratified 70/15/15 & 0.9762 & performance on known signers \\
+        Signer-independent, mean of 8 folds & 0.9518 & performance on a new signer \\
+        Signer-independent, pooled & 0.9536 & performance on a new signer \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\noindent This is worth stating because published NSL recognition results are generally reported without separating signers, including the closest prior landmark-based work \cite{shrestha2024nsl}. A comparison of headline accuracies across papers is therefore not meaningful unless the protocols match. On this dataset the difference between the two protocols is 2.5 points, and a project reporting only the higher number would not be doing anything unusual by the standards of the field.
+\noindent This is worth stating because published NSL recognition results are generally reported without separating signers, including the closest prior landmark-based work \cite{shrestha2024nsl}. A comparison of headline accuracies across papers is therefore not meaningful unless the protocols match. On this dataset the difference between the two protocols is 2.3 points, and a project reporting only the higher number would not be doing anything unusual by the standards of the field.
 
 \section{Generalisation and Overfitting}
 \label{sec:generalisation}
@@ -256,7 +232,7 @@ what the question turns on.
 
 \noindent Four pieces of evidence bear on overfitting.
 
-First, no fold ran to the epoch limit. Early stopping halted every fold between 29 and 45
+First, no fold ran to the epoch limit. Early stopping halted every fold between 29 and 71
 epochs against a budget of 200, monitoring validation loss with the best weights restored.
 A model still improving on held-out data at the point it stops has not begun to memorise;
 a model that needed the full 200 epochs and kept its final weights would be the worrying
@@ -268,21 +244,21 @@ masking layer removes padded frames from the computation so they cannot be fitte
 signal.
 
 Third, the per-fold spread is contained. Eight independently trained models, each missing a
-different signer, produce accuracies between 0.9000 and 0.9929 with a standard deviation
-of 3.40 percentage points. A model that had memorised its training signers would be
-expected to collapse on some folds and not others; the worst fold here is nine points below
-the best, not thirty. The spread is nonetheless wider than the differences between any two
-architectures tested in Section~\ref{sec:ablation}, which is the finding this chapter keeps
+different signer, produce accuracies between 0.9286 and 0.9857 with a standard deviation
+of 1.74 percentage points. A model that had memorised its training signers would be
+expected to collapse on some folds and not others; the worst fold here is 5.7 points below
+the best, not thirty. That range is still wider than the 2.1 points separating the best and
+worst architectures in Section~\ref{sec:ablation}, which is the finding this chapter keeps
 returning to.
 
 Fourth, and least comfortably, the random-split comparison puts a number on the
-memorisation that does remain. The 2.5-point gap between 98.41\% and 95.95\% is the
+memorisation that does remain. The 2.3-point gap between 97.62\% and 95.36\% is the
 portion of a random-split score that comes from recognising people rather than phrases. It
 is small, but it is not zero, and it is the reason the signer-independent figure is the one
 quoted throughout this report.
 
 Taken together these say the model generalises to a new signer with a loss of roughly two
-and a half points against a same-signer measurement, and that it is not overfitting in the
+and a quarter points against a same-signer measurement, and that it is not overfitting in the
 sense of having memorised its training clips. What they do not say is that it generalises
 to a new signer drawn from outside the population of eight, which is a separate claim and
 is addressed in Section~\ref{sec:discussion}.
@@ -298,6 +274,14 @@ callbacks, so that a difference between them is a property of the architecture a
 the training regime. The cell type is held fixed at LSTM throughout, so what varies is the
 size and depth of the network and nothing else. Table~\ref{tab:ablation} gives the result and
 Figure~\ref{fig:ablation} shows the same numbers as intervals.
+
+One caveat applies to the whole table before any of its rows are read. The sweep was run on
+the dataset as it stood before the \texttt{none} row of Table~\ref{tab:composition} was
+evened out, and through a parallel runner rather than the single-process one that produced
+Table~\ref{tab:folds}. Every row of Table~\ref{tab:ablation} was produced the same way as
+every other, so the comparison between architectures, which is what this section is for,
+holds. The absolute values are not directly comparable against Table~\ref{tab:folds},
+and no conclusion below rests on them.
 
 \begin{table}[H]
     \centering
@@ -319,23 +303,24 @@ Figure~\ref{fig:ablation} shows the same numbers as intervals.
 \end{table}
 
 \mustdo{%
-The \texttt{current} row of Table~\ref{tab:ablation} is the shipped architecture measured
-through this sweep, and it reports mean 0.961 with a standard deviation of 0.024, against
-0.9551 and 0.0340 from \texttt{results/metrics.json} in Table~\ref{tab:folds}. The two use
-the same protocol, seed, splits, callbacks and sequence length, so they ought to agree, and
-they differ by 0.6 points.
+Table~\ref{tab:ablation} and Figure~\ref{fig:ablation} are the only results in this chapter
+that have \emph{not} been regenerated from the corrected dataset. They come from
+\texttt{results/architecture\_sweep.csv}, which was produced before the \texttt{none} row of
+Table~\ref{tab:composition} was evened out, and by
+\texttt{scripts/sweep\_parallel.py} (a separate process per candidate with four intra-op
+threads, against the single-process \texttt{train\_eval.py} that produced
+Table~\ref{tab:folds}). Both differences push the same way: the sweep's \texttt{current} row
+reads 0.961 $\pm$ 0.024 where Table~\ref{tab:folds} reads 0.9518 $\pm$ 0.0174.
 
-The difference is the runner, not the model. The sweep is executed by
-\texttt{scripts/sweep\_parallel.py}, which runs each candidate in a separate process with
-four intra-op threads, while \texttt{train\_eval.py} runs single-process. Deterministic
-operations are enabled in both, but the thread count changes the order of parallel
-reductions --- the same effect Section~\ref{sec:experimentsetup} already measures at up to
-2.7 points.
-
-Before submission, either re-run the sweep through \texttt{scripts/sweep\_architectures.py}
-single-process so the two figures are produced identically, or state in the text above that
-the sweep column was produced by a different runner and is comparable within itself but not
-against Table~\ref{tab:folds}. Then delete this box.}
+The paragraph added above Table~\ref{tab:ablation} states this in the text, so the chapter
+is defensible as it stands. The better fix is to re-run the sweep on the current
+\texttt{data/processed/} through \texttt{scripts/sweep\_architectures.py} single-process, so
+that the \texttt{current} row reproduces Table~\ref{tab:folds} exactly. That run also emits a
+\texttt{gru} variant which this table deliberately omits, since the text claims the cell type
+is held fixed at LSTM. Keep it omitted, or say why it is there. Then refresh
+\texttt{img/architecturesweep.png}, update this table, the 2.1-point span quoted twice
+below, the 0.024--0.047 range, and the four-tenths-of-a-point figure in
+Section~\ref{sec:archcompare}'s discussion in Chapter~3. Then delete this box.}
 
 \noindent No candidate is distinguishable from any other. The means span 0.944 to 0.965, but
 with only eight folds the standard error on each one is between 0.9 and 1.7 percentage
@@ -360,7 +345,7 @@ Three conclusions do follow from the table. Capacity is not the bottleneck: the 
 variant carries 535{,}559 parameters, 2.8 times the shipped model, and gains four tenths of
 a point for them. A dropout rate of 0.3 is the right setting, since raising it to 0.5 is
 nominally worse and needs 50 epochs to converge instead of 42. And the smallest variant is
-the only one that looks genuinely handicapped --- not for its mean, which is within noise of
+the only one that looks genuinely handicapped, not for its mean, which is within noise of
 the rest, but for a fold-to-fold standard deviation of 0.047, nearly twice the shipped
 model's, and the slowest convergence in the set. A network of 32 and 16 units is too small
 to behave consistently from one held-out signer to the next.
@@ -371,7 +356,7 @@ measured and could account for differences of this size by itself. And eight fol
 resolve differences of one or two points whatever statistical test is applied to them; that
 is a property of the design and not of the analysis.
 
-The shipped architecture is therefore retained --- not because it measurably outperforms the
+The shipped architecture is therefore retained, not because it measurably outperforms the
 alternatives, but because no alternative measurably outperforms it, and it sits at the
 smaller end of the range over which accuracy has already saturated. The single-layer variant
 is the one worth revisiting should the deployment target ever impose a size budget this model
@@ -381,7 +366,7 @@ well inside the noise, though its fold-to-fold spread is slightly wider.
 \section{Why the Accuracy Is High}
 \label{sec:whyhigh}
 
-An accuracy near 96\% on a first attempt at an under-resourced sign language invites
+An accuracy near 95\% on a first attempt at an under-resourced sign language invites
 suspicion, and it should. Five properties of the task account for it, and three of them are
 forms of optimism that a reader should discount.
 
@@ -389,8 +374,9 @@ The legitimate reasons come first. The problem is a seven-way choice, and the si
 were drawn from different semantic domains: medical, fire, crime, and basic need. Nothing
 constrained them to be visually distinct, but choosing by situation produced a set whose
 signed forms differ in handshape, location, and movement all at once. The confusion matrix
-reflects this directly: across the twenty-one possible pairs of phrases, no pair is confused
-more than once. Second, the landmark representation discards background, lighting, and appearance
+reflects this directly: of the twenty-one possible pairs of phrases, seventeen are never
+confused in either direction, and the nine phrase-to-phrase errors that do occur fall on
+only four pairs. Second, the landmark representation discards background, lighting, and appearance
 before the model sees anything, and dual-anchor normalisation removes position and scale.
 The nuisance variation that costs a pixel-based model most of its accuracy is not present
 in the input. Third, the classes are exactly balanced at 120 clips each, so no part of the
@@ -412,14 +398,17 @@ mid-phrase. Segmentation is one of the harder problems in sign recognition and t
 avoids it entirely.
 
 Half the signers are the authors, who knew the phrase set better than anyone and had the
-most practice performing it. Their four folds average 0.9714 against 0.9387 for the other
-four, a gap of 3.3 points. Four folds a side is far too few to call this conclusive, and the
-signer 05 and signer 06 irregularities noted above sit on the weaker side of the comparison,
-but the direction is the one the explanation predicts and the size of it is no longer
-negligible. The headline figure is an accuracy on a population half of which built the
-system.
+most practice performing it. Their four folds average 0.9571 against 0.9464 for the other
+four, a gap of 1.1 points. That gap is in the direction the explanation predicts, but it is
+smaller than the standard deviation across folds and rests on four folds a side, so it does
+not support a claim on its own. What it does rule out is a large practice effect: whatever
+the authors' familiarity with the phrase set is worth, it is not worth much here. Note also
+that the authors are the four signers with 20 clips per class, so their folds are also the
+ones that remove the most training data, an effect that pushes the other way and is not
+separable from the first at this sample size. The headline figure remains an accuracy on a
+population half of which built the system.
 
-None of this makes 95.95\% wrong. It makes it an accuracy on this task as specified:
+None of this makes 95.36\% wrong. It makes it an accuracy on this task as specified:
 seven distinct classes, one deliberate phrase at a time, performed against a fixed
 reference by eight people, four of whom built the system. A wider vocabulary, natural
 signing, or continuous input would each lower it.
@@ -452,7 +441,7 @@ A conversion fault would be indistinguishable from a model that simply performs 
 
 The delivered system is a single Android application package of about 18 megabytes, of which the two MediaPipe landmark bundles account for most and the classifier for 881 kilobytes. It carries everything recognition needs and contacts nothing. The fallback server remains available as a container that omits TensorFlow entirely and runs the exported model through a lightweight runtime, which reduces that image from about three gigabytes to one.
 
-The cost profile of a single recognition is dominated by one operation on both paths. Landmark extraction is the whole pipeline, and everything after it --- the two corrections, normalisation, standardisation, and the forward pass --- is a small fixed cost paid once when the user stops signing. Because frames are landmarked while the user is still signing, the dominant cost is paid concurrently with the sign rather than after it. A design that captured a whole recording and then processed it would have serialised the two, adding several seconds of silence before every result.
+The cost profile of a single recognition is dominated by one operation on both paths. Landmark extraction is the whole pipeline, and everything after it (the two corrections, normalisation, standardisation, and the forward pass) is a small fixed cost paid once when the user stops signing. Because frames are landmarked while the user is still signing, the dominant cost is paid concurrently with the sign rather than after it. A design that captured a whole recording and then processed it would have serialised the two, adding several seconds of silence before every result.
 
 The difference between the two paths is where the extraction runs, and the phone is the slower of the two. That is precisely why the temporal resampling of Section~\ref{sec:ondevice} exists: the phone cannot be made fast enough, so the clip it produces is corrected to the timescale the model expects instead.
 
@@ -486,17 +475,21 @@ The application was built and installed on a physical device, and recognition wo
         \toprule
         \textbf{Quantity} & \textbf{Value} \\
         \midrule
-        Test device & \fillin{device model} \\
-        Sustained landmarking rate while signing & \fillin{fps} \\
-        Per-frame conversion cost & \fillin{ms} \\
-        Per-frame landmark extraction cost & \fillin{ms} \\
-        Corrections, normalisation and forward pass, per clip & \fillin{ms} \\
-        End-to-end latency, tap to spoken output & \fillin{seconds} \\
+        Test device & OnePlus CPH2569, Qualcomm SM7325 \\
+        Capture resolution, source to upright & $720 \times 480$ to $480 \times 720$ \\
+        Sustained landmarking rate while signing & 5.7--6.2 per second \\
+        Per-frame conversion cost & 6--7 ms \\
+        Per-frame landmark extraction cost & $\approx$ 165 ms \\
+        Corrections, normalisation and forward pass, per clip & 70--91 ms \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\noindent Screenshots of the client in each of its three result states appear in Appendix~\ref{app:ui}.
+\noindent The ranges are across recognitions on that handset. The per-frame extraction cost is derived from sustained throughput (frames landmarked divided by clip duration) rather than from the client's instantaneous per-frame timer, which reports only the most recent frame and so varies by more than a factor of two between consecutive readings. The derivation is corroborated by the client's own frame counters: of the frames the converter produces, roughly half are refused by the detectors because a previous frame is still in flight, which places the entire budget on landmark extraction rather than on capture or colour conversion.
+
+Landmark extraction on the phone is therefore about four times the cost of the same operation on the server, and the sustained rate that follows from it, close to 6 frames per second, sits well below the 16 the client asks for. This is the measurement behind Section~\ref{sec:ondevice}: the gap is not a tuning problem to be closed but a property of the hardware, so the clip is resampled to the training timescale after capture instead.
+
+\noindent Screenshots of the client recognising phrases on the device, and of the desktop recogniser, appear in Appendix~\ref{app:ui}.
 
 \section{Development Process}
 
@@ -525,7 +518,7 @@ The work proceeded in eight increments, each delivering a module that could be e
         \hline
         7 & Export and server deployment & TensorFlow Lite export with verification, inference server, and Android client. The deployment target changed from a browser to a phone at this stage, for the reasons in Section~\ref{sec:deploychange}. \\
         \hline
-        8 & On-device recognition & Landmark extraction and classification moved onto the phone, removing the network dependency the previous increment had introduced. The preprocessing was ported and pinned to the Python implementation by generated fixtures, and two distortions specific to the phone --- frame aspect ratio and an unattainable capture rate --- were found and corrected. The server was retained as a fallback. \\
+        8 & On-device recognition & Landmark extraction and classification moved onto the phone, removing the network dependency the previous increment had introduced. The preprocessing was ported and pinned to the Python implementation by generated fixtures, and two distortions specific to the phone (frame aspect ratio and an unattainable capture rate) were found and corrected. The server was retained as a fallback. \\
         \hline
     \end{tabular}
 \end{table}
@@ -541,8 +534,9 @@ method, and it identifies where the next measurements should be taken.
 \subsection{Confusion Grows Faster Than the Vocabulary}
 
 A $K$-class problem has $K(K-1)/2$ pairs that can be confused. At seven classes there are
-21, and the confusion matrix shows one of them carrying more than a single error. The
-count grows quadratically: 105 pairs at fifteen classes, 435 at thirty.
+21, and the confusion matrix shows four of them carrying any error at all, two of those
+more than a single one. The count grows quadratically: 105 pairs at fifteen classes, 435
+at thirty.
 
 The more important effect is not the arithmetic but which pairs get added. The six phrases
 here were chosen by situation, not by appearance, and they happened to differ in handshape,
@@ -570,7 +564,7 @@ community.
 
 \subsection{The Negative Class Gets Harder}
 
-The \texttt{none} class is already the weakest at 0.862 F1, and it degrades as the
+The \texttt{none} class is already the weakest at 0.870 F1, and it degrades as the
 vocabulary grows for a structural reason. Its job is to cover everything that is not one of
 the known phrases. As known phrases multiply, the boundary between the known region and
 everything else becomes longer and more intricate, while the number of \texttt{none} clips
@@ -628,13 +622,13 @@ first of the two cliffs directly, at a cost of one consultation and a few hundre
 
 \subsection{What the Results Support}
 
-Under a protocol that tests only on unseen signers, the system recognises the six emergency phrases with a pooled accuracy of 95.95\% and per-class F1 between 0.950 and 0.992. The landmark representation is what makes this achievable from 840 clips: a pixel-based model on the same data would have far more parameters to fit and far less invariance to the rooms and lighting the clips were recorded in. It is also what makes the result deployable, since a classifier over 225 coordinates is small enough to run on the phone that captured them.
+Under a protocol that tests only on unseen signers, the system recognises the six emergency phrases with a pooled accuracy of 95.36\% and per-class F1 between 0.946 and 0.988. The landmark representation is what makes this achievable from 840 clips: a pixel-based model on the same data would have far more parameters to fit and far less invariance to the rooms and lighting the clips were recorded in. It is also what makes the result deployable, since a classifier over 225 coordinates is small enough to run on the phone that captured them.
 
-The evaluation protocol is the part of this work most worth carrying forward. The 2.5-point gap between the random split and the signer-independent folds is a concrete measurement of how much a random split flatters a model on this kind of data, and it was obtained on a dataset small enough that the effect could easily have been dismissed as noise.
+The evaluation protocol is the part of this work most worth carrying forward. The 2.3-point gap between the random split and the signer-independent folds is a concrete measurement of how much a random split flatters a model on this kind of data, and it was obtained on a dataset small enough that the effect could easily have been dismissed as noise.
 
 \subsection{Eight Signers Is the Binding Limitation}
 
-Every accuracy in this chapter rests on eight people, four of whom are the authors. The standard deviation across folds is 3.40 points and the range is 9.3, which means the estimate of performance on a new signer is itself uncertain. A ninth signer with an unusual signing style could plausibly score below any fold reported here.
+Every accuracy in this chapter rests on eight people, four of whom are the authors. The standard deviation across folds is 1.74 points and the range is 5.7, which means the estimate of performance on a new signer is itself uncertain. A ninth signer with an unusual signing style could plausibly score below any fold reported here.
 
 The architecture comparison in Section~\ref{sec:ablation} puts this on a firmer footing than an assertion. Across six architectures spanning 77{,}063 to 535{,}559 parameters, no variant is distinguishable from any other, and the fold-to-fold spread within each one is larger than every difference between them. What limits this system is not the model that was chosen but the number of people it has been measured on.
 
@@ -642,11 +636,11 @@ Four of the eight signers are also not fluent NSL users. They learned each phras
 
 \subsection{The Negative Class Is the Weak Point}
 
-The \texttt{none} class carries a recall of 0.808, and twenty-three non-signs were predicted as emergency phrases. In deployment these are the errors that produce a false announcement, which is the most serious failure mode this system can have. They are also two thirds of every error in the matrix: confusion among the six phrases has almost disappeared, and what remains is the boundary between the phrases and everything that is not one.
+The \texttt{none} class carries a recall of 0.833, and twenty non-signs were predicted as emergency phrases. In deployment these are the errors that produce a false announcement, which is the most serious failure mode this system can have. They are also just over half of every error in the matrix, and more than twice the nine errors that confuse one phrase with another: what remains hardest is the boundary between the phrases and everything that is not one.
 
-That single row therefore accounts for the difference between the system's accuracy and the accuracy it could have. If every non-sign were correctly rejected, pooled accuracy would rise from 95.95\% to 98.7\%, and the six phrases would already be at that level.
+That single row therefore accounts for most of the difference between the system's accuracy and the accuracy it could have. If every non-sign were correctly rejected, pooled accuracy would rise from 95.36\% to 97.7\%.
 
-Reducing this error is a question of what the negative class covers rather than of the threshold it is checked against. The \texttt{none} class holds 120 clips describing the complement of six phrases --- an unbounded space sampled 120 times --- and it is the only class whose examples are not a specific repeatable performance. Widening it with more varied non-signing motion, particularly the kind of motion these twenty-three clips resemble, is the direct way to give the classifier a better boundary to place, and it is the single most useful addition to this evaluation. How many of the twenty-three cleared the confidence threshold is not recorded in the saved metrics and would need measuring separately; that number decides whether a stricter threshold would help at all, and it should be obtained before any threshold is changed.
+Reducing this error is a question of what the negative class covers rather than of the threshold it is checked against. The \texttt{none} class holds 120 clips describing the complement of six phrases (an unbounded space sampled 120 times), and it is the only class whose examples are not a specific repeatable performance. Widening it with more varied non-signing motion, particularly the kind of motion these twenty clips resemble, is the direct way to give the classifier a better boundary to place, and it is the single most useful addition to this evaluation. How many of the twenty cleared the confidence threshold is not recorded in the saved metrics and would need measuring separately; that number decides whether a stricter threshold would help at all, and it should be obtained before any threshold is changed.
 
 \subsection{Duration Is Only Encoded Below the Sequence Length}
 
@@ -658,7 +652,7 @@ A related effect follows from the masking layer. A frame in which MediaPipe dete
 
 Recognition runs on the phone, so the delivered system works with no network connection at all. That was the right outcome for an emergency tool, but it was not free, and the price is worth stating precisely because it is a weakness that does not show up in any accuracy figure.
 
-The measured 95.95\% was obtained on landmarks produced by MediaPipe Holistic through a webcam, preprocessed by one module. The phone produces landmarks with a different extractor, through a different lens, at a different frame rate, and preprocesses them with a port of that module rather than the module itself. Nothing in this chapter measures the accuracy of that combination. Two of the differences were large enough to find and correct --- the frame aspect ratio and the capture rate, both described in Section~\ref{sec:ondevice} --- and both were found only because they broke recognition visibly. A smaller discrepancy would not have announced itself; it would have shown up as a few more errors, indistinguishable from the model simply being imperfect.
+The measured 95.36\% was obtained on landmarks produced by MediaPipe Holistic through a webcam, preprocessed by one module. The phone produces landmarks with a different extractor, through a different lens, at a different frame rate, and preprocesses them with a port of that module rather than the module itself. Nothing in this chapter measures the accuracy of that combination. Two of the differences were large enough to find and correct (the frame aspect ratio and the capture rate, both described in Section~\ref{sec:ondevice}), and both were found only because they broke recognition visibly. A smaller discrepancy would not have announced itself; it would have shown up as a few more errors, indistinguishable from the model simply being imperfect.
 
 Three things reduce that exposure without removing it. The ported preprocessing is pinned to the Python implementation by fixtures generated from it, so an arithmetic divergence fails a test. The client writes the raw landmark clip behind every attempt to storage, so any suspect result can be replayed through the Python pipeline afterwards, which is how both corrections were diagnosed. And the fallback server path remains, running the original module, so the two can be compared on the same signer at any time.
 

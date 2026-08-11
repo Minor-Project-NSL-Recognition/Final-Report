@@ -32,21 +32,25 @@ Table~\ref{tab:phrases} lists the six phrases and the situation each covers. Phr
     \caption{Target emergency phrases and their categories}
     \label{tab:phrases}
     \small
-    \begin{tabular}{|c|p{3.6cm}|p{3.4cm}|l|l|}
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular}{|c|>{\raggedright\arraybackslash}p{3.4cm}
+                      |>{\raggedright\arraybackslash}p{3.5cm}
+                      |>{\raggedright\arraybackslash}p{2.2cm}
+                      |>{\raggedright\arraybackslash}p{3.4cm}|}
         \hline
         \textbf{\#} & \textbf{English phrase} & \textbf{Nepali phrase} & \textbf{Category} & \textbf{Class key} \\
         \hline
-        1 & I can't breathe            & \nepali{मलाई सास फेर्न गाह्रो भइरहेको छ} & Medical           & \texttt{cant\_breathe} \\
+        1 & I can't breathe            & \nepali{म सास फेर्न सक्दिन।} & Medical           & \texttt{cant\_breathe} \\
         \hline
-        2 & The building is on fire    & \nepali{भवनमा आगो लागेको छ} & Fire              & \texttt{building\_on\_fire} \\
+        2 & The building is on fire    & \nepali{घरमा आगो लाग्यो।} & Fire              & \texttt{building\_on\_fire} \\
         \hline
-        3 & Call the police            & \nepali{प्रहरीलाई फोन गर्नुहोस्} & Crime             & \texttt{call\_police} \\
+        3 & Call the police            & \nepali{प्रहरीलाई बोलाउनुहोस्।} & Crime             & \texttt{call\_police} \\
         \hline
-        4 & I need an ambulance        & \nepali{मलाई एम्बुलेन्स चाहियो} & Medical           & \texttt{need\_ambulance} \\
+        4 & I need an ambulance        & \nepali{मलाई एम्बुलेन्स चाहियो।} & Medical           & \texttt{need\_ambulance} \\
         \hline
-        5 & Help me / I am in danger   & \nepali{मलाई मद्दत गर्नुहोस् / म खतरामा छु} & Generic emergency & \texttt{help\_danger} \\
+        5 & Help me / I am in danger   & \nepali{मलाई मद्दत गर्नुहोस्।} & Generic emergency & \texttt{help\_danger} \\
         \hline
-        6 & I need to go to the toilet & \nepali{मलाई शौचालय जानु छ} & Basic need        & \texttt{need\_toilet} \\
+        6 & I need to go to the toilet & \nepali{मलाई शौचालय जानु छ।} & Basic need        & \texttt{need\_toilet} \\
         \hline
         7 & Not one of the above       & --- & Negative class    & \texttt{none} \\
         \hline
@@ -221,7 +225,7 @@ A stratified 70/15/15 random split is also trained and reported. It is not an ad
 \subsection{The Architecture Comparison}
 \label{sec:archcompare}
 
-The architecture in Table~\ref{tab:architecture} fixes several numbers --- two recurrent widths, a dense width, and a dropout rate --- that were settled before any accuracy had been measured. A comparison across six variants of it is therefore also run and reported. Like the random-split contrast, it is not an additional performance measure; its purpose is to establish whether those numbers were a defensible choice rather than an arbitrary one.
+The architecture in Table~\ref{tab:architecture} fixes several numbers (two recurrent widths, a dense width, and a dropout rate) that were settled before any accuracy had been measured. A comparison across six variants of it is therefore also run and reported. Like the random-split contrast, it is not an additional performance measure; its purpose is to establish whether those numbers were a defensible choice rather than an arbitrary one.
 
 The six candidates vary one aspect of the design at a time: a smaller network (32/16/16 units), a larger one (128/64/64), a single recurrent layer instead of two, the removal of the dense head, and dropout raised from 0.3 to 0.5. The sixth candidate is the shipped architecture itself, reconstructed to the same specification, so that it is measured on equal footing with the alternatives instead of being compared against a figure obtained some other way. The comparison holds the cell type fixed at LSTM throughout, so that what it varies is the size and depth of the network and nothing else.
 
@@ -309,7 +313,7 @@ Three outcomes are possible:
     \item Otherwise the result is \texttt{low\_confidence}: the top class is an emergency phrase but the model does not carry enough probability on it, and the user is told the input was not recognised clearly.
 \end{enumerate}
 
-\noindent Only \texttt{accepted} speaks. The two refusals are distinguished because they call for different responses from the user --- \texttt{unknown} means the system saw motion it does not treat as a target phrase, while \texttt{low\_confidence} means it saw something phrase-like and would not commit --- but neither produces audio, so a wrong announcement and no announcement stay on the same footing.
+\noindent Only \texttt{accepted} speaks. The two refusals are distinguished because they call for different responses from the user: \texttt{unknown} means the system saw motion it does not treat as a target phrase, while \texttt{low\_confidence} means it saw something phrase-like and would not commit. Neither produces audio, though, so a wrong announcement and no announcement stay on the same footing.
 
 Separating \texttt{unknown} from \texttt{low\_confidence} also removes a failure mode that the two-outcome design would have carried into deployment. The \texttt{none} class has a human-readable label like any other class, so a confidently recognised non-sign would otherwise satisfy the acceptance test and be announced aloud, which is the opposite of what the negative class was added to achieve. Routing \texttt{none} to its own refusing status is what prevents that.
 

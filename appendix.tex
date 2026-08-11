@@ -211,12 +211,52 @@ Figure~\ref{fig:padslice} shows this same $(146, 225)$ array as a row of frames,
 \end{figure}
 
 % ================= Appendix E =================
-\chapter{Client Interface}
+\chapter{Application Interfaces}
 \label{app:ui}
 
-The Android client presents one of three outcomes for every recognition attempt: an accepted phrase, which is displayed and spoken; an unrecognised result, when the classifier identifies the input as not being one of the six phrases; or a low-confidence result, when the top class is a phrase but the model will not commit to it. Only the first produces speech. A row of indicators below the camera preview reports what the recogniser observed for each frame --- whether pose and hands were detected, the sustained frame rate, the per-frame conversion and extraction costs, and whether any frames were dropped --- so a failure during use can be attributed instead of guessed at.
+Two applications present a recognition result to a user. The desktop recogniser runs the Python pipeline against a webcam and was the tool used to exercise the trained model during development; the Android client is the delivered system. Both apply the decision rule of Section~\ref{sec:decisionrule}, and they differ in where the computation happens rather than in what the user is told.
 
-\fillin{Insert client screenshots here: the accepted, unrecognised and low-confidence result states, and the telemetry indicator row during an active recording. The server configuration screen is optional, since it is reachable only after switching out of the default on-device mode.}
+\section{Desktop Recogniser}
+\label{app:ui-desktop}
+
+The desktop recogniser imports the training-time preprocessing module rather than reimplementing it, so the numbers reaching the model are the same ones the reported accuracy was measured with. That is what makes it the reference the on-device path of Section~\ref{sec:ondevice} was checked against.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{img/cant_breathe.png}
+    \caption{The desktop recogniser accepting \textit{I can't breathe} at full confidence, with live pose and hand landmark overlays on the camera feed. The panel reports the phrase, its category, the confidence, and the three most probable classes; the footer shows the sequence length of 146 frames and the 75\% acceptance threshold in force}
+    \label{fig:ui-desktop}
+\end{figure}
+
+\noindent Recording is started and stopped from the keyboard, so one clip corresponds to one deliberate performance, as in the recorder of Appendix~\ref{app:recorder}. Displaying the top three classes rather than only the winner was deliberate: a confident wrong answer and a genuine near-tie look identical when only the winning label is shown, and the two call for different responses.
+
+\section{Android Client}
+\label{app:ui-client}
+
+The client presents one of three outcomes for every attempt: an accepted phrase, which is displayed and spoken; an unrecognised result, when the classifier positively identifies the input as not being one of the six phrases; or a low-confidence result, when the top class is a phrase but the model will not commit to it. Only the first produces speech. Figure~\ref{fig:ui-client} shows two accepted results, one from each of two phrase categories.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.375\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/mobile_app_house_on_fire.jpeg}
+        \caption{\textit{The building is on fire}, accepted at 97\%}
+        \label{fig:ui-client-fire}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.375\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{img/mobile_app_need_ambulance.jpeg}
+        \caption{\textit{I need an ambulance}, accepted at 100\%}
+        \label{fig:ui-client-ambulance}
+    \end{subfigure}
+    \caption{The Android client recognising two phrases on the device with the network disabled. Each banner carries the phrase, its category, the top three class probabilities, and the frame counts before and after temporal resampling}
+    \label{fig:ui-client}
+\end{figure}
+
+\noindent The row of indicators between the camera preview and the result reports what the recogniser observed while the clip was being captured: whether pose and hands were detected, the sustained frame rate, the per-frame conversion and landmark extraction costs, the source and working frame sizes, and how many frames were dropped because a conversion was still in flight. A failure during use can therefore be attributed rather than guessed at, which is what the two distortions of Section~\ref{sec:ondevice} required to locate.
+
+The frame counts in the banners make the temporal correction visible. The fire clip was captured as 46 frames and resampled to 125 before padding; the ambulance clip, 56 to 139. Both were captured well below the rate of the training data, and without the resampling of Section~\ref{sec:ondevice} the model would have read the shortfall as a different sign rather than a slower camera.
 
 % ================= Appendix F =================
 \chapter{Server Interface}
@@ -274,4 +314,4 @@ The fallback inference server exposes the endpoints in Table~\ref{tab:endpoints}
     \end{tabular}
 \end{table}
 
-\noindent The on-device path carries no protocol, but it produces the same result structure --- status, phrase, confidence, and the top three classes --- so the presentation logic in the client is identical whichever path produced the decision. Switching between them changes where the computation happens and nothing the user sees.
+\noindent The on-device path carries no protocol, but it produces the same result structure (status, phrase, confidence, and the top three classes), so the presentation logic in the client is identical whichever path produced the decision. Switching between them changes where the computation happens and nothing the user sees.

@@ -13,31 +13,27 @@ Sign languages are complete natural languages with their own vocabulary and gram
 
 \noindent Two developments make a lightweight system practical. Pretrained hand and body tracking such as MediaPipe \cite{zhang2020mediapipe} extracts the geometry of a signing person from an ordinary camera without gloves or depth sensors, and reduces each video frame to a few hundred numbers. Sequence models such as the bidirectional Long Short-Term Memory network \cite{hochreiter1997lstm, graves2005bilstm} classify the resulting motion directly. Together they allow a recognition system to be trained from a few hundred recordings and to run on hardware people already own.
 
-\noindent This project applies that combination to a narrow, high-value problem: recognising six NSL emergency phrases from a live camera feed and delivering each as on-screen text and speech. The six phrases are \textit{I can't breathe} (\nepali{मलाई सास फेर्न गाह्रो भइरहेको छ}), \textit{The building is on fire} (\nepali{भवनमा आगो लागेको छ}), \textit{Call the police} (\nepali{प्रहरीलाई फोन गर्नुहोस्}), \textit{I need an ambulance} (\nepali{मलाई एम्बुलेन्स चाहियो}), \textit{Help me / I am in danger} (\nepali{मलाई मद्दत गर्नुहोस् / म खतरामा छु}), and \textit{I need to go to the toilet} (\nepali{मलाई शौचालय जानु छ}). They span medical, fire, crime, and basic-need situations. Their signed form was established with Deaf experts before any data was recorded, so what the system recognises is real NSL and not an invention of the authors.
+\noindent This project applies that combination to a narrow, high-value problem: recognising six NSL emergency phrases from a live camera feed and delivering each as on-screen text and speech. The six phrases are \textit{I can't breathe} (\nepali{म सास फेर्न सक्दिन}), \textit{The building is on fire} (\nepali{घरमा आगो लाग्यो}), \textit{Call the police} (\nepali{प्रहरीलाई बोलाउनुहोस्}), \textit{I need an ambulance} (\nepali{मलाई एम्बुलेन्स चाहियो}), \textit{Help me / I am in danger} (\nepali{मलाई मद्दत गर्नुहोस्}), and \textit{I need to go to the toilet} (\nepali{मलाई शौचालय जानु छ}). They span medical, fire, crime, and basic-need situations. Their signed form was established with Deaf experts before any data was recorded, so what the system recognises is real NSL and not an invention of the authors.
 
 \section{Problem Statement}
 
-In an emergency, clear communication is the difference between help arriving and help not arriving. Deaf and hard-of-hearing people in Nepal are at a disadvantage in exactly those moments:
+In an emergency, a deaf person in Nepal has no reliable way to make an urgent need understood:
 
 \begin{itemize}
-    \item Most hearing people, including first responders and bystanders, do not understand Nepali Sign Language.
-    \item Human interpreters are scarce and are almost never present when an emergency begins.
-    \item Existing sign language recognition systems are built for high-resource sign languages. No system or dataset exists for NSL emergency communication \cite{sunuwar2024nsl23, shrestha2024nsl, poudel2025nsl}.
+    \item Bystanders and first responders do not understand Nepali Sign Language, and an interpreter is almost never present when an emergency begins.
+    \item No recognition system or dataset exists for NSL emergency phrases; published work stops at the fingerspelling alphabet and static letters \cite{sunuwar2024nsl23, shrestha2024nsl, poudel2025nsl}.
 \end{itemize}
 
-\noindent A deaf person in an emergency may therefore be unable to convey an urgent need to the people around them. What is missing is an accessible, low-cost tool that recognises essential NSL emergency phrases as they are signed and presents them in a form a hearing person understands immediately.
+\noindent What is missing is a low-cost tool that recognises essential NSL emergency phrases as they are signed and presents them in a form a hearing person understands immediately.
 
 \section{Objectives}
 
-The primary objective was to design and implement a system that recognises six Nepali Sign Language emergency phrases and outputs them as text and audio. The specific objectives were:
+The objective was to build a system that recognises six Nepali Sign Language emergency phrases from a live camera and speaks them aloud. Specifically:
 
 \begin{itemize}
-    \item To establish the natural signed form of each of the six target phrases with NSL experts, so that the recorded data reflects how the phrases are actually signed.
-    \item To build a custom dataset of NSL emergency phrases across multiple signers and recording conditions, since no suitable public dataset exists.
-    \item To develop a landmark-based recognition pipeline using MediaPipe Holistic, representing each frame as 225 pose and hand coordinates.
-    \item To normalise landmarks against anatomical anchors and standardise every clip to a fixed length derived from the recorded data.
-    \item To train a bidirectional LSTM classifier and evaluate it on signers absent from its training data.
-    \item To deploy the trained model in a mobile application that runs recognition on the device itself, so that no network connection is required at the moment of an emergency, and that on the user's command captures a sign, displays the recognised phrase, speaks it aloud, and withholds output when the system is not confident.
+    \item To record a custom dataset of the six phrases, with their signed form established by Deaf experts, since no such dataset exists.
+    \item To train a landmark-based recogniser (MediaPipe Holistic and a bidirectional LSTM) and test it on signers it has never seen.
+    \item To deploy it as a mobile application that runs offline on the device, displays and speaks the recognised phrase, and stays silent when it is not confident.
 \end{itemize}
 
 \section{Scope of the Project}
