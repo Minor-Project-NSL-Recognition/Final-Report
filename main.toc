@@ -1,9 +1,9 @@
-\contentsline {section}{Copyright}{i}{figure.caption.1}%
-\contentsline {section}{Acknowledgement}{ii}{figure.caption.1}%
-\contentsline {section}{Abstract}{iii}{figure.caption.1}%
-\contentsline {section}{List of tables}{viii}{chapter*.2}%
-\contentsline {section}{List of figures}{ix}{chapter*.3}%
-\contentsline {section}{List of Symbols and Abbreviation}{xi}{chapter*.4}%
+\contentsline {section}{Copyright}{i}{Doc-Start}%
+\contentsline {section}{Acknowledgement}{ii}{Doc-Start}%
+\contentsline {section}{Abstract}{iii}{Doc-Start}%
+\contentsline {section}{List of tables}{viii}{chapter*.1}%
+\contentsline {section}{List of figures}{ix}{chapter*.2}%
+\contentsline {section}{List of Symbols and Abbreviation}{xi}{chapter*.3}%
 \contentsline {chapter}{\numberline {1}INTRODUCTION}{1}{chapter.1}%
 \contentsline {section}{\numberline {1.1}Background Introduction}{1}{section.1.1}%
 \contentsline {section}{\numberline {1.2}Problem Statement}{2}{section.1.2}%
@@ -111,7 +111,7 @@
 \contentsline {section}{\numberline {6.1}Conclusion}{51}{section.6.1}%
 \contentsline {section}{\numberline {6.2}Limitations}{52}{section.6.2}%
 \contentsline {section}{\numberline {6.3}Future Work}{53}{section.6.3}%
-\contentsline {chapter}{REFERENCES}{55}{chapter*.34}%
+\contentsline {chapter}{REFERENCES}{55}{chapter*.33}%
 \contentsline {chapter}{\numberline {A}Field Consultation with NSL Experts}{56}{chapter.A}%
 \contentsline {chapter}{\numberline {B}Data Collection Tool}{58}{chapter.B}%
 \contentsline {chapter}{\numberline {C}Dataset Organisation}{61}{chapter.C}%
