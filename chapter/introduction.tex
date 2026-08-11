@@ -37,7 +37,7 @@ The primary objective was to design and implement a system that recognises six N
     \item To develop a landmark-based recognition pipeline using MediaPipe Holistic, representing each frame as 225 pose and hand coordinates.
     \item To normalise landmarks against anatomical anchors and standardise every clip to a fixed length derived from the recorded data.
     \item To train a bidirectional LSTM classifier and evaluate it on signers absent from its training data.
-    \item To deploy the trained model in an application that, on the user's command, captures a sign and displays the recognised phrase and speaks it aloud, and to withhold output when the system is not confident.
+    \item To deploy the trained model in a mobile application that runs recognition on the device itself, so that no network connection is required at the moment of an emergency, and that on the user's command captures a sign, displays the recognised phrase, speaks it aloud, and withholds output when the system is not confident.
 \end{itemize}
 
 \section{Scope of the Project}
