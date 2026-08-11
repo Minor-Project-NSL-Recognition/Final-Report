@@ -158,36 +158,14 @@ That asymmetry is expected. The six phrases are each a specific, repeatable perf
 
 \subsection{Confusion Matrix}
 
-Figure~\ref{fig:confusion} shows the pooled confusion matrix and Table~\ref{tab:confusion} the same counts numerically.
+Errors are easiest to read from the pooled confusion matrix in Figure~\ref{fig:confusion}.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{img/confusionmatrix.png}
-    \caption{Confusion matrix pooled over all eight leave-one-signer-out folds}
+    \includegraphics[width=0.62\textwidth]{img/confusionmatrix_cropped.png}
+    \caption{Confusion matrix pooled over all eight leave-one-signer-out folds. Rows are the true class, columns the prediction.}
     \label{fig:confusion}
 \end{figure}
-
-\begin{table}[H]
-    \centering
-    \caption{Pooled confusion matrix. Rows are the true class, columns the prediction.}
-    \label{tab:confusion}
-    \small
-    \begin{tabular}{l|ccccccc}
-        \toprule
-        & \rotatebox{60}{\texttt{fire}} & \rotatebox{60}{\texttt{police}} & \rotatebox{60}{\texttt{breathe}}
-        & \rotatebox{60}{\texttt{help}} & \rotatebox{60}{\texttt{ambulance}} & \rotatebox{60}{\texttt{toilet}}
-        & \rotatebox{60}{\texttt{none}} \\
-        \midrule
-        \texttt{building\_on\_fire} & \textbf{113} & 0 & 0 & 0 & 0 & 1 & 6 \\
-        \texttt{call\_police}       & 0 & \textbf{117} & 0 & 0 & 0 & 0 & 3 \\
-        \texttt{cant\_breathe}      & 0 & 0 & \textbf{118} & 0 & 0 & 0 & 2 \\
-        \texttt{help\_danger}       & 0 & 1 & 0 & \textbf{118} & 0 & 0 & 1 \\
-        \texttt{need\_ambulance}    & 1 & 0 & 0 & 0 & \textbf{118} & 0 & 1 \\
-        \texttt{need\_toilet}       & 0 & 0 & 0 & 1 & 0 & \textbf{119} & 0 \\
-        \texttt{none}               & 3 & 3 & 1 & 2 & 6 & 0 & \textbf{105} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
 
 \noindent Thirty-two of the 840 predictions are wrong, and they fall into three groups that carry very different consequences.
 

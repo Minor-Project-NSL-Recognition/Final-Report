@@ -33,14 +33,14 @@ Clips were recorded with a purpose-built tool that runs MediaPipe Holistic on a 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.88\textwidth]{img/recorder1.jpg}
+    \includegraphics[height=2.3in]{img/recorder1.jpg}
     \caption{A signer recording the \textit{Call the police} phrase, showing live pose and hand landmark overlays alongside the signer identity and phrase selection}
     \label{fig:recorder-a}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.88\textwidth]{img/recorder2.png}
+    \includegraphics[width=0.62\textwidth]{img/recorder2.png}
     \caption{The recorder during an active recording, showing hand landmarks in detail and the running per-class clip counts on disk}
     \label{fig:recorder-b}
 \end{figure}
@@ -104,6 +104,29 @@ This appendix traces one clip through the preprocessing pipeline, to make the nu
     \end{tabular}
 \end{table}
 
+\noindent Figure~\ref{fig:vectorslice} shows the same layout as a single 225-value row, sliced into its three blocks.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        blk/.style={draw=dgrey, thick, minimum height=1cm, align=center, font=\footnotesize},
+        brc/.style={decorate, decoration={brace, amplitude=5pt, mirror}, dgrey, thick},
+        lbl/.style={font=\footnotesize\sffamily, text=dgrey}
+    ]
+        % widths proportional to value counts, total 12cm for 225 values
+        \def\w{0.05333cm} % cm per value
+        \node[blk, fill=dfill,  minimum width=99*\w]  (pose) at (0,0) {Pose\\[1pt]\texttt{0--98}};
+        \node[blk, fill=dfilla, minimum width=63*\w, right=0pt of pose]  (lhand) {Left hand\\[1pt]\texttt{99--161}};
+        \node[blk, fill=dfill,  minimum width=63*\w, right=0pt of lhand] (rhand) {Right hand\\[1pt]\texttt{162--224}};
+
+        % overall extent brace
+        \draw[brc] ($(pose.south west)+(0,-3pt)$) -- ($(rhand.south east)+(0,-3pt)$)
+            node[midway, below=6pt, lbl] {225-value feature vector, one frame};
+    \end{tikzpicture}
+    \caption{The 225-value feature vector as a single row, sliced into its three landmark blocks}
+    \label{fig:vectorslice}
+\end{figure}
+
 \section{Raw Values}
 
 The first five pose landmarks of the clip's first frame, in the normalised image coordinates MediaPipe reports:
@@ -153,6 +176,39 @@ The same five landmarks after dual-anchor normalisation, now expressed relative 
 \section{After Length Standardisation}
 
 The clip has 42 frames, fewer than the sequence length of 146, so it is zero-padded at the end. The result is a $(146, 225)$ array in which the first 42 frames are real and the remaining 104 are zero, with a boolean mask recording which is which. The final frame of the standardised clip is entirely zero, confirming that padding stays distinguishable from signal and that the masking layer will skip it.
+
+Figure~\ref{fig:padslice} shows this same $(146, 225)$ array as a row of frames, sliced against the boolean mask computed alongside it.
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        blk/.style={draw=dgrey, thick, minimum height=1cm, align=center, font=\footnotesize},
+        mblk/.style={draw=dgrey, thick, minimum height=0.7cm, align=center, font=\footnotesize},
+        brc/.style={decorate, decoration={brace, amplitude=5pt, mirror}, dgrey, thick},
+        lbl/.style={font=\footnotesize\sffamily, text=dgrey}
+    ]
+        \def\w{0.0288cm} % cm per frame, 146 frames over ~4.2cm+8.2cm split
+
+        % data array row
+        \node[blk, fill=dfill,  minimum width=42*\w]  (real) at (0,0) {\texttt{clip[0:42]}\\[1pt]real frames};
+        \node[blk, fill=dfilla, minimum width=104*\w, right=0pt of real] (pad) {\texttt{clip[42:146]}\\[1pt]zero-padded frames};
+
+        \draw[brc] ($(real.south west)+(0,-3pt)$) -- ($(pad.south east)+(0,-3pt)$)
+            node[midway, below=6pt, lbl] {standardised clip, shape (146, 225)};
+
+        % mask row, aligned beneath
+        \node[mblk, fill=white, minimum width=42*\w, below=1.55cm of real, anchor=north west] (mreal) {};
+        \node[mblk, fill=dline!40, minimum width=104*\w, right=0pt of mreal] (mpad) {};
+        \node[lbl, left=4pt of mreal] {\texttt{mask}};
+        \node[font=\scriptsize, text=dgrey] at (mreal) {True};
+        \node[font=\scriptsize, text=dgrey] at (mpad) {False};
+
+        \draw[dgrey, dashed] (real.south) -- (mreal.north);
+        \draw[dgrey, dashed] (pad.south)  -- (mpad.north);
+    \end{tikzpicture}
+    \caption{The standardised clip as a single row of 146 frames, sliced into the real and zero-padded spans, with the boolean mask that marks the same split}
+    \label{fig:padslice}
+\end{figure}
 
 % ================= Appendix E =================
 \chapter{Client Interface}

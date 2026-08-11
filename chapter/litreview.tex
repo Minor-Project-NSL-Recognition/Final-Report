@@ -133,123 +133,24 @@ The 33 pose landmarks are translated so the midpoint of the left shoulder (landm
     \quad i = 0,\dots,32.
 \]
 
-Figure~\ref{fig:anchors} shows both anchors on the MediaPipe Holistic skeletons they are computed from. Landmarks 11 and 12 and their midpoint define the pose anchor; landmarks 0 and 9 define the hand anchor and the wrist-to-middle-knuckle distance used to scale it.
+Figure~\ref{fig:anchors} shows the MediaPipe Holistic landmark layouts these anchors are drawn from. Landmarks 11 and 12 and their midpoint define the pose anchor; landmarks 0 and 9 define the hand anchor and the wrist-to-middle-knuckle distance used to scale it.
 
 \begin{figure}[H]
     \centering
-    \begin{subfigure}[b]{0.48\textwidth}
+    \begin{subfigure}[b]{0.42\textwidth}
         \centering
-        \resizebox{\textwidth}{!}{%
-        \begin{tikzpicture}[
-            lm/.style={circle, fill=dfilla, draw=dgrey, inner sep=1.3pt},
-            anchor_pt/.style={circle, fill=white, draw=dgrey, very thick, inner sep=1.7pt},
-            bone/.style={dline, line width=0.8pt},
-            anchorline/.style={dgrey, line width=0.9pt, dashed},
-            lbl/.style={font=\scriptsize\sffamily, text=dgrey}
-        ]
-            % --- torso / limb bones ---
-            \draw[bone] (-1.0,3.6) -- (1.0,3.6);   % shoulders
-            \draw[bone] (-1.0,3.6) -- (-1.4,1.4);  % left upper arm
-            \draw[bone] (-1.4,1.4) -- (-1.7,-0.4); % left forearm
-            \draw[bone] (1.0,3.6)  -- (1.4,1.4);   % right upper arm
-            \draw[bone] (1.4,1.4)  -- (1.7,-0.4);  % right forearm
-            \draw[bone] (-1.0,3.6) -- (-0.7,0.2);  % left torso side
-            \draw[bone] (1.0,3.6)  -- (0.7,0.2);   % right torso side
-            \draw[bone] (-0.7,0.2) -- (0.7,0.2);   % hips
-
-            % --- head ---
-            \draw[bone] (0,3.6) -- (0,4.15);
-            \draw[dline, line width=0.8pt] (0,4.55) circle (0.4);
-
-            % --- anchor line: shoulder midpoint ---
-            \draw[anchorline] (-1.0,3.6) -- (1.0,3.6);
-
-            % --- non-anchor pose landmarks ---
-            \node[lm] at (-1.4,1.4)  {};
-            \node[lm] at (-1.7,-0.4) {};
-            \node[lm] at (1.4,1.4)   {};
-            \node[lm] at (1.7,-0.4)  {};
-            \node[lm] at (-0.7,0.2)  {};
-            \node[lm] at (0.7,0.2)   {};
-            \node[lm] at (0,4.15)    {};
-
-            % --- anchor landmarks: shoulders + midpoint ---
-            \node[anchor_pt] (ls) at (-1.0,3.6) {};
-            \node[anchor_pt] (rs) at (1.0,3.6)  {};
-            \node[anchor_pt] (mid) at (0,3.6)   {};
-
-            \node[lbl, above=1pt] at (ls)  {12};
-            \node[lbl, above=1pt] at (rs)  {11};
-            \node[lbl, above=4pt] at (mid) {origin};
-
-        \end{tikzpicture}%
-        }
-        \caption{Pose anchor: landmarks 11 and 12 (shoulders) and their midpoint}
+        \includegraphics[height=2.3in]{img/pose.png}
+        \caption{Pose landmarks. 11 and 12 (shoulders) and their midpoint anchor the pose block.}
         \label{fig:anchor-pose}
     \end{subfigure}
-    \hfill
-    \begin{subfigure}[b]{0.48\textwidth}
+    \hspace{0.4cm}
+    \begin{subfigure}[b]{0.5\textwidth}
         \centering
-        \resizebox{\textwidth}{!}{%
-        \begin{tikzpicture}[
-            lm/.style={circle, fill=dfilla, draw=dgrey, inner sep=1.3pt},
-            anchor_pt/.style={circle, fill=white, draw=dgrey, very thick, inner sep=1.7pt},
-            bone/.style={dline, line width=0.8pt},
-            anchorline/.style={dgrey, line width=0.9pt, dashed},
-            lbl/.style={font=\scriptsize\sffamily, text=dgrey}
-        ]
-            % wrist at origin
-            \coordinate (w) at (0,0);
-            % finger bases (MCPs) fan out from wrist
-            \coordinate (thumbcmc) at (-0.9,0.5);
-            \coordinate (indexmcp) at (-0.55,1.9);
-            \coordinate (midmcp)   at (0,2.1);
-            \coordinate (ringmcp)  at (0.55,1.95);
-            \coordinate (pinkymcp) at (1.0,1.6);
-
-            % palm bones from wrist to each base
-            \draw[bone] (w) -- (thumbcmc);
-            \draw[bone] (w) -- (indexmcp);
-            \draw[bone] (w) -- (midmcp);
-            \draw[bone] (w) -- (ringmcp);
-            \draw[bone] (w) -- (pinkymcp);
-
-            % thumb chain
-            \draw[bone] (thumbcmc) -- (-1.5,1.1) -- (-1.95,1.65) -- (-2.3,2.1);
-            % index chain
-            \draw[bone] (indexmcp) -- (-0.65,2.75) -- (-0.7,3.35) -- (-0.75,3.85);
-            % middle chain
-            \draw[bone] (midmcp) -- (0,2.9) -- (0,3.55) -- (0,4.05);
-            % ring chain
-            \draw[bone] (ringmcp) -- (0.6,2.7) -- (0.65,3.3) -- (0.7,3.8);
-            % pinky chain
-            \draw[bone] (pinkymcp) -- (1.15,2.35) -- (1.3,2.85) -- (1.42,3.25);
-
-            % anchor line: wrist to middle-finger MCP
-            \draw[anchorline] (w) -- (midmcp);
-
-            % non-anchor landmarks (finger joints)
-            \foreach \p in {(-1.5,1.1),(-1.95,1.65),(-2.3,2.1),
-                            (-0.65,2.75),(-0.7,3.35),(-0.75,3.85),
-                            (0,2.9),(0,3.55),(0,4.05),
-                            (0.6,2.7),(0.65,3.3),(0.7,3.8),
-                            (1.15,2.35),(1.3,2.85),(1.42,3.25),
-                            (thumbcmc),(indexmcp),(ringmcp),(pinkymcp)}
-                \node[lm] at \p {};
-
-            % anchor landmarks: wrist (0) and middle MCP (9)
-            \node[anchor_pt] (wr) at (w) {};
-            \node[anchor_pt] (mm) at (midmcp) {};
-
-            \node[lbl, below=1pt] at (wr) {0, origin};
-            \node[lbl, above=1pt] at (mm) {9};
-
-        \end{tikzpicture}%
-        }
-        \caption{Hand anchor: wrist (landmark 0) and middle-finger MCP (landmark 9)}
+        \includegraphics[height=2.3in]{img/hands.jpg}
+        \caption{Hand landmarks. Wrist (0) and middle-finger MCP (9) anchor each hand block.}
         \label{fig:anchor-hand}
     \end{subfigure}
-    \caption{The two normalisation anchors on the MediaPipe Holistic skeletons. Filled points are ordinary tracked landmarks; the open circles and dashed line mark the anchor points and the reference distance each block is normalised against.}
+    \caption{MediaPipe Holistic landmark layouts for the pose and hand blocks, with the index of every tracked point. Each block is normalised against its own two anchor landmarks.}
     \label{fig:anchors}
 \end{figure}
 
