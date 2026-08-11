@@ -63,7 +63,7 @@ The final dataset holds 840 clips, distributed exactly evenly at 120 clips in ea
     \end{tabular}
 \end{table}
 
-\noindent The four signers who recorded 20 clips per class were team members, who could record repeatedly. The four who recorded 10 per class include the Deaf consultants and additional volunteers, whose available time was shorter. Class balance across the seven classes was maintained deliberately, since an imbalanced set would have let the classifier gain accuracy by favouring whichever class was most common.
+\noindent Signers 01 to 04 are the four project members. They studied the reference recordings from the consultations of Section~\ref{sec:phase0} and rehearsed each phrase before recording, and their availability to each other let them record repeatedly, so they contributed 20 clips per class. Signers 05 to 08 are the Deaf experts consulted to establish the signed form of each phrase: Yojana Sakha and a pupil at the Rehabilitation Centre for the Rural Deaf, and two resource persons at the National Federation of the Deaf Nepal. Their time was shorter, so each contributed roughly 10 clips per class, but their signing is fluent NSL rather than a reproduction of it. Class balance across the seven classes was maintained deliberately, since an imbalanced set would have let the classifier gain accuracy by favouring whichever class was most common.
 
 The \texttt{none} row is the one departure from the otherwise regular pattern. Signer 05 recorded no negatives and signer 06 recorded twice the usual number, so the class total still comes to 120 while those two signers contribute 60 and 80 clips overall rather than 70 each. This matters for one thing only, and it is worth stating before the fold results: signer 05's held-out fold is scored on six classes, not seven, because that signer has no \texttt{none} clips to be tested on. Since \texttt{none} is the hardest class, that fold is measured on a slightly easier problem than the other seven.
 
@@ -398,12 +398,13 @@ score comes from favouring a common class.
 
 The three optimistic properties matter more for interpreting the number.
 
-Every signer reproduced a single fixed reference form, established with the consultants
+Every clip converges on a single fixed reference form, established with the consultants
 before recording. This was the right methodological choice, since it fixes the ground truth
-for each class, but it also means the dataset contains eight people imitating one
-performance rather than eight people signing naturally. Real signing carries regional and
-personal variation that this dataset largely excludes, so intra-class variance here is
-lower than a deployed system would meet.
+for each class, but it also means four of the eight signers are imitating a performance
+rather than signing naturally, and even the four experts were asked to sign concisely and
+consistently rather than with the full regional and personal variation fluent signing
+normally carries. Intra-class variance here is therefore lower than a deployed system would
+meet.
 
 Each input is one complete phrase, performed deliberately, with the user marking its start
 and end by tapping. The system never has to find a phrase inside continuous motion, decide
@@ -638,7 +639,7 @@ Every accuracy in this chapter rests on eight people, four of whom are the autho
 
 The architecture comparison in Section~\ref{sec:ablation} puts this on a firmer footing than an assertion. Across six architectures spanning 77{,}063 to 535{,}559 parameters, no variant is distinguishable from any other, and the fold-to-fold spread within each one is larger than every difference between them. What limits this system is not the model that was chosen but the number of people it has been measured on.
 
-Four of the eight signers are also not fluent NSL users. They learned each phrase from the consultants' reference and reproduced it. The dataset therefore contains a mixture of fluent and learned performances, and the accuracy above is an accuracy on that mixture, not on fluent signing.
+Four of the eight signers are also not fluent NSL users. Signers 01 to 04 are the project members, who learned each phrase from the consultants' reference and reproduced it; signers 05 to 08 are the Deaf experts who set that reference in the first place. The dataset therefore contains a mixture of fluent and learned performances, and the accuracy above is an accuracy on that mixture, not on fluent signing alone.
 
 \subsection{The Negative Class Is the Weak Point}
 

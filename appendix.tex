@@ -53,29 +53,58 @@ The eight signers recorded independently on separate machines. Contributions wer
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.88\textwidth]{img/repomerge1.png}
+    \includegraphics[width=0.88\textwidth]{img/Githubdataset.png}
     \caption{The shared dataset repository, with raw and processed directories tracked separately and a commit history showing contributions merged from several signers}
     \label{fig:merge-repo}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.88\textwidth]{img/repomerge2.png}
+    \includegraphics[width=0.88\textwidth]{img/more_github.png}
     \caption{The raw directory after merging, with one subfolder per phrase class holding the contributions of all signers}
     \label{fig:merge-raw}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\textwidth]{img/rawdirs.png}
-    \caption{Local directory layout: raw clips organised by phrase class, alongside the processed output directory}
+    \begin{Verbatim}[frame=single, fontsize=\small, xleftmargin=1em, xrightmargin=1em]
+data/
+`-- raw/
+    |-- building_on_fire/
+    |   |-- building_on_fire__signer01__001.npy
+    |   |-- building_on_fire__signer01__002.npy
+    |   |-- ...
+    |   `-- building_on_fire__signer08__010.npy
+    |-- call_police/
+    |   `-- ... (120 clips)
+    |-- cant_breathe/
+    |   `-- ... (120 clips)
+    |-- help_danger/
+    |   `-- ... (120 clips)
+    |-- need_ambulance/
+    |   `-- ... (120 clips)
+    |-- need_toilet/
+    |   `-- ... (120 clips)
+    `-- none/
+        `-- ... (120 clips)
+    \end{Verbatim}
+    \caption{Local directory layout: raw clips organised into one subfolder per phrase class, each holding 120 clips named \texttt{<phrase>\_\_<signer>\_\_<index>.npy}}
     \label{fig:dirs-raw}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.42\textwidth]{img/processeddirs.png}
-    \caption{Contents of the processed directory: the compiled tensors alongside the manifest and the sequence-length metadata}
+    \begin{Verbatim}[frame=single, fontsize=\small, xleftmargin=1em, xrightmargin=1em]
+data/
+`-- processed/
+    |-- label_map.json
+    |-- manifest.csv
+    |-- mask.npy
+    |-- seq_len.json
+    |-- seq_len_hist.png
+    `-- y.npy
+    \end{Verbatim}
+    \caption{Contents of the processed directory: the compiled label array, padding mask, manifest, and sequence-length metadata produced from the raw clips}
     \label{fig:dirs-processed}
 \end{figure}
 

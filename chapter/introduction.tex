@@ -29,16 +29,7 @@ In an emergency, clear communication is the difference between help arriving and
 
 \section{Objectives}
 
-The primary objective was to design and implement a system that recognises six Nepali Sign Language emergency phrases and outputs them as text and audio. The specific objectives were:
-
-\begin{itemize}
-    \item To establish the natural signed form of each of the six target phrases with NSL experts, so that the recorded data reflects how the phrases are actually signed.
-    \item To build a custom dataset of NSL emergency phrases across multiple signers and recording conditions, since no suitable public dataset exists.
-    \item To develop a landmark-based recognition pipeline using MediaPipe Holistic, representing each frame as 225 pose and hand coordinates.
-    \item To normalise landmarks against anatomical anchors and standardise every clip to a fixed length derived from the recorded data.
-    \item To train a bidirectional LSTM classifier and evaluate it on signers absent from its training data.
-    \item To deploy the trained model in a mobile application that runs recognition on the device itself, so that no network connection is required at the moment of an emergency, and that on the user's command captures a sign, displays the recognised phrase, speaks it aloud, and withholds output when the system is not confident.
-\end{itemize}
+The objective was to design and implement a system that establishes the signed form of six NSL emergency phrases with NSL experts, builds a custom landmark-based dataset from multiple signers, and trains and evaluates a BiLSTM classifier on signers absent from training, deployed in a mobile application that recognises phrases on-device and outputs them as text and speech.
 
 \section{Scope of the Project}
 
