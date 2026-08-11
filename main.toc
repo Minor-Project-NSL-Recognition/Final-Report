@@ -1,5 +1,3 @@
-\contentsline {section}{Copyright}{i}{Doc-Start}%
-\contentsline {section}{Acknowledgement}{ii}{Doc-Start}%
 \contentsline {section}{Abstract}{iii}{Doc-Start}%
 \contentsline {section}{List of tables}{viii}{chapter*.1}%
 \contentsline {section}{List of figures}{ix}{chapter*.2}%
