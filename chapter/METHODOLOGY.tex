@@ -113,7 +113,7 @@ Every frame of every clip is reduced to the same 225-dimensional vector, concate
 
 The classifier requires a fixed number of time steps, but raw clip lengths vary because signers take different amounts of time. The value was measured from the data rather than chosen.
 
-Across the 840 clips, frame counts ranged from 18 to 217, with a median of 89 and a mean of 90.1. The 95th percentile of this distribution gives $\textsc{seq\_len} = 137$ frames. The distribution and the cutoff are shown in Figure~\ref{fig:seqlen} in Chapter~\ref{ch:results}. The value is written to a metadata file that every later stage reads, so no stage recomputes or assumes it.
+Across the 840 clips, frame counts ranged from 30 to 217, with a median of 89.5 and a mean of 91.7. The 95th percentile of this distribution gives $\textsc{seq\_len} = 146$ frames. The distribution and the cutoff are shown in Figure~\ref{fig:seqlen} in Chapter~\ref{ch:results}. The value is written to a metadata file that every later stage reads, so no stage recomputes or assumes it.
 
 An observation from the same metadata turned out to matter more than expected. The recorder never locked a frame rate; it ran as fast as the interface and MediaPipe allowed, giving a median capture rate of 15.7 frames per second across a range of 10.8 to 21.2. Since the model receives a fixed-length sequence with no explicit time axis, it reads frame count as duration. The capture rate is therefore a property of the training data that any real-time path has to reproduce, and Section~\ref{sec:framerate} describes how.
 
@@ -123,11 +123,11 @@ Each clip is normalised and then standardised to \textsc{seq\_len}, in that orde
 
 Normalisation applies the dual-anchor scheme of Section~\ref{sec:normalisation} to each frame, treating the three landmark blocks independently. The pose block is re-centred on the shoulder midpoint and divided by shoulder width; each hand block is re-centred on its wrist and divided by the wrist-to-middle-knuckle distance. Normalising per block keeps the position of a hand relative to the body while removing the signer's position and distance from the camera.
 
-Standardisation then forces the clip to exactly 137 frames in one of three ways. A clip already at 137 frames is used unchanged. A longer clip is subsampled at 137 evenly spaced positions spanning its full duration, so the whole performance is represented instead of the first 137 frames. A shorter clip is zero-padded at the end, and a boolean mask records which frames are real.
+Standardisation then forces the clip to exactly 146 frames in one of three ways. A clip already at 146 frames is used unchanged. A longer clip is subsampled at 146 evenly spaced positions spanning its full duration, so the whole performance is represented instead of the first 146 frames. A shorter clip is zero-padded at the end, and a boolean mask records which frames are real.
 
 The order is what makes the padding safe. Both normalisation formulas map a zero input to zero output, so an undetected block stays zero through normalisation, and padding added afterwards is also exactly zero. The classifier's masking layer then skips any all-zero time step at no cost. Padding after normalising would have produced non-zero padded frames that the model would read as signal.
 
-The compiled dataset is stored as three aligned arrays: the normalised sequences with shape $(840, 137, 225)$, the integer labels with shape $(840,)$, and the padding mask with shape $(840, 137)$. A manifest records the class, signer, source file, and original frame count for every row, which keeps each compiled clip traceable to the recording it came from.
+The compiled dataset is stored as three aligned arrays: the normalised sequences with shape $(840, 146, 225)$, the integer labels with shape $(840,)$, and the padding mask with shape $(840, 146)$. A manifest records the class, signer, source file, and original frame count for every row, which keeps each compiled clip traceable to the recording it came from.
 
 \section{Phase 5: Model Training}
 
@@ -143,7 +143,7 @@ The classifier is a bidirectional LSTM built with TensorFlow and Keras:
         \hline
         \textbf{Layer} & \textbf{Purpose} \\
         \hline
-        Input $(137, 225)$              & one normalised clip \\
+        Input $(146, 225)$              & one normalised clip \\
         \hline
         Masking (mask value 0.0)        & skips zero-padded and undetected frames \\
         \hline
@@ -180,7 +180,7 @@ That is a much smaller problem, and 192{,}007 parameters is a proportionate mode
 A pretrained video classifier operating on pixels was considered and rejected for two
 reasons. It would need the raw video, which was deliberately never stored, so adopting one
 would mean re-recording the entire dataset. It would also be too large for the deployment
-target, where the whole exported model is 879 kilobytes and runs without a GPU.
+target, where the whole exported model is 881 kilobytes and runs without a GPU.
 
 The dataset was also enlarged during development in preference to adding model capacity,
 growing from four signers and 570 clips at the mid-term to eight signers and 840 clips.
