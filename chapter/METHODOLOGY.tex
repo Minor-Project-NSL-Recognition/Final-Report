@@ -5,7 +5,7 @@ This chapter describes how the system was built, in the order the work was carri
 
 \section{Software Development Approach}
 
-Agile incremental development was adopted because several parameters could not be fixed in advance. The sequence length depended on how long signers actually took to perform each phrase, the normalisation scheme had to be validated against real recordings, and the deployment target changed once the recognition results were in hand. Each increment delivered a working module: phrase verification, the recorder, the preprocessing core, the trained model, the inference server, and the mobile client.
+Agile incremental development was adopted because several parameters could not be fixed in advance. The sequence length depended on how long signers actually took to perform each phrase, the normalisation scheme had to be validated against real recordings, and the deployment target changed once the recognition results were in hand. Each increment delivered a working module: phrase verification, the recorder, the preprocessing core, the trained model, the inference server, the mobile client, and finally the on-device recognition path that replaced the server on the delivered system.
 
 The riskiest unknown was addressed first. Before any large-scale recording, a small set of clips was captured to confirm that MediaPipe Holistic produces stable landmarks for multi-sign NSL phrases performed at natural speed. Had it not, the entire landmark-based approach would have needed reconsideration while there was still time to change it.
 
@@ -113,7 +113,7 @@ Every frame of every clip is reduced to the same 225-dimensional vector, concate
 
 The classifier requires a fixed number of time steps, but raw clip lengths vary because signers take different amounts of time. The value was measured from the data rather than chosen.
 
-Across the 840 clips, frame counts ranged from 30 to 217, with a median of 89.5 and a mean of 91.7. The 95th percentile of this distribution gives $\textsc{seq\_len} = 146$ frames. The distribution and the cutoff are shown in Figure~\ref{fig:seqlen} in Chapter~\ref{ch:results}. The value is written to a metadata file that every later stage reads, so no stage recomputes or assumes it.
+Across the 840 clips, frame counts ranged from 30 to 217, with a median of 89.5 and a mean of 91.7. The 95th percentile of this distribution gives $\textsc{seq\_len} = 146$ frames. The distribution and the cutoff are shown in Figure~\ref{fig:seqlen} in Chapter~\ref{ch:results}. The value is written to a metadata file that every later stage reads, so no stage recomputes or assumes it. Nothing in the training code, the export, or the mobile client hardcodes it; the sequence length has moved twice as recordings were added, and each time the change propagated without a code edit.
 
 An observation from the same metadata turned out to matter more than expected. The recorder never locked a frame rate; it ran as fast as the interface and MediaPipe allowed, giving a median capture rate of 15.7 frames per second across a range of 10.8 to 21.2. Since the model receives a fixed-length sequence with no explicit time axis, it reads frame count as duration. The capture rate is therefore a property of the training data that any real-time path has to reproduce, and Section~\ref{sec:framerate} describes how.
 
@@ -179,8 +179,10 @@ That is a much smaller problem, and 192{,}007 parameters is a proportionate mode
 
 A pretrained video classifier operating on pixels was considered and rejected for two
 reasons. It would need the raw video, which was deliberately never stored, so adopting one
-would mean re-recording the entire dataset. It would also be too large for the deployment
-target, where the whole exported model is 881 kilobytes and runs without a GPU.
+would mean re-recording the entire dataset. It would also be far too large for the
+deployment target, which turned out to be a phone: the whole exported classifier is
+881 kilobytes, it runs without a GPU, and it is small enough to ship inside the
+application package alongside the landmark models.
 
 The dataset was also enlarged during development in preference to adding model capacity,
 growing from four signers and 570 clips at the mid-term to eight signers and 840 clips.
@@ -219,9 +221,9 @@ A stratified 70/15/15 random split is also trained and reported. It is not an ad
 \subsection{The Architecture Comparison}
 \label{sec:archcompare}
 
-The architecture in Table~\ref{tab:architecture} fixes several numbers --- two recurrent widths, a dense width, a dropout rate, and the choice of LSTM over GRU --- that were settled before any accuracy had been measured. A comparison across seven variants of it is therefore also run and reported. Like the random-split contrast, it is not an additional performance measure; its purpose is to establish whether those numbers were a defensible choice rather than an arbitrary one.
+The architecture in Table~\ref{tab:architecture} fixes several numbers --- two recurrent widths, a dense width, and a dropout rate --- that were settled before any accuracy had been measured. A comparison across six variants of it is therefore also run and reported. Like the random-split contrast, it is not an additional performance measure; its purpose is to establish whether those numbers were a defensible choice rather than an arbitrary one.
 
-The seven candidates vary one aspect of the design at a time: a smaller network (32/16/16 units), a larger one (128/64/64), a single recurrent layer instead of two, the removal of the dense head, dropout raised from 0.3 to 0.5, and the LSTM cells replaced with GRU cells. The seventh candidate is the shipped architecture itself, reconstructed to the same specification, so that it is measured on equal footing with the alternatives instead of being compared against a figure obtained some other way.
+The six candidates vary one aspect of the design at a time: a smaller network (32/16/16 units), a larger one (128/64/64), a single recurrent layer instead of two, the removal of the dense head, and dropout raised from 0.3 to 0.5. The sixth candidate is the shipped architecture itself, reconstructed to the same specification, so that it is measured on equal footing with the alternatives instead of being compared against a figure obtained some other way. The comparison holds the cell type fixed at LSTM throughout, so that what it varies is the size and depth of the network and nothing else.
 
 Every candidate is evaluated over the same eight leave-one-signer-out folds described above, with the same seed, the same stratified validation split, the same class weights, and the same early-stopping and learning-rate schedule. Only the architecture changes, so any difference in accuracy is attributable to it and not to a different training regime. The results are given in Section~\ref{sec:ablation}.
 
@@ -240,47 +242,75 @@ A confusion matrix pooled over all folds identifies which classes are mutually c
 \subsection{Revision of the Deployment Approach}
 \label{sec:deploychange}
 
-The proposal specified a browser application built with Next.js, running the model in the visitor's browser through TensorFlow.js, with no server involved. The delivered system is an Android application that streams frames to an inference server. Two separate decisions produced that change and they are worth separating.
+The proposal specified a browser application built with Next.js, running the model in the visitor's browser through TensorFlow.js, with no server involved. The delivered system is an Android application that runs recognition on the phone itself, with no server involved at use time. Two separate decisions produced that change and they are worth separating.
 
 The first is the choice of device. A phone is what a person has with them when an emergency happens; a laptop with a browser open is not. For a tool whose value depends on being available at the moment of need, the phone is the correct target, and this was decided on those grounds. The browser route was not attempted. The change was recorded as a task deviation in the project log and accepted by the supervisor before the client was built.
 
-The second decision concerns where inference runs, and it carries a real cost. MediaPipe Holistic, the exact landmark extractor the dataset was recorded with, exists as a Python pipeline. Running recognition on the device would mean reimplementing the 225-feature extraction and the dual-anchor normalisation against a different landmark source, and a numerical difference between the two implementations does not raise an error. It produces confident wrong answers, because the model receives numbers unlike anything it was trained on. Serving from Python means the inference path imports the same preprocessing module that the reported accuracy was measured with, so the correspondence between measured and deployed behaviour is structural, not something that had to be verified.
+The second decision concerns where inference runs, and it was revised once during development. MediaPipe Holistic, the exact landmark extractor the dataset was recorded with, exists only as a Python pipeline and has no mobile build. Running recognition on the device therefore meant reimplementing the 225-feature extraction and the dual-anchor normalisation against a different landmark source, and a numerical difference between two such implementations does not raise an error. It produces confident wrong answers, because the model receives numbers unlike anything it was trained on. On that reasoning the first working system served the model from Python over a network, so that the inference path imported the same preprocessing module the reported accuracy was measured with.
 
-The cost is that the delivered system requires a network connection at use time, which the proposal stated it would not. For an emergency tool this is a genuine weakness and not a neutral trade. It is listed among the limitations in Chapter~\ref{ch:conclusion}, along with the work that would remove it.
+That system worked, but it made an emergency tool depend on a network connection, which the proposal had stated it would not. The on-device path was therefore built as well, and Section~\ref{sec:ondevice} describes what it took to make the two landmark sources agree closely enough for the trained model to survive the substitution. The delivered application runs on the device by default and needs no network at all. The server is retained as a selectable fallback for a phone too slow to extract landmarks in real time, and as the verification path described in Appendix~\ref{app:protocol}.
+
+The cost did not disappear; it changed shape. The on-device path is a reimplementation rather than the same code, and the guarantee that inference and training preprocess identically is now enforced by tests rather than by construction. That is a weaker guarantee, and it is recorded among the limitations in Chapter~\ref{ch:conclusion}.
+
+\subsection{On-Device Recognition}
+\label{sec:ondevice}
+
+The phone extracts landmarks with the MediaPipe Pose Landmarker and Hand Landmarker, the mobile-supported successors to Holistic, and assembles them into the same 225-value vector in the same order. Because Holistic assigns hands implicitly and the two mobile landmarkers do not, the on-device assembler reproduces that assignment by matching each detected hand to the nearer pose wrist, and carries a flag recording whether MediaPipe's own handedness classifier agreed. A disagreement would mean the two hand blocks had swapped, which is the one error in this pipeline that produces plausible output rather than an obvious failure.
+
+Normalisation and length standardisation are ported to the client and pinned to the Python implementation by generated fixtures: a script exports the intermediate arrays for a set of real clips, and the client's test suite fails if its own output diverges. The port also reproduces one detail that would otherwise drift silently, namely that the subsampling index uses round-half-to-even, as NumPy does, rather than the round-half-up of the client language.
+
+Two distortions were found once the path could be measured against recorded clips, and both are corrected before any of the shared preprocessing runs.
+
+The first is geometric. MediaPipe reports each coordinate as a fraction of the frame's width and height, so the aspect ratio of the frame decides how much vertical distance one unit represents. The dataset was recorded through an unconfigured webcam in landscape, and the phone captures in portrait. Without correction the on-device skeleton arrives at the correct width and roughly half the correct height, which the dual-anchor normalisation cannot repair because it divides by a single, largely horizontal, scalar. Rescaling the vertical coordinates by the ratio of the two aspect ratios removes it.
+
+The second is temporal. Pose and hand landmarking on a phone processor does not sustain the capture rate of the training data, so a six-second phrase can arrive as forty-five frames where the recordings held about ninety-five. Since the model reads frame count as duration, that is not a quality loss but a different sign: measured before the correction, genuine \texttt{need\_ambulance} clips were classified as \texttt{none} with full confidence. The client therefore resamples the completed clip along time to the frame count the training capture rate would have produced over the measured wall-clock duration of the recording. Interpolation cannot recover motion the low frame rate never sampled; it restores the temporal scale, which is what the model is sensitive to. Interpolation never crosses a missing block, since averaging a detected hand against an absent one would invent a landmark halfway to the origin.
 
 \subsection{Model Export}
 
-The trained model is converted to TensorFlow Lite \cite{tflite2024} so the server can run it without a full TensorFlow installation, reducing the deployed image from about three gigabytes to one. The conversion required a workaround: on the pinned TensorFlow and Keras versions used here, the standard converter entry points abort the host process inside the compiler backend instead of raising a catchable exception. Freezing the model's variables to constants before conversion avoids the failure.
+The trained model is converted to TensorFlow Lite \cite{tflite2024}, which is what allows it to run on the phone at all and, on the fallback server, to run without a full TensorFlow installation, reducing that deployed image from about three gigabytes to one. The conversion required a workaround: on the pinned TensorFlow and Keras versions used here, the standard converter entry points abort the host process inside the compiler backend instead of raising a catchable exception. Freezing the model's variables to constants before conversion avoids the failure.
 
 Because a silent conversion error would be indistinguishable from a model that simply performs worse, the export is verified and not assumed. The converted model and the original are run on 30 real clips and compared; the export is rejected if they disagree. The measured agreement is reported in Section~\ref{sec:exportverify}.
 
-\subsection{Inference Server}
+\subsection{The Fallback Inference Server}
 
-The server is a FastAPI application exposing a WebSocket endpoint. A client opens a session, streams JPEG frames while the user signs, and sends a completion message; the server replies with the decision. Landmark extraction costs about 38 milliseconds per frame and accounts for almost the entire pipeline cost, so streaming frames during signing overlaps that work with the signing itself. When the client signals completion, only normalisation, standardisation, and the forward pass remain, which together take about 15 milliseconds. Uploading a finished recording instead would have serialised the two and added several seconds of silence before every result.
+The server predates the on-device path and is retained for two purposes: it serves phones that cannot extract landmarks in real time, and it is the path by which the deployed decision can be checked against the offline pipeline without a phone at all.
+
+It is a FastAPI application exposing a WebSocket endpoint. A client opens a session, streams JPEG frames while the user signs, and sends a completion message; the server replies with the decision. Landmark extraction costs about 38 milliseconds per frame and accounts for almost the entire pipeline cost, so streaming frames during signing overlaps that work with the signing itself. When the client signals completion, only normalisation, standardisation, and the forward pass remain, which together take about 15 milliseconds. Uploading a finished recording instead would have serialised the two and added several seconds of silence before every result.
 
 Each session holds its own MediaPipe graph, which occupies about 150 megabytes, so concurrency is bounded by memory, not processor time. A semaphore caps simultaneous sessions and refuses further connections with an explicit error instead of allowing the process to be killed for exhausting memory. Requests are authenticated with a shared key compared using a constant-time function, so that a wrong key cannot be narrowed down by timing the response. The health endpoint is left unauthenticated so that container health checks and the client's reachability test continue to work.
 
 \subsection{Frame Rate as a Correctness Constraint}
 \label{sec:framerate}
 
-Because the model reads frame count as duration, a client capturing at 30 frames per second produces twice as many frames for the same sign as the training data contained, and presents the model with a temporal scale it has never seen. The server therefore discards incoming frames down to the 15.7 frames per second of the training data before running detection, using an accumulator that tracks when the next frame is due. A simpler test of whether enough time has elapsed since the last accepted frame aliases a 16 frames-per-second client down to 8. The client caps its own send rate at 16 frames per second, slightly above the target so that jitter does not starve the server below it.
+Because the model reads frame count as duration, a capture rate that differs from the training data's presents the model with a temporal scale it has never seen. The two deployment paths meet this constraint from opposite directions, because they fail in opposite directions.
+
+A network client can capture faster than the training data: at 30 frames per second it produces twice as many frames for the same sign. The server therefore discards incoming frames down to the 15.7 frames per second of the training data before running detection, using an accumulator that tracks when the next frame is due. A simpler test of whether enough time has elapsed since the last accepted frame aliases a 16 frames-per-second client down to 8. The client caps its own send rate at 16 frames per second, slightly above the target so that jitter does not starve the server below it.
+
+On the device the problem is the reverse: landmark extraction is the bottleneck and the phone captures more slowly than the training data, so there is nothing to discard. The correction there is the temporal resampling of Section~\ref{sec:ondevice}, applied to the finished clip against its measured duration. Both paths therefore deliver a clip whose frame count means what it meant during recording, which is the property the model actually depends on.
 
 \subsection{Mobile Client}
 
-The Android client performs no recognition. It captures camera frames, encodes them, sends them, and speaks the result.
+The Android client captures camera frames, converts them, runs the recogniser, and speaks the result. In the fallback server mode it encodes and transmits frames instead of recognising them.
 
-Frame encoding is the client's bottleneck, since it is pure Dart. Colour conversion, rotation, and downscaling are folded into a single pass over the output pixels, avoiding the intermediate full-resolution buffers a naive implementation allocates. Frames are downscaled to 320 pixels wide and encoded with chroma subsampling, on the grounds that landmarks are derived from luminance structure and not chroma resolution. The work runs on a persistent background isolate. When a frame is already in flight the next one is dropped instead of queued, since the server discards surplus frames anyway and a queue would only add latency.
+Frame conversion is the client's bottleneck, since it is pure Dart. Colour conversion, rotation, mirroring, and downscaling are folded into a single pass over the output pixels, avoiding the intermediate full-resolution buffers a naive implementation allocates. The work runs on a persistent background isolate. When a frame is already in flight the next one is dropped instead of queued, since a queue would only add latency to a result the user is waiting for. On the on-device path each frame becomes a 480-pixel-wide raw image handed to the landmarkers; on the server path it is downscaled to 320 pixels and encoded as JPEG with chroma subsampling, on the grounds that landmarks are derived from luminance structure and not chroma resolution.
 
-Two details are recorded because they are easy to get wrong. The application is locked to portrait orientation and rotates each frame by the camera's sensor orientation before sending, because Android delivers frames in sensor orientation and MediaPipe detects nothing at all in an image of a person lying sideways. Frames are sent unmirrored with a flag instructing the server to apply the same horizontal flip the recorder used, and the flag is set for both front and rear cameras: the lens faces the signer either way, so the signer's right hand appears on the image-left in both cases, and making the flag depend on the camera would swap the two hand blocks in the feature vector for one of them.
+Two details are recorded because they are easy to get wrong. The application is locked to portrait orientation and rotates each frame by the camera's sensor orientation, because Android delivers frames in sensor orientation and MediaPipe detects nothing at all in an image of a person lying sideways. Every frame is mirrored to match the horizontal flip the recorder applied, and the mirror is applied for both front and rear cameras: the lens faces the signer either way, so the signer's right hand appears on the image-left in both cases, and making the mirror depend on the camera would swap the two hand blocks in the feature vector for one of them. On the server path the frames go unmirrored with a flag instructing the server to apply the same flip, which keeps the single implementation of it on the side that owns the feature vector.
+
+The client also writes the raw landmark clip for each attempt to device storage. The recorder saved landmarks so that a bad recording could be inspected afterwards; the phone originally did not, and that is precisely what made the two distortions of Section~\ref{sec:ondevice} difficult to locate. Both were diagnosed by pulling a clip off the device and running it through the Python pipeline beside a recorded one.
 
 \subsection{The Decision Rule}
 \label{sec:decisionrule}
 
-Two outcomes are possible:
+Three outcomes are possible:
 
 \begin{enumerate}
     \item If the predicted class is one of the six emergency phrases and the softmax confidence reaches 0.75, the result is \texttt{accepted}. The phrase is displayed and spoken.
-    \item Otherwise the result is \texttt{low\_confidence}. This covers a prediction of the \texttt{none} class and a low-confidence prediction of any class alike: the user is told the input was not recognised clearly, and nothing is spoken.
+    \item If the predicted class is \texttt{none}, the result is \texttt{unknown}. The classifier has positively identified the input as not being one of the six phrases, which is a different statement from being unsure, and the user is told so.
+    \item Otherwise the result is \texttt{low\_confidence}: the top class is an emergency phrase but the model does not carry enough probability on it, and the user is told the input was not recognised clearly.
 \end{enumerate}
 
-\noindent Folding rejection into the classifier this way keeps a wrong announcement and no announcement on the same footing: both routes into \texttt{low\_confidence} withhold output rather than guessing. The best guess and the top three probabilities are returned in every case, including refusals, which is what makes a failure diagnosable during a demonstration.
+\noindent Only \texttt{accepted} speaks. The two refusals are distinguished because they call for different responses from the user --- \texttt{unknown} means the system saw motion it does not treat as a target phrase, while \texttt{low\_confidence} means it saw something phrase-like and would not commit --- but neither produces audio, so a wrong announcement and no announcement stay on the same footing.
+
+Separating \texttt{unknown} from \texttt{low\_confidence} also removes a failure mode that the two-outcome design would have carried into deployment. The \texttt{none} class has a human-readable label like any other class, so a confidently recognised non-sign would otherwise satisfy the acceptance test and be announced aloud, which is the opposite of what the negative class was added to achieve. Routing \texttt{none} to its own refusing status is what prevents that.
+
+The best guess and the top three probabilities are returned in every case, including both refusals, which is what makes a failure diagnosable during a demonstration.

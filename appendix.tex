@@ -214,15 +214,15 @@ Figure~\ref{fig:padslice} shows this same $(146, 225)$ array as a row of frames,
 \chapter{Client Interface}
 \label{app:ui}
 
-The Android client presents one of two outcomes for every recognition attempt: an accepted phrase, which is displayed and spoken, or a low-confidence result, which is reported without being spoken. A row of indicators below the camera preview reports what the server observed for each frame, so a failure during use can be attributed instead of guessed at.
+The Android client presents one of three outcomes for every recognition attempt: an accepted phrase, which is displayed and spoken; an unrecognised result, when the classifier identifies the input as not being one of the six phrases; or a low-confidence result, when the top class is a phrase but the model will not commit to it. Only the first produces speech. A row of indicators below the camera preview reports what the recogniser observed for each frame --- whether pose and hands were detected, the sustained frame rate, the per-frame conversion and extraction costs, and whether any frames were dropped --- so a failure during use can be attributed instead of guessed at.
 
-\fillin{Insert client screenshots here: the accepted and low-confidence result states, the telemetry indicator row, and the server configuration screen.}
+\fillin{Insert client screenshots here: the accepted, unrecognised and low-confidence result states, and the telemetry indicator row during an active recording. The server configuration screen is optional, since it is reachable only after switching out of the default on-device mode.}
 
 % ================= Appendix F =================
 \chapter{Server Interface}
 \label{app:protocol}
 
-The inference server exposes the endpoints in Table~\ref{tab:endpoints}. The streaming endpoint is the path the client uses; the two prediction endpoints exist so that the server can be checked against the offline pipeline without needing a phone.
+The fallback inference server exposes the endpoints in Table~\ref{tab:endpoints}. The streaming endpoint is the path the client uses when on-device recognition is switched off; the two prediction endpoints exist so that the served decision can be checked against the offline pipeline without needing a phone at all, which is what keeps this path useful as a reference even when nothing uses it in production.
 
 \begin{table}[H]
     \centering
@@ -273,3 +273,5 @@ The inference server exposes the endpoints in Table~\ref{tab:endpoints}. The str
         \hline
     \end{tabular}
 \end{table}
+
+\noindent The on-device path carries no protocol, but it produces the same result structure --- status, phrase, confidence, and the top three classes --- so the presentation logic in the client is identical whichever path produced the decision. Switching between them changes where the computation happens and nothing the user sees.

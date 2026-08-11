@@ -45,6 +45,7 @@ Khwopa College of Engineering
 \newpage
 
 \pagenumbering{roman}
+\addcontentsline{toc}{section}{Copyright}
 \begin{center}
     {\Large\bfseries COPYRIGHT\copyright}
 \end{center}
@@ -60,6 +61,7 @@ Khwopa College of Engineering (KhCE) \\
 Libali-08, Bhaktapur, Nepal
 \newpage
 
+\addcontentsline{toc}{section}{Acknowledgement}
 \begin{center}
     {\Large\bfseries ACKNOWLEDGEMENT}
 \end{center}
@@ -94,9 +96,9 @@ Nepali Sign Language (NSL) is the first language of Nepal's deaf community, yet 
 
 \noindent No public dataset of NSL emergency phrases exists, so one was recorded from scratch. The natural signed form of every phrase was established in person with Deaf experts at the Rehabilitation Centre for the Rural Deaf and the National Federation of the Deaf Nepal before any recording began. Eight signers then contributed 840 clips across seven classes: the six emergency phrases and a negative class covering non-signing motion.
 
-\noindent Each frame is reduced by MediaPipe Holistic to 225 landmark coordinates instead of being stored as video, which keeps the representation compact and independent of background and lighting. Landmarks are normalised against two anatomical anchors, the shoulder midpoint for the body and the wrist for each hand, and every clip is standardised to 146 frames, the 95th percentile of the recorded frame-count distribution. A bidirectional Long Short-Term Memory network classifies the resulting sequence.
+\noindent Each frame is reduced by MediaPipe to 225 landmark coordinates instead of being stored as video, which keeps the representation compact and independent of background and lighting. Landmarks are normalised against two anatomical anchors, the shoulder midpoint for the body and the wrist for each hand, and every clip is standardised to 146 frames, the 95th percentile of the recorded frame-count distribution. A bidirectional Long Short-Term Memory network classifies the resulting sequence.
 
-\noindent Evaluation used leave-one-signer-out folds, in which the model is scored only on a signer absent from its training data. Accuracy averaged 96.11\% over eight folds and 96.19\% pooled across all 840 predictions, with per-class F1 between 0.954 and 0.992 for the six emergency phrases. The same architecture reaches 99.21\% under a random split, and that gap of 3.0 percentage points is a measure of how much a random split overstates performance on this kind of data. A seventh, negative class trained on non-signing motion lets the system stay silent instead of announcing an emergency phrase for arbitrary motion. The trained network was exported to TensorFlow Lite and deployed behind a streaming inference server, with an Android client that captures the sign, displays the recognised phrase, and speaks it aloud.
+\noindent Evaluation used leave-one-signer-out folds, in which the model is scored only on a signer absent from its training data. Accuracy averaged 95.51\% over eight folds and 95.95\% pooled across all 840 predictions, with per-class F1 between 0.950 and 0.992 for the six emergency phrases. The same architecture reaches 98.41\% under a random split, and that gap of 2.5 percentage points is a measure of how much a random split overstates performance on this kind of data. A seventh, negative class trained on non-signing motion lets the system stay silent instead of announcing an emergency phrase for arbitrary motion. The trained network was exported to TensorFlow Lite and runs entirely on an Android phone, which extracts landmarks on the device, classifies the sign, displays the recognised phrase, and speaks it aloud without a network connection. A streaming inference server is retained as an optional fallback for devices that cannot sustain on-device landmark extraction.
 
 \vspace{1em}
 \noindent
