@@ -1,0 +1,34 @@
+{
+    "latex-workshop.latex.recipes": [
+        {
+            "name": "xelatex ➞ bibtex ➞ xelatex × 2",
+            "tools": [
+                "xelatex",
+                "bibtex",
+                "xelatex",
+                "xelatex"
+            ]
+        }
+    ],
+    "latex-workshop.latex.tools": [
+        {
+            "name": "xelatex",
+            "command": "xelatex",
+            "args": [
+                "--max-print-line=10000",
+                "-synctex=1",
+                "-interaction=nonstopmode",
+                "-file-line-error",
+                "-recorder",
+                "%DOC%"
+            ]
+        },
+        {
+            "name": "bibtex",
+            "command": "bibtex",
+            "args": [
+                "%DOCFILE%"
+            ]
+        }
+    ]
+}

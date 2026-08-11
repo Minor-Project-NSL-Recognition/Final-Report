@@ -73,7 +73,7 @@ We are grateful to our project supervisor, \textbf{Er. Prakash Chandra Prasad}, 
 
 \noindent We thank our Head of Department, \textbf{Er. Dinesh Man Gothe}, for his encouragement and for the departmental support that made the work possible.
 
-\noindent This project could not have been built without the Deaf community of Bhaktapur. We thank \textbf{Yojana Sakha} and her colleagues at the \textbf{Rehabilitation Centre for the Rural Deaf (RCRD)}, and the resource persons at the \textbf{National Federation of the Deaf Nepal (NFDN)}, who gave us their time, taught us the correct signed form of every phrase in this report, and recorded reference clips for us. Any part of this system that works does so because they were willing to teach us first.
+\noindent This project could not have been built without Nepal's Deaf community. We thank \textbf{Yojana Sakha} and her colleagues at the \textbf{Rehabilitation Centre for the Rural Deaf (RCRD)} in Bhaktapur, and the resource persons at the \textbf{National Federation of the Deaf Nepal (NFDN)} in Kathmandu, who gave us their time, taught us the correct signed form of every phrase in this report, and recorded reference clips for us. Any part of this system that works does so because they were willing to teach us first.
 
 \noindent We also thank the Department of Computer and Electronics Engineering, Khwopa College of Engineering, for the resources and the environment in which this work was carried out, and our friends and families for their support.
 
@@ -99,11 +99,11 @@ Nepali Sign Language (NSL) is the first language of Nepal's deaf community, yet 
 
 \noindent Each frame is reduced by MediaPipe Holistic to 225 landmark coordinates instead of being stored as video, which keeps the representation compact and independent of background and lighting. Landmarks are normalised against two anatomical anchors, the shoulder midpoint for the body and the wrist for each hand, and every clip is standardised to 137 frames, the 95th percentile of the recorded frame-count distribution. A bidirectional Long Short-Term Memory network classifies the resulting sequence.
 
-\noindent Evaluation used leave-one-signer-out folds, in which the model is scored only on a signer absent from its training data. Accuracy averaged 96.52\% over eight folds and 96.67\% pooled across all 840 predictions, with per-class F1 between 0.963 and 0.996 for the six emergency phrases. The same architecture reaches 99.21\% under a random split, and that gap of 2.5 percentage points is a measure of how much a random split overstates performance on this kind of data. A Mahalanobis distance gate fitted in the model's embedding space rejects inputs unlike any known sign, allowing the system to stay silent instead of announcing an emergency phrase for arbitrary motion. The trained network was exported to TensorFlow Lite and deployed behind a streaming inference server, with an Android client that captures the sign, displays the recognised phrase, and speaks it aloud.
+\noindent Evaluation used leave-one-signer-out folds, in which the model is scored only on a signer absent from its training data. Accuracy averaged 96.52\% over eight folds and 96.67\% pooled across all 840 predictions, with per-class F1 between 0.963 and 0.996 for the six emergency phrases. The same architecture reaches 99.21\% under a random split, and that gap of 2.5 percentage points is a measure of how much a random split overstates performance on this kind of data. A seventh, negative class trained on non-signing motion lets the system stay silent instead of announcing an emergency phrase for arbitrary motion. The trained network was exported to TensorFlow Lite and deployed behind a streaming inference server, with an Android client that captures the sign, displays the recognised phrase, and speaks it aloud.
 
 \vspace{1em}
 \noindent
-\textbf{Keywords}: \textit{Nepali Sign Language, Emergency Phrases, Sign Language Recognition, MediaPipe Holistic, Hand Landmarks, BiLSTM, Signer-Independent Evaluation, Open-Set Recognition, Real-Time Recognition, Assistive Technology.}
+\textbf{Keywords}: \textit{Nepali Sign Language, Emergency Phrases, Sign Language Recognition, MediaPipe Holistic, Hand Landmarks, BiLSTM, Signer-Independent Evaluation.}
 \newpage
 
 \tableofcontents
@@ -131,7 +131,6 @@ AI      & Artificial Intelligence \\
 API     & Application Programming Interface \\
 APK     & Android Package Kit \\
 ASL     & American Sign Language \\
-AUROC   & Area Under the Receiver Operating Characteristic Curve \\
 BiLSTM  & Bidirectional Long Short-Term Memory \\
 CNN     & Convolutional Neural Network \\
 CPU     & Central Processing Unit \\
@@ -149,7 +148,6 @@ LSTM    & Long Short-Term Memory \\
 MCP     & Metacarpophalangeal (finger knuckle joint) \\
 NFDN    & National Federation of the Deaf Nepal \\
 NSL     & Nepali Sign Language \\
-OOD     & Out of Distribution \\
 RCRD    & Rehabilitation Centre for the Rural Deaf \\
 ReLU    & Rectified Linear Unit \\
 RNN     & Recurrent Neural Network \\

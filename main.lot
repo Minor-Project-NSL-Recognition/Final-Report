@@ -1,0 +1,33 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2.1}{\ignorespaces Review matrix of related works}}{7}{table.caption.5}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Target emergency phrases and their categories}}{15}{table.caption.8}%
+\contentsline {table}{\numberline {3.2}{\ignorespaces Classifier architecture}}{19}{table.caption.9}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {4.1}{\ignorespaces Software used, and the role of each component}}{25}{table.caption.10}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Clips by class and signer in the final dataset}}{35}{table.caption.18}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces How the 840 clips were standardised to 137 frames}}{36}{table.caption.20}%
+\contentsline {table}{\numberline {5.3}{\ignorespaces Leave-one-signer-out results. Each fold trains on seven signers and tests on the eighth.}}{38}{table.caption.23}%
+\contentsline {table}{\numberline {5.4}{\ignorespaces Per-class performance, pooled over all eight folds}}{39}{table.caption.24}%
+\contentsline {table}{\numberline {5.5}{\ignorespaces Pooled confusion matrix. Rows are the true class, columns the prediction.}}{40}{table.caption.26}%
+\contentsline {table}{\numberline {5.6}{\ignorespaces The two evaluation protocols compared}}{41}{table.caption.27}%
+\contentsline {table}{\numberline {5.7}{\ignorespaces The three levels of accuracy, and what the gap between each pair means}}{42}{table.caption.28}%
+\contentsline {table}{\numberline {5.8}{\ignorespaces TensorFlow Lite export verification}}{44}{table.caption.29}%
+\contentsline {table}{\numberline {5.9}{\ignorespaces Measured costs on the server path}}{45}{table.caption.30}%
+\contentsline {table}{\numberline {5.10}{\ignorespaces Client-side measurements on a physical device}}{45}{table.caption.31}%
+\contentsline {table}{\numberline {5.11}{\ignorespaces Development increments}}{46}{table.caption.32}%
+\contentsline {table}{\numberline {5.12}{\ignorespaces Predicted effect of a larger vocabulary on each component}}{48}{table.caption.33}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {D.1}{\ignorespaces Layout of the 225-value feature vector}}{63}{table.caption.44}%
+\contentsline {table}{\numberline {D.2}{\ignorespaces Raw pose landmarks 0 to 4, first frame}}{63}{table.caption.45}%
+\contentsline {table}{\numberline {D.3}{\ignorespaces Normalised pose landmarks 0 to 4, first frame}}{64}{table.caption.46}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {F.1}{\ignorespaces Server endpoints}}{66}{table.caption.47}%
+\contentsline {table}{\numberline {F.2}{\ignorespaces Messages on the streaming endpoint}}{66}{table.caption.48}%

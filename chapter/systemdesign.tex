@@ -26,7 +26,7 @@ This chapter records the requirements the system was built against, the feasibil
         \hline
         NumPy & Landmark arrays, normalisation arithmetic, and the compiled dataset tensors. \\
         \hline
-        scikit-learn & Stratified splits, class weights, the confusion matrix and classification report, and the Ledoit--Wolf covariance estimate used by the rejection gate. \\
+        scikit-learn & Stratified splits, class weights, and the confusion matrix and classification report. \\
         \hline
         Matplotlib & Training curves, the confusion matrix, and the frame-count histogram. \\
         \hline
@@ -53,7 +53,7 @@ Training and evaluation ran on an ordinary laptop with no GPU. The model has 192
     \item \textbf{Dataset recording.} The system shall record clips of each target phrase, extract 225 landmark values per frame, and store each clip with its class, signer identity, frame count, and per-block detection rates.
     \item \textbf{Preprocessing.} The system shall normalise every clip against the shoulder-midpoint and wrist anchors and standardise it to the fixed sequence length, using one implementation shared by the training and inference paths.
     \item \textbf{Phrase recognition.} Given a captured sequence, the system shall produce a probability distribution over the seven classes.
-    \item \textbf{Rejection of unknown input.} The system shall measure the distance from the input to each class prototype in the model's embedding space and report the input as unknown when it lies beyond the fitted threshold, irrespective of the classifier's confidence.
+    \item \textbf{Rejection of unknown input.} The system shall be trained with an explicit negative class covering non-signing motion, so that an input unlike any of the six target phrases has a class to be assigned to instead of being forced into one of them.
     \item \textbf{Confidence thresholding.} The system shall emit a phrase only when confidence reaches the configured threshold, and shall remain silent otherwise.
     \item \textbf{Text and speech output.} On an accepted recognition the system shall display the phrase on screen and speak it aloud.
     \item \textbf{Live capture.} The client shall stream frames while the user signs and present the result when signing ends, without the user needing to time or trim the recording.
@@ -119,8 +119,8 @@ The system has three parts. An offline path builds the model, a server reproduce
     \node[store] (raw)  at (3.6, 0)  {\texttt{data/raw}\\ \scriptsize 840 clips, 8 signers};
     \node[box]   (len)  at (6.6, 0)  {Frame-count analysis\\ \scriptsize p95 $\rightarrow$ 137};
     \node[shared](pre1) at (9.6, 0)  {Normalise\\ + standardise};
-    \node[box]   (trn)  at (12.6, 0) {Train BiLSTM\\ \scriptsize + fit reject gate};
-    \node[store] (art)  at (15.6, 0) {\texttt{model.tflite}\\ \scriptsize + gate statistics};
+    \node[box]   (trn)  at (12.6, 0) {Train BiLSTM};
+    \node[store] (art)  at (15.6, 0) {\texttt{model.tflite}};
 
     \draw[arr] (rec) -- (raw);
     \draw[arr] (raw) -- (len);
@@ -134,8 +134,8 @@ The system has three parts. An offline path builds the model, a server reproduce
     \node[box]   (hol)  at (3.6, -3.4)  {MediaPipe Holistic\\ \scriptsize 225 values/frame};
     \node[box]   (buf)  at (6.6, -3.4)  {Frame buffer\\ \scriptsize one clip};
     \node[shared](pre2) at (9.6, -3.4)  {Normalise\\ + standardise};
-    \node[box]   (inf)  at (12.6, -3.4) {TFLite\\ forward pass\\ \scriptsize probs + embedding};
-    \node[box]   (dcs)  at (15.6, -3.4) {Decision\\ \scriptsize accept / low / unknown};
+    \node[box]   (inf)  at (12.6, -3.4) {TFLite\\ forward pass\\ \scriptsize class probabilities};
+    \node[box]   (dcs)  at (15.6, -3.4) {Decision\\ \scriptsize accept / low confidence};
 
     \draw[arr] (dec) -- (hol);
     \draw[arr] (hol) -- (buf);
@@ -224,10 +224,10 @@ Figure~\ref{fig:dfd1} decomposes the system into the processes that carry out re
     \node[stor] (d1)  at (18.0, 0)   {D1\\ locked constants};
 
     % ---- bottom row ----
-    \node[proc] (p4)  at (4.3, -4.8)  {\textbf{4}\\ Classify\\ and gate};
+    \node[proc] (p4)  at (4.3, -4.8)  {\textbf{4}\\ Classify\\ and threshold};
     \node[proc] (p5)  at (9.0, -4.8)  {\textbf{5}\\ Present\\ result};
     \node[ent]  (hear) at (13.7, -4.8) {Hearing recipient};
-    \node[stor] (d2)  at (18.0, -4.8) {D2\\ model and gate statistics};
+    \node[stor] (d2)  at (18.0, -4.8) {D2\\ model weights};
 
     \draw[arr] (sig) -- node[above] {gesture} (p1);
     \draw[arr] (p1) -- node[above] {JPEG frames} (p2);
@@ -239,7 +239,7 @@ Figure~\ref{fig:dfd1} decomposes the system into the processes that carry out re
 
     \draw[arr] (p4) -- node[above] {status, phrase} (p5);
     \draw[arr] (p5) -- node[above] {text, speech} (hear);
-    \draw[arr] (d2.south) -- (18.0,-6.6) -- node[below] {weights, prototypes, threshold} (4.3,-6.6) -- (p4.south);
+    \draw[arr] (d2.south) -- (18.0,-6.6) -- node[below] {weights, threshold} (4.3,-6.6) -- (p4.south);
     \end{tikzpicture}%
     }
     \caption{Level 1 data flow diagram}
@@ -286,7 +286,7 @@ Figure~\ref{fig:sequence} shows one recognition from the tap that starts it to t
     \draw[arr] (0,-7.7) -- node[above] {tap to finish} (3.4,-7.7);
     \draw[arr] (3.4,-8.4) -- node[above] {done} (7.4,-8.4);
     \draw[arr] (7.4,-9.1) -- node[above] {clip $(n, 225)$} (15,-9.1);
-    \draw[ret] (15,-9.8) -- node[above] {status, phrase, distance, top three} (7.4,-9.8);
+    \draw[ret] (15,-9.8) -- node[above] {status, phrase, confidence, top three} (7.4,-9.8);
     \draw[ret] (7.4,-10.5) -- node[above] {result} (3.4,-10.5);
     \draw[arr] (3.4,-11.2) -- node[above] {display; speak if accepted} (0,-11.2);
     \end{tikzpicture}%
@@ -339,13 +339,6 @@ Figure~\ref{fig:classdiagram} shows the principal modules and classes. The share
         \nodepart{two}
         build\_bilstm()};
 
-    \node[cls] (od) at (0,-10.5) {%
-        \textbf{ood}
-        \nodepart{two}
-        fit\_prototypes() \\
-        mahalanobis\_min() \\
-        save\_stats(), load\_stats()};
-
     \node[cls] (ds) at (5.8,-1.4) {%
         \textbf{dataset}
         \nodepart{two}
@@ -367,8 +360,6 @@ Figure~\ref{fig:classdiagram} shows the principal modules and classes. The share
         \textbf{Predictor}
         \nodepart{two}
         interpreter : TFLite \\
-        means, precision \\
-        ood\_threshold \\
         confidence\_threshold \\
         predict(clip) : Result};
 
@@ -420,9 +411,7 @@ Figure~\ref{fig:classdiagram} shows the principal modules and classes. The share
     \draw[arr] (lm) -- (ds);
     \draw[dep] (ds) -- (tr);
     \draw[dep] (md) -- (tr);
-    \draw[dep] (od) -- (tr);
     \draw[dep] (pp.east) -- (pr.west);
-    \draw[dep] (od.east) -- (pr.south west);
     \draw[dep] (lm.east) -- (ss.west);
     \draw[arr] (ss) -- (pr);
     \draw[arr] (ap) -- (ss);
@@ -438,7 +427,7 @@ Figure~\ref{fig:classdiagram} shows the principal modules and classes. The share
 
 \section{Activity Diagram}
 
-Figure~\ref{fig:activity} shows the control flow of one recognition attempt, including the two decision points that can end it without output.
+Figure~\ref{fig:activity} shows the control flow of one recognition attempt, including the decision point that can end it without output.
 
 \begin{figure}[H]
     \centering
@@ -461,13 +450,11 @@ Figure~\ref{fig:activity} shows the control flow of one recognition attempt, inc
     \node[act]  (a3)  at (0,-6.6)   {Extract 225 landmark\\ values, append to clip};
     \node[dia]  (d2)  at (0,-8.6)   {user still signing?};
     \node[act]  (a4)  at (0,-10.5)  {Normalise, standardise\\ to 137 frames};
-    \node[act]  (a5)  at (0,-12.0)  {Forward pass:\\ probabilities, embedding};
-    \node[dia]  (d3)  at (0,-14.0)  {distance within\\ threshold?};
-    \node[dia]  (d4)  at (0,-16.4)  {confidence $\geq 0.75$?};
-    \node[act]  (a6)  at (0,-18.3)  {Display phrase\\ and speak it};
-    \node[act]  (a7)  at (5.8,-14.0){Report unknown,\\ stay silent};
-    \node[act]  (a8)  at (5.8,-16.4){Report low confidence,\\ stay silent};
-    \node[term] (en)  at (0,-19.9)  {End};
+    \node[act]  (a5)  at (0,-12.0)  {Forward pass:\\ class probabilities};
+    \node[dia]  (d4)  at (0,-14.0)  {confidence $\geq 0.75$?};
+    \node[act]  (a6)  at (0,-15.9)  {Display phrase\\ and speak it};
+    \node[act]  (a8)  at (5.8,-14.0){Report low confidence,\\ stay silent};
+    \node[term] (en)  at (0,-17.5)  {End};
 
     \draw[arr] (st) -- (a1);
     \draw[arr] (a1) -- (a2);
@@ -478,13 +465,10 @@ Figure~\ref{fig:activity} shows the control flow of one recognition attempt, inc
     \draw[arr] (d2.east) -- node[above] {yes} ++(2.6,0) |- (a2.east);
     \draw[arr] (d2) -- node[right] {no} (a4);
     \draw[arr] (a4) -- (a5);
-    \draw[arr] (a5) -- (d3);
-    \draw[arr] (d3) -- node[right] {yes} (d4);
-    \draw[arr] (d3) -- node[above] {no} (a7);
+    \draw[arr] (a5) -- (d4);
     \draw[arr] (d4) -- node[right] {yes} (a6);
     \draw[arr] (d4) -- node[above] {no} (a8);
     \draw[arr] (a6) -- (en);
-    \draw[arr] (a7.south) -- (a8.north);
     \draw[arr] (a8.south) -- ++(0,-2.5) -| (en.east);
     \end{tikzpicture}%
     }

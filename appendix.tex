@@ -2,7 +2,7 @@
 \chapter{Field Consultation with NSL Experts}
 \label{app:fieldwork}
 
-The signed form of each of the six emergency phrases was established in person with Deaf experts before any data collection began, as described in Section~\ref{sec:phase0}. Consultations were held at the Rehabilitation Centre for the Rural Deaf and at the National Federation of the Deaf Nepal, both in Bhaktapur. The images below are reproduced with the consent of those photographed.
+The signed form of each of the six emergency phrases was established in person with Deaf experts before any data collection began, as described in Section~\ref{sec:phase0}. Consultations were held at the Rehabilitation Centre for the Rural Deaf in Bhaktapur and at the National Federation of the Deaf Nepal in Ranibari Marga, Samakhushi, Kathmandu. The images below are reproduced with the consent of those photographed.
 
 \begin{figure}[H]
     \centering
@@ -158,9 +158,9 @@ The clip has 42 frames, fewer than the sequence length of 137, so it is zero-pad
 \chapter{Client Interface}
 \label{app:ui}
 
-The Android client presents one of three outcomes for every recognition attempt: an accepted phrase, which is displayed and spoken; a low-confidence result, which is reported without being spoken; and an unknown result, produced when the rejection gate refuses the input. A row of indicators below the camera preview reports what the server observed for each frame, so a failure during use can be attributed instead of guessed at.
+The Android client presents one of two outcomes for every recognition attempt: an accepted phrase, which is displayed and spoken, or a low-confidence result, which is reported without being spoken. A row of indicators below the camera preview reports what the server observed for each frame, so a failure during use can be attributed instead of guessed at.
 
-\fillin{Insert client screenshots here: the accepted, low-confidence, and unknown result states, the telemetry indicator row, and the server configuration screen.}
+\fillin{Insert client screenshots here: the accepted and low-confidence result states, the telemetry indicator row, and the server configuration screen.}
 
 % ================= Appendix F =================
 \chapter{Server Interface}
@@ -209,7 +209,7 @@ The inference server exposes the endpoints in Table~\ref{tab:endpoints}. The str
         \hline
         Client & \texttt{done}      & Signing has finished; produce a decision \\
         \hline
-        Server & \texttt{result}    & Status, phrase, distance, and the three most probable classes \\
+        Server & \texttt{result}    & Status, phrase, confidence, and the three most probable classes \\
         \hline
         Client & \texttt{reset}     & Discard the current clip and start again \\
         \hline

@@ -19,14 +19,9 @@ regardless. Run, in this order:
 Then copy the regenerated \texttt{seq\_len\_hist.png}, \texttt{training\_curves.png},
 \texttt{training\_loss\_curves.png} and \texttt{confusion\_matrix\_signer\_indep.png} into
 \texttt{img/}, and update every number in this chapter, in the abstract, and in
-Chapter~6 from the new \texttt{results/metrics.json} and \texttt{results/model\_meta.json}.
-Step 3 prints the two open-set figures marked \fillin{re-run train\_model.py} in
-Table~\ref{tab:ood}.\\[3pt]
-The rejection threshold is also \textbf{contradictory between chapters}: Section~\ref{sec:oodgate}
-states 15.34 while Section~\ref{sec:openset} and Table~\ref{tab:ood} state 14.17. Take the value
-from the regenerated \texttt{results/model\_meta.json} and make both agree.}
+Chapter~6 from the new \texttt{results/metrics.json} and \texttt{results/model\_meta.json}.}
 
-This chapter reports what the system achieves and where it fails. The dataset is described first, then the recognition results under the signer-independent protocol, then the rejection gate, the deployment measurements, and a discussion of the remaining weaknesses.
+This chapter reports what the system achieves and where it fails. The dataset is described first, then the recognition results under the signer-independent protocol, then the deployment measurements, and a discussion of the remaining weaknesses.
 
 \section{Experiment Setup}
 
@@ -345,37 +340,6 @@ seven distinct classes, one deliberate phrase at a time, performed against a fix
 reference by eight people, four of whom built the system. A wider vocabulary, natural
 signing, or continuous input would each lower it.
 
-\section{Open-Set Rejection}
-\label{sec:openset}
-
-The rejection gate was fitted on the deployable model as described in Section~\ref{sec:oodgate}. One prototype per class was computed in the 32-dimensional embedding space, with a shared covariance estimated under Ledoit--Wolf shrinkage. The 99th percentile of in-distribution Mahalanobis distances gives a rejection threshold of 14.17, which by construction refuses one per cent of genuine training clips.
-
-The gate was then tested against 300 synthetic out-of-distribution inputs fabricated from the real clips: half with their frame order shuffled, half spliced from the first half of one phrase and the second half of another. Both constructions produce inputs whose individual frames are valid poses but whose motion is not any known sign.
-
-\begin{table}[H]
-    \centering
-    \caption{Open-set rejection gate}
-    \label{tab:ood}
-    \begin{tabular}{lc}
-        \toprule
-        \textbf{Quantity} & \textbf{Value} \\
-        \midrule
-        Embedding dimension & 32 \\
-        Prototypes & 7, one per class \\
-        Covariance estimate & shared, Ledoit--Wolf shrinkage \\
-        Threshold percentile & 99th of in-distribution distances \\
-        Rejection threshold & 14.17 \\
-        Genuine clips wrongly rejected & 1.0\% by construction \\
-        Synthetic OOD inputs rejected & \fillin{re-run train\_model.py} \\
-        Separation AUROC & \fillin{re-run train\_model.py} \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\noindent The gate is checked before the confidence threshold, so a clip the classifier assigns confidently to one phrase is still refused if its embedding lies far from every prototype. This ordering matters: the failure mode being guarded against is precisely a confident wrong answer, and a confidence threshold cannot catch it.
-
-Two limitations of this evaluation should be stated. Synthetic negatives establish that the gate responds to destroyed temporal structure, which is weaker than establishing that it rejects arbitrary human motion. And the threshold is a trade rather than a setting: raising it admits more real signs and catches less nonsense, lowering it does the reverse. The value chosen refuses one genuine clip in a hundred, which for an emergency tool is a defensible position but not the only one.
-
 \section{Model Export Verification}
 \label{sec:exportverify}
 
@@ -469,7 +433,7 @@ The work proceeded in seven increments, each delivering a module that could be e
         \hline
         5 & Training and evaluation & Leave-one-signer-out results. Two corrections came out of this stage: the early-stopping threshold had to be raised off zero, and deterministic operations had to be enabled before fold accuracies were reproducible. \\
         \hline
-        6 & Rejection gate & Mahalanobis gate fitted and validated against synthetic negatives. The confidence threshold was lowered from 0.85 to 0.75 once the gate covered the failure mode the higher threshold was guarding. \\
+        6 & Confidence thresholding & Decision rule fixed on the softmax over all seven classes, accepting a phrase only above threshold. The confidence threshold was lowered from 0.85 to 0.75 once the negative class was in place, since 0.85 was rejecting genuine signs. \\
         \hline
         7 & Export and deployment & TensorFlow Lite export with verification, inference server, and Android client. The deployment target changed from a browser to a phone at this stage, for the reasons in Section~\ref{sec:deploychange}. \\
         \hline
@@ -523,27 +487,6 @@ everything else becomes longer and more intricate, while the number of \texttt{n
 available to describe it stays fixed. A negative class of 120 clips describing the
 complement of six phrases is thin; describing the complement of thirty is thinner.
 
-\subsection{The Rejection Gate Degrades in a Specific Way}
-
-The open-set gate measures Mahalanobis distance to $K$ prototypes in a 32-dimensional
-embedding, and rejects an input further than the threshold from all of them. Two things
-happen as $K$ rises.
-
-The false-rejection rate does not move, because the threshold is defined as the 99th
-percentile of in-distribution distances and therefore refuses one per cent of genuine clips
-by construction, whatever $K$ is. What degrades is detection. Each prototype claims a
-region of the embedding space, and the union of those regions is the space the gate accepts.
-More prototypes in a fixed 32 dimensions means a larger accepted union, so genuinely unknown
-inputs are more likely to fall inside it and be accepted. The gate gets quieter, not
-noisier, and a quiet gate on an emergency system is the failure that matters.
-
-The shared-covariance assumption also weakens. One covariance matrix is estimated across
-all classes, which is reasonable when seven classes occupy similar-shaped clusters. With
-thirty classes of differing intra-class variability, a single shared matrix fits none of
-them well, and per-class covariance would need enough clips per class to estimate a
-$32 \times 32$ matrix thirty times over. The embedding dimension would likely have to grow
-with the vocabulary, which in turn raises the sample size needed for any covariance estimate.
-
 \subsection{The Confidence Threshold Needs Recalibrating}
 
 The threshold of 0.75 requires the model to place three quarters of its probability mass on
@@ -573,8 +516,6 @@ Table~\ref{tab:scaling} collects these effects.
         Training data & 120 clips per new class, plus one consultation each & Expert time, the scarcest input \\
         \hline
         \texttt{none} class & Describes a larger complement with the same clip count & Negative clips scaled with $K$ \\
-        \hline
-        Rejection gate & Accepted region grows, so detection falls & Larger embedding; per-class covariance \\
         \hline
         Confidence threshold & Correct predictions fall below a fixed 0.75 & Recalibration per vocabulary size \\
         \hline
@@ -609,9 +550,9 @@ Four of the eight signers are also not fluent NSL users. They learned each phras
 
 \subsection{The Negative Class Is the Weak Point}
 
-The \texttt{none} class carries a recall of 0.892, and thirteen non-signs were predicted as emergency phrases. In deployment these are the errors that produce a false announcement, and they are the reason the rejection gate exists as a second line of defence. The gate operates on a different signal from the classifier, measuring distance in embedding space instead of reading the softmax, so an input can pass the classifier and still be refused.
+The \texttt{none} class carries a recall of 0.892, and thirteen non-signs were predicted as emergency phrases. In deployment these are the errors that produce a false announcement, which is the most serious failure mode this system can have. All thirteen also passed the confidence threshold, meaning the classifier was confident about a wrong answer rather than merely uncertain, so raising the threshold would not by itself have caught them.
 
-How much the gate recovers in practice is not established by the evidence in this report. It was validated against synthetic negatives, and the thirteen errors above are real non-signs that the classifier was confident about. Measuring how many of those thirteen the gate would have caught is a direct experiment that has not been run, and it is the single most useful addition to this evaluation.
+Reducing this error is therefore a question of what the negative class covers, not of the threshold it is checked against. Widening the \texttt{none} class with more varied non-signing motion, particularly the kind of motion these thirteen clips resemble, is the direct way to give the classifier a better boundary to place, and it is the single most useful addition to this evaluation.
 
 \subsection{Duration Is Only Encoded Below the Sequence Length}
 

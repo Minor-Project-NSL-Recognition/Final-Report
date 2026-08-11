@@ -13,7 +13,7 @@ Sign languages are complete natural languages with their own vocabulary and gram
 
 \noindent Two developments make a lightweight system practical. Pretrained hand and body tracking such as MediaPipe \cite{zhang2020mediapipe} extracts the geometry of a signing person from an ordinary camera without gloves or depth sensors, and reduces each video frame to a few hundred numbers. Sequence models such as the bidirectional Long Short-Term Memory network \cite{hochreiter1997lstm, graves2005bilstm} classify the resulting motion directly. Together they allow a recognition system to be trained from a few hundred recordings and to run on hardware people already own.
 
-\noindent This project applies that combination to a narrow, high-value problem: recognising six NSL emergency phrases in real time and delivering each as on-screen text and speech. The six phrases are \textit{I can't breathe}, \textit{The building is on fire}, \textit{Call the police}, \textit{I need an ambulance}, \textit{Help me / I am in danger}, and \textit{I need to go to the toilet}. They span medical, fire, crime, and basic-need situations. Their signed form was established with Deaf experts before any data was recorded, so what the system recognises is real NSL and not an invention of the authors.
+\noindent This project applies that combination to a narrow, high-value problem: recognising six NSL emergency phrases from a live camera feed and delivering each as on-screen text and speech. The six phrases are \textit{I can't breathe} (\nepali{मलाई सास फेर्न गाह्रो भइरहेको छ}), \textit{The building is on fire} (\nepali{भवनमा आगो लागेको छ}), \textit{Call the police} (\nepali{प्रहरीलाई फोन गर्नुहोस्}), \textit{I need an ambulance} (\nepali{मलाई एम्बुलेन्स चाहियो}), \textit{Help me / I am in danger} (\nepali{मलाई मद्दत गर्नुहोस् / म खतरामा छु}), and \textit{I need to go to the toilet} (\nepali{मलाई शौचालय जानु छ}). They span medical, fire, crime, and basic-need situations. Their signed form was established with Deaf experts before any data was recorded, so what the system recognises is real NSL and not an invention of the authors.
 
 \section{Problem Statement}
 
@@ -37,13 +37,13 @@ The primary objective was to design and implement a system that recognises six N
     \item To develop a landmark-based recognition pipeline using MediaPipe Holistic, representing each frame as 225 pose and hand coordinates.
     \item To normalise landmarks against anatomical anchors and standardise every clip to a fixed length derived from the recorded data.
     \item To train a bidirectional LSTM classifier and evaluate it on signers absent from its training data.
-    \item To deploy the trained model in a real-time application that displays the recognised phrase and speaks it aloud, and to withhold output when the system is not confident.
+    \item To deploy the trained model in an application that, on the user's command, captures a sign and displays the recognised phrase and speaks it aloud, and to withhold output when the system is not confident.
 \end{itemize}
 
 \section{Scope of the Project}
 
 The system recognises exactly seven classes: the six emergency phrases listed above and a seventh negative class covering non-signing motion, idle movement, and gestures outside the target set. Each input is one complete phrase performed once. Recognition works from an ordinary camera with no gloves, markers, or depth sensors, and the model runs without a GPU.
 
-\noindent The seventh class deserves a note, because it is not in the original proposal. A classifier trained on six phrases will assign one of those six to any input it receives, including someone scratching their head. For a system whose output is an emergency announcement, that behaviour is unacceptable. The negative class gives the model examples of what is not a sign, and a second rejection mechanism described in Chapter~\ref{ch:methodology} handles inputs unlike anything in training.
+\noindent The seventh class deserves a note. A classifier trained on six phrases will assign one of those six to any input it receives, including someone scratching their head. For a system whose output is an emergency announcement, that behaviour is unacceptable. The negative class gives the model explicit examples of what is not a sign, so the confidence threshold described in Chapter~\ref{ch:methodology} can withhold output for inputs unlike anything in the six target phrases.
 
 \noindent Outside the scope are sentence-level or conversational translation, the full NSL vocabulary, recognition of more than one person at a time, and facial expression. Facial landmarks were excluded after the NSL consultants confirmed that none of the six target phrases depends on facial expression to be understood. The system is a proof of concept for a fixed phrase set and is built so that phrases, signers, and deployment targets can be added later.

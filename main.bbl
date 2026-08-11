@@ -103,21 +103,6 @@ W.~J. Scheirer, A.~de~Rezende~Rocha, A.~Sapkota, and T.~E. Boult, ``Toward open
   set recognition,'' \emph{IEEE Transactions on Pattern Analysis and Machine
   Intelligence}, vol.~35, no.~7, pp. 1757--1772, 2013.
 
-\bibitem{hendrycks2017baseline}
-D.~Hendrycks and K.~Gimpel, ``A baseline for detecting misclassified and
-  out-of-distribution examples in neural networks,'' in \emph{5th International
-  Conference on Learning Representations (ICLR)}, 2017.
-
-\bibitem{lee2018mahalanobis}
-K.~Lee, K.~Lee, H.~Lee, and J.~Shin, ``A simple unified framework for detecting
-  out-of-distribution samples and adversarial attacks,'' in \emph{Advances in
-  Neural Information Processing Systems (NeurIPS)}, vol.~31, 2018.
-
-\bibitem{ledoit2004shrinkage}
-O.~Ledoit and M.~Wolf, ``A well-conditioned estimator for large-dimensional
-  covariance matrices,'' \emph{Journal of Multivariate Analysis}, vol.~88,
-  no.~2, pp. 365--411, 2004.
-
 \bibitem{kohavi1995crossval}
 R.~Kohavi, ``A study of cross-validation and bootstrap for accuracy estimation
   and model selection,'' \emph{Proceedings of the 14th International Joint

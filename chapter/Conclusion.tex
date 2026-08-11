@@ -11,7 +11,7 @@ Representing each frame as 225 pose and hand landmarks instead of pixels is what
 
 Under leave-one-signer-out evaluation the system reaches 96.52\% mean accuracy across eight folds and 96.67\% pooled, with per-class F1 between 0.963 and 0.996 for the six emergency phrases. The same architecture reaches 99.21\% under a random split, and reporting both is deliberate: the difference of 2.5 percentage points is a measurement of how much a random split overstates performance when clips from one person can appear on both sides of it. Published NSL recognition results are generally reported without this separation, so the lower figure here is the more comparable one to any future work that adopts the same protocol.
 
-Because a seven-way classifier will name a phrase for any input at all, the system adds a rejection gate that measures Mahalanobis distance to per-class prototypes in the model's embedding space and refuses inputs that lie far from all of them. The gate is checked before the confidence threshold, so a confident wrong answer can still be refused. For a tool whose output is a spoken emergency announcement, the ability to stay silent is a feature of the same standing as accuracy.
+Because a six-way classifier would name a phrase for any input at all, the system trains a seventh, negative class on non-signing motion and requires the softmax confidence to clear a threshold before announcing a phrase. For a tool whose output is a spoken emergency announcement, the ability to stay silent is a feature of the same standing as accuracy.
 
 The trained model was exported to TensorFlow Lite, verified against the original to a largest probability difference of $1.2 \times 10^{-7}$, and deployed behind a streaming inference server with an Android client. Recognition works end to end on a physical device.
 
@@ -24,9 +24,7 @@ The trained model was exported to TensorFlow Lite, verified against the original
 
     \item \textbf{Six phrases.} The vocabulary is fixed and small. The system cannot express anything outside it, and a user with a need not on the list has no way to convey it.
 
-    \item \textbf{The negative class is the weakest class.} Recall on \texttt{none} is 0.892, and thirteen non-signs were classified as emergency phrases. How many of those the rejection gate would catch has not been measured.
-
-    \item \textbf{The rejection gate was validated on synthetic negatives.} Time-shuffled and spliced clips establish that the gate responds to destroyed temporal structure. They do not establish that it rejects arbitrary human motion, which is what it will actually encounter.
+    \item \textbf{The negative class is the weakest class.} Recall on \texttt{none} is 0.892, and thirteen non-signs were classified as emergency phrases, each a case where the system would announce an emergency that nobody signed. All thirteen cleared the confidence threshold, so the fix is a broader negative class and not a stricter threshold.
 
     \item \textbf{Speech output is in English.} The client uses the device's text-to-speech voice, and Nepali is absent from most Android devices. The proposal specified pre-recorded Nepali audio, which was not implemented.
 
@@ -42,7 +40,7 @@ The trained model was exported to TensorFlow Lite, verified against the original
 \begin{enumerate}
     \item \textbf{Move inference onto the device.} This would remove the network dependency, the most serious limitation above. The obstacle is that the dataset was recorded with MediaPipe Holistic, which exists only as a Python pipeline, and an on-device implementation would use a different landmark source producing slightly different numbers. The comparison needed to settle whether a model trained on one source survives the other is implemented in the codebase but has not been run; it requires recording some 35 clips through both paths at once. That measurement is the correct next step, since it either unblocks on-device inference or establishes that re-recording the dataset is the price of it.
 
-    \item \textbf{Measure the rejection gate against real negatives.} Replaying the thirteen misclassified non-signs through the gate would establish how many it catches, and recording genuine non-signing motion from new people would give a far stronger evaluation than the synthetic inputs used here.
+    \item \textbf{Broaden the negative class.} Recording more varied non-signing motion, targeted at the kind of motion the thirteen misclassified clips resemble, is the direct route to reducing false announcements.
 
     \item \textbf{Recruit more signers, prioritising fluent ones.} The clearest route to a more trustworthy accuracy figure is more people, and specifically more fluent NSL users. Doubling the signer count would narrow the confidence in the leave-one-signer-out estimate more than any change to the model.
 

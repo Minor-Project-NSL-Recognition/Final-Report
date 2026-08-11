@@ -19,7 +19,7 @@ The riskiest unknown was addressed first. Before any large-scale recording, a sm
 \section{Phase 0: Establishing the Signed Form of Each Phrase}
 \label{sec:phase0}
 
-No standard published gloss exists for the six target emergency phrases, so the natural signed form of each had to be established with the Deaf community before recording could begin. Two consultations were held in person in Bhaktapur: with Yojana Sakha and colleagues at the Rehabilitation Centre for the Rural Deaf, and with a resource person at the National Federation of the Deaf Nepal.
+No standard published gloss exists for the six target emergency phrases, so the natural signed form of each had to be established with the Deaf community before recording could begin. Two consultations were held in person: with Yojana Sakha and colleagues at the Rehabilitation Centre for the Rural Deaf in Bhaktapur, and with a resource person at the National Federation of the Deaf Nepal in Ranibari Marga, Samakhushi, Kathmandu.
 
 Each consultant was asked to demonstrate how the idea would be signed in an actual emergency, as concisely as possible, and not to sign the English sentence word by word. Each demonstration was discussed for regional variation, recorded as a reference, and confirmed as the form every signer would reproduce. Because the experts' time was limited, they also contributed roughly ten clips per phrase, which anchor the dataset to an authentic performance. Photographs from the consultations appear in Appendix~\ref{app:fieldwork}.
 
@@ -31,23 +31,24 @@ Table~\ref{tab:phrases} lists the six phrases and the situation each covers. Phr
     \centering
     \caption{Target emergency phrases and their categories}
     \label{tab:phrases}
-    \begin{tabular}{|c|p{6cm}|l|l|}
+    \small
+    \begin{tabular}{|c|p{3.6cm}|p{3.4cm}|l|l|}
         \hline
-        \textbf{\#} & \textbf{English phrase} & \textbf{Category} & \textbf{Class key} \\
+        \textbf{\#} & \textbf{English phrase} & \textbf{Nepali phrase} & \textbf{Category} & \textbf{Class key} \\
         \hline
-        1 & I can't breathe            & Medical           & \texttt{cant\_breathe} \\
+        1 & I can't breathe            & \nepali{मलाई सास फेर्न गाह्रो भइरहेको छ} & Medical           & \texttt{cant\_breathe} \\
         \hline
-        2 & The building is on fire    & Fire              & \texttt{building\_on\_fire} \\
+        2 & The building is on fire    & \nepali{भवनमा आगो लागेको छ} & Fire              & \texttt{building\_on\_fire} \\
         \hline
-        3 & Call the police            & Crime             & \texttt{call\_police} \\
+        3 & Call the police            & \nepali{प्रहरीलाई फोन गर्नुहोस्} & Crime             & \texttt{call\_police} \\
         \hline
-        4 & I need an ambulance        & Medical           & \texttt{need\_ambulance} \\
+        4 & I need an ambulance        & \nepali{मलाई एम्बुलेन्स चाहियो} & Medical           & \texttt{need\_ambulance} \\
         \hline
-        5 & Help me / I am in danger   & Generic emergency & \texttt{help\_danger} \\
+        5 & Help me / I am in danger   & \nepali{मलाई मद्दत गर्नुहोस् / म खतरामा छु} & Generic emergency & \texttt{help\_danger} \\
         \hline
-        6 & I need to go to the toilet & Basic need        & \texttt{need\_toilet} \\
+        6 & I need to go to the toilet & \nepali{मलाई शौचालय जानु छ} & Basic need        & \texttt{need\_toilet} \\
         \hline
-        7 & Not one of the above       & Negative class    & \texttt{none} \\
+        7 & Not one of the above       & --- & Negative class    & \texttt{none} \\
         \hline
     \end{tabular}
 \end{table}
@@ -56,7 +57,7 @@ Table~\ref{tab:phrases} lists the six phrases and the situation each covers. Phr
 
 The seventh class was added during development and is not in the original proposal. A classifier over six phrases assigns one of those six to every input it receives, so a signer adjusting their glasses would be reported as an emergency. For a system whose output is a spoken emergency announcement, that is the worst available failure mode.
 
-The \texttt{none} class holds deliberate non-examples: resting, idle movement, gestures outside the target set, and partial or abandoned signs. Giving the model explicit negatives lets it learn a decision boundary around the six real phrases instead of partitioning the whole input space among them. A second, independent rejection mechanism is described in Section~\ref{sec:oodgate}.
+The \texttt{none} class holds deliberate non-examples: resting, idle movement, gestures outside the target set, and partial or abandoned signs. Giving the model explicit negatives lets it learn a decision boundary around the six real phrases instead of partitioning the whole input space among them, so the confidence threshold of Section~\ref{sec:decisionrule} has a class to fall back on instead of being forced to choose one of six emergency phrases for every input.
 
 \section{Phase 1: Dataset Collection}
 
@@ -154,7 +155,7 @@ The classifier is a bidirectional LSTM built with TensorFlow and Keras:
         \hline
         Dropout 0.3                     & regularisation \\
         \hline
-        Dense 32, ReLU                  & embedding used by the rejection gate \\
+        Dense 32, ReLU                  & feature layer feeding the classification head \\
         \hline
         Dense 7, softmax                & probability over the seven classes \\
         \hline
@@ -162,8 +163,6 @@ The classifier is a bidirectional LSTM built with TensorFlow and Keras:
 \end{table}
 
 \noindent The network has 192{,}007 trainable parameters, which is small enough to train on a laptop CPU in minutes.
-
-The 32-unit dense layer does double duty. It is the penultimate feature layer of the classifier, and it is also the space in which the open-set rejection gate measures distance. This is why the exported model has two outputs, not one.
 
 \subsection{Why This Model and Not a Larger Pretrained One}
 
@@ -198,15 +197,6 @@ Two callbacks control the schedule. Early stopping monitors validation loss with
 Learning rate reduction on plateau addresses the cause of those fluctuations, halving the learning rate after 6 epochs without improvement, down to a floor of $10^{-5}$. Its patience is kept well below the early-stopping patience so that the reduced rate has a chance to take effect before training halts.
 
 Reproducibility required more than fixing the random seed. TensorFlow's parallel CPU reductions vary between runs, and on identical data this moved per-fold accuracy by up to 2.7 percentage points. Deterministic operations are therefore enabled explicitly, at some cost in speed, so that a reported fold accuracy is a property of the data and the recipe, not of one particular run.
-
-\subsection{Fitting the Open-Set Rejection Gate}
-\label{sec:oodgate}
-
-After the deployable model is trained, the rejection gate of Section~\ref{sec:opensettheory} is fitted on the same data. Every clip is passed through the network to obtain its 32-dimensional embedding. One prototype is computed per class as the mean embedding of that class, and a single covariance matrix shared across classes is estimated from the within-class deviations using Ledoit--Wolf shrinkage \cite{ledoit2004shrinkage}. The rejection threshold is set at the 99th percentile of the resulting in-distribution Mahalanobis distances, which for the committed model is 15.34. By construction, one per cent of genuine training clips fall beyond it.
-
-The gate is then checked against out-of-distribution inputs, which is harder than it sounds because no dataset of things-that-are-not-NSL-emergency-phrases exists. Three hundred synthetic inputs are fabricated from the real clips instead. Half are time-shuffled, with the frame order randomised so the poses are individually valid but the motion is destroyed. The other half are cross-class splices, taking the first half of one phrase and the second half of a different one, which produces a clip that is locally plausible everywhere and globally not a sign. The separation between genuine and synthetic distances is measured as an AUROC.
-
-Synthetic negatives are a weaker test than real ones. They establish that the gate responds to destroyed temporal structure, which is not the same as establishing that it rejects arbitrary human motion, and this limitation is revisited in Chapter~\ref{ch:conclusion}.
 
 \section{Phase 6: Evaluation Methodology}
 
@@ -269,13 +259,13 @@ Frame encoding is the client's bottleneck, since it is pure Dart. Colour convers
 Two details are recorded because they are easy to get wrong. The application is locked to portrait orientation and rotates each frame by the camera's sensor orientation before sending, because Android delivers frames in sensor orientation and MediaPipe detects nothing at all in an image of a person lying sideways. Frames are sent unmirrored with a flag instructing the server to apply the same horizontal flip the recorder used, and the flag is set for both front and rear cameras: the lens faces the signer either way, so the signer's right hand appears on the image-left in both cases, and making the flag depend on the camera would swap the two hand blocks in the feature vector for one of them.
 
 \subsection{The Decision Rule}
+\label{sec:decisionrule}
 
-Three outcomes are possible, and the order of the checks matters:
+Two outcomes are possible:
 
 \begin{enumerate}
-    \item If the Mahalanobis distance to the nearest class prototype exceeds the threshold, the result is \texttt{unknown}. Nothing is displayed as a recognised phrase and nothing is spoken.
-    \item Otherwise, if the softmax confidence reaches 0.75, the result is \texttt{accepted}. The phrase is displayed and spoken.
-    \item Otherwise the result is \texttt{low\_confidence}. The user is told the input was not recognised clearly, and nothing is spoken.
+    \item If the predicted class is one of the six emergency phrases and the softmax confidence reaches 0.75, the result is \texttt{accepted}. The phrase is displayed and spoken.
+    \item Otherwise the result is \texttt{low\_confidence}. This covers a prediction of the \texttt{none} class and a low-confidence prediction of any class alike: the user is told the input was not recognised clearly, and nothing is spoken.
 \end{enumerate}
 
-\noindent The rejection gate is checked before confidence, so a clip that the softmax assigns to one phrase with high probability is still refused if its embedding sits far from every prototype. The confidence threshold was lowered from the 0.85 proposed to 0.75 once the gate was in place, since the gate handles the failure mode the higher threshold was guarding against, and 0.85 was rejecting genuine signs. The best guess and the top three probabilities are returned in every case, including refusals, which is what makes a failure diagnosable during a demonstration.
+\noindent Folding rejection into the classifier this way keeps a wrong announcement and no announcement on the same footing: both routes into \texttt{low\_confidence} withhold output rather than guessing. The best guess and the top three probabilities are returned in every case, including refusals, which is what makes a failure diagnosable during a demonstration.

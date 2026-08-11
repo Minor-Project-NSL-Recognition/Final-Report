@@ -1,11 +1,14 @@
 % Khwopa College of Engineering LaTeX Template
-% Original template prepared by Mukesh Kumar Pokharel.
+% Asul is super gay.
 
 \documentclass[12pt, a4paper, oneside, openany]{report}
 
 % ── Encoding ──────────────────────────────────────────────────────────────────
-\usepackage[utf8]{inputenc}
-\DeclareUnicodeCharacter{202F}{\,}
+% Compiled with XeLaTeX (not pdflatex) so that \nepali{} can render Devanagari.
+\usepackage{fontspec}
+\setmainfont{Latin Modern Roman}
+\newfontfamily\devanagarifont{Nirmala UI}
+\newcommand{\nepali}[1]{{\devanagarifont #1}}
 
 % ── Page Layout ───────────────────────────────────────────────────────────────
 \usepackage[left=1.2in, right=1in, top=1.2in, bottom=1in,
