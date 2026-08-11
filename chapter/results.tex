@@ -297,6 +297,89 @@ sense of having memorised its training clips. What they do not say is that it ge
 to a new signer drawn from outside the population of eight, which is a separate claim and
 is addressed in Section~\ref{sec:discussion}.
 
+\section{Architecture Comparison}
+\label{sec:ablation}
+
+The layer sizes in Table~\ref{tab:architecture} were settled before any of the accuracies
+above existed, and nothing reported so far establishes that they were the right choice. The
+protocol in Section~\ref{sec:archcompare} tests them: seven variants of the architecture,
+each evaluated over the same eight leave-one-signer-out folds with the same seed, split, and
+callbacks, so that a difference between them is a property of the architecture and not of
+the training regime. Table~\ref{tab:ablation} gives the result and
+Figure~\ref{fig:ablation} shows the same numbers as intervals.
+
+\begin{table}[H]
+    \centering
+    \caption{Architecture variants under the leave-one-signer-out protocol, ranked by mean accuracy. Units are given as first recurrent layer / second recurrent layer / dense head; a dash marks a layer the variant does not have.}
+    \label{tab:ablation}
+    \small
+    \begin{tabular}{lccccccc}
+        \toprule
+        \textbf{Architecture} & \textbf{Units} & \textbf{Cell} & \textbf{Dropout} & \textbf{Params} & \textbf{Mean} & \textbf{95\% CI} & \textbf{Epochs} \\
+        \midrule
+        gru                    & 64/32/32   & GRU  & 0.3 & 145{,}159 & 0.972 & [0.962, 0.982] & 36 \\
+        bigger                 & 128/64/64  & LSTM & 0.3 & 535{,}559 & 0.965 & [0.947, 0.983] & 43 \\
+        \textbf{current}       & 64/32/32   & LSTM & 0.3 & 192{,}007 & 0.961 & [0.944, 0.978] & 43 \\
+        single\_layer          & 64/--/32   & LSTM & 0.3 & 152{,}839 & 0.960 & [0.939, 0.980] & 43 \\
+        no\_dense\_head        & 64/32/--   & LSTM & 0.3 & 190{,}151 & 0.952 & [0.930, 0.974] & 40 \\
+        high\_dropout          & 64/32/32   & LSTM & 0.5 & 192{,}007 & 0.947 & [0.925, 0.970] & 51 \\
+        smaller                & 32/16/16   & LSTM & 0.3 & 77{,}063  & 0.944 & [0.911, 0.976] & 51 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\mustdo{%
+The \texttt{current} row of Table~\ref{tab:ablation} is the shipped architecture measured
+through this same sweep, and it reproduces the leave-one-signer-out result exactly
+(mean 0.9611, standard deviation 0.0244, matching \texttt{results/metrics.json} to every
+decimal place). Table~\ref{tab:folds} and the surrounding text still carry 0.9652 and 0.9667
+from the earlier run flagged at the start of this chapter. Once those are regenerated the
+two tables will agree; until then they differ by 0.4 points and an examiner comparing them
+will notice. Regenerate Chapter~5 from the current \texttt{metrics.json} first, then delete
+this box.}
+
+\noindent No candidate is distinguishable from any other. The means span 0.944 to 0.972, but
+with only eight folds the standard error on each one is between 0.5 and 1.7 percentage
+points, and every confidence interval in the table overlaps every other. Even the widest
+separation in the set, between the GRU variant and the smallest one, is 2.8 points against
+a standard error of 1.7 on the difference.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{img/architecturesweep.png}
+    \caption{Mean leave-one-signer-out accuracy for each architecture variant, with 95\% confidence intervals over the eight folds. The vertical rule marks the shipped model's mean; every interval crosses it.}
+    \label{fig:ablation}
+\end{figure}
+
+\noindent The comparison that matters more is against the spread within each candidate. The
+fold-to-fold standard deviation of a single architecture ranges from 0.014 to 0.047, which
+is larger than every difference between architectures in the table. Which signer is held
+out affects the result more than which architecture is trained. That is the substantive
+finding of this section, and Section~\ref{sec:discussion} returns to it.
+
+Three conclusions do follow from the table. Capacity is not the bottleneck: the largest
+variant carries 535{,}559 parameters, 2.8 times the shipped model, and gains four tenths of
+a point for them. A dropout rate of 0.3 is the right setting, since raising it to 0.5 is
+nominally worse and needs 51 epochs to converge instead of 43. And the smallest variant is
+the only one that looks genuinely handicapped --- not for its mean, which is within noise of
+the rest, but for a fold-to-fold standard deviation of 0.047, more than three times the GRU
+variant's, and the slowest convergence in the set. A network of 32 and 16 units is too small
+to behave consistently from one held-out signer to the next.
+
+Two properties of the comparison limit what can be read from it. Each candidate was trained
+once per fold from a single seed, so run-to-run variation from weight initialisation is not
+measured and could account for differences of this size by itself. And eight folds cannot
+resolve differences of one or two points whatever statistical test is applied to them; that
+is a property of the design and not of the analysis.
+
+The shipped architecture is therefore retained --- not because it measurably outperforms the
+alternatives, but because no alternative measurably outperforms it, and it sits at the
+smaller end of the range over which accuracy has already saturated. The GRU variant is the
+one worth revisiting should the deployment target ever impose a size or latency budget this
+model misses: its accuracy advantage is within noise, but its lower fold-to-fold variance,
+faster convergence, and 24\% smaller parameter count do not depend on that difference being
+real.
+
 \section{Why the Accuracy Is High}
 \label{sec:whyhigh}
 
@@ -431,7 +514,7 @@ The work proceeded in seven increments, each delivering a module that could be e
         \hline
         4 & Preprocessing core & Sequence length derived at 137 from the measured distribution. Established that normalisation must precede padding so padded frames stay exactly zero. \\
         \hline
-        5 & Training and evaluation & Leave-one-signer-out results. Two corrections came out of this stage: the early-stopping threshold had to be raised off zero, and deterministic operations had to be enabled before fold accuracies were reproducible. \\
+        5 & Training and evaluation & Leave-one-signer-out results. Two corrections came out of this stage: the early-stopping threshold had to be raised off zero, and deterministic operations had to be enabled before fold accuracies were reproducible. The architecture comparison of Section~\ref{sec:ablation} was run here, once the evaluation harness existed to run it through. \\
         \hline
         6 & Confidence thresholding & Decision rule fixed on the softmax over all seven classes, accepting a phrase only above threshold. The confidence threshold was lowered from 0.85 to 0.75 once the negative class was in place, since 0.85 was rejecting genuine signs. \\
         \hline
@@ -545,6 +628,8 @@ The evaluation protocol is the part of this work most worth carrying forward. Th
 \subsection{Eight Signers Is the Binding Limitation}
 
 Every accuracy in this chapter rests on eight people, four of whom are the authors. The standard deviation across folds is 2.41 points and the range is seven, which means the estimate of performance on a new signer is itself uncertain. A ninth signer with an unusual signing style could plausibly score below any fold reported here.
+
+The architecture comparison in Section~\ref{sec:ablation} puts this on a firmer footing than an assertion. Across seven architectures spanning 77{,}063 to 535{,}559 parameters, no variant is distinguishable from any other, and the fold-to-fold spread within each one is larger than every difference between them. What limits this system is not the model that was chosen but the number of people it has been measured on.
 
 Four of the eight signers are also not fluent NSL users. They learned each phrase from the consultants' reference and reproduced it. The dataset therefore contains a mixture of fluent and learned performances, and the accuracy above is an accuracy on that mixture, not on fluent signing.
 

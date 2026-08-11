@@ -162,7 +162,7 @@ The classifier is a bidirectional LSTM built with TensorFlow and Keras:
     \end{tabular}
 \end{table}
 
-\noindent The network has 192{,}007 trainable parameters, which is small enough to train on a laptop CPU in minutes.
+\noindent The network has 192{,}007 trainable parameters, which is small enough to train on a laptop CPU in minutes. The layer sizes above are not asserted. Section~\ref{sec:ablation} compares this architecture against six variants of it, under the evaluation protocol of Section~\ref{sec:archcompare}.
 
 \subsection{Why This Model and Not a Larger Pretrained One}
 
@@ -188,6 +188,12 @@ For a landmark-based classifier at this vocabulary size, additional signers buy 
 additional parameters, because the quantity in short supply is variation between people and
 not model expressiveness.
 
+Both halves of that judgement were tested afterwards rather than left as reasoning.
+Widening the recurrent layers to 128 and 64 units and the dense head to 64, which is
+2.8 times the parameter count, moves leave-one-signer-out accuracy by four tenths of a
+percentage point, while the spread between held-out signers is several times that.
+The measurements are reported in Section~\ref{sec:ablation}.
+
 \subsection{Training Configuration}
 
 Training minimises sparse categorical cross-entropy with the Adam optimiser \cite{kingma2015adam} at a batch size of 16, for at most 200 epochs. Class weights are computed to be inversely proportional to class frequency, which matters more for the folds than for the whole dataset, since the classes are balanced overall but a held-out signer's contribution is not always uniform.
@@ -209,6 +215,15 @@ A signer is eligible for holdout only if removing their clips leaves every class
 \subsection{The Random-Split Contrast}
 
 A stratified 70/15/15 random split is also trained and reported. It is not an additional performance measure. Its purpose is to quantify what the signer-independent protocol is protecting against: under a random split, clips from the same person appear in both training and test, and the model can score well by recognising individuals. The gap between the two protocols is the size of that effect on this dataset, and it is discussed in Section~\ref{sec:leakage}.
+
+\subsection{The Architecture Comparison}
+\label{sec:archcompare}
+
+The architecture in Table~\ref{tab:architecture} fixes several numbers --- two recurrent widths, a dense width, a dropout rate, and the choice of LSTM over GRU --- that were settled before any accuracy had been measured. A comparison across seven variants of it is therefore also run and reported. Like the random-split contrast, it is not an additional performance measure; its purpose is to establish whether those numbers were a defensible choice rather than an arbitrary one.
+
+The seven candidates vary one aspect of the design at a time: a smaller network (32/16/16 units), a larger one (128/64/64), a single recurrent layer instead of two, the removal of the dense head, dropout raised from 0.3 to 0.5, and the LSTM cells replaced with GRU cells. The seventh candidate is the shipped architecture itself, reconstructed to the same specification, so that it is measured on equal footing with the alternatives instead of being compared against a figure obtained some other way.
+
+Every candidate is evaluated over the same eight leave-one-signer-out folds described above, with the same seed, the same stratified validation split, the same class weights, and the same early-stopping and learning-rate schedule. Only the architecture changes, so any difference in accuracy is attributable to it and not to a different training regime. The results are given in Section~\ref{sec:ablation}.
 
 \subsection{Metrics}
 

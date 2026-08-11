@@ -4,31 +4,32 @@
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {3.1}{\ignorespaces Agile incremental development approach}}{14}{figure.caption.6}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {4.1}{\ignorespaces Use case diagram of the NSL emergency-phrase recognition system}}{28}{figure.caption.10}%
-\contentsline {figure}{\numberline {4.2}{\ignorespaces System block diagram. The offline path builds the model; the server reproduces the same preprocessing at inference; the client only captures and presents.}}{29}{figure.caption.11}%
-\contentsline {figure}{\numberline {4.3}{\ignorespaces Level 0 data flow diagram}}{30}{figure.caption.12}%
-\contentsline {figure}{\numberline {4.4}{\ignorespaces Level 1 data flow diagram}}{30}{figure.caption.13}%
-\contentsline {figure}{\numberline {4.5}{\ignorespaces Sequence diagram for one recognition}}{31}{figure.caption.14}%
-\contentsline {figure}{\numberline {4.6}{\ignorespaces Class and module diagram. Solid arrows are use relationships; dashed arrows are imports of the shared package.}}{32}{figure.caption.15}%
-\contentsline {figure}{\numberline {4.7}{\ignorespaces Activity diagram for one recognition attempt}}{33}{figure.caption.16}%
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Use case diagram of the NSL emergency-phrase recognition system}}{29}{figure.caption.10}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces System block diagram. The offline path builds the model; the server reproduces the same preprocessing at inference; the client only captures and presents.}}{30}{figure.caption.11}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Level 0 data flow diagram}}{31}{figure.caption.12}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Level 1 data flow diagram}}{31}{figure.caption.13}%
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Sequence diagram for one recognition}}{32}{figure.caption.14}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Class and module diagram. Solid arrows are use relationships; dashed arrows are imports of the shared package.}}{33}{figure.caption.15}%
+\contentsline {figure}{\numberline {4.7}{\ignorespaces Activity diagram for one recognition attempt}}{34}{figure.caption.16}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {5.1}{\ignorespaces Distribution of raw clip frame counts across the 840 recorded clips, with the 95th-percentile cutoff that fixes the sequence length at 137 frames}}{36}{figure.caption.18}%
-\contentsline {figure}{\numberline {5.2}{\ignorespaces Accuracy per epoch for each leave-one-signer-out fold. Training and validation curves are drawn from signers inside the training set; the dashed line marks the held-out signer's score.}}{37}{figure.caption.20}%
-\contentsline {figure}{\numberline {5.3}{\ignorespaces Loss per epoch for each fold. Validation loss is the quantity early stopping monitors.}}{37}{figure.caption.21}%
-\contentsline {figure}{\numberline {5.4}{\ignorespaces Confusion matrix pooled over all eight leave-one-signer-out folds}}{40}{figure.caption.24}%
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Distribution of raw clip frame counts across the 840 recorded clips, with the 95th-percentile cutoff that fixes the sequence length at 137 frames}}{37}{figure.caption.18}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Accuracy per epoch for each leave-one-signer-out fold. Training and validation curves are drawn from signers inside the training set; the dashed line marks the held-out signer's score.}}{38}{figure.caption.20}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Loss per epoch for each fold. Validation loss is the quantity early stopping monitors.}}{38}{figure.caption.21}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces Confusion matrix pooled over all eight leave-one-signer-out folds}}{41}{figure.caption.24}%
+\contentsline {figure}{\numberline {5.5}{\ignorespaces Mean leave-one-signer-out accuracy for each architecture variant, with 95\% confidence intervals over the eight folds. The vertical rule marks the shipped model's mean; every interval crosses it.}}{45}{figure.caption.29}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {A.1}{\ignorespaces The project team with the NSL consultant following a gloss consultation session}}{56}{figure.caption.34}%
-\contentsline {figure}{\numberline {A.2}{\ignorespaces Reviewing a recorded demonstration with the consultant to confirm the reference form of a phrase}}{56}{figure.caption.35}%
-\contentsline {figure}{\numberline {A.3}{\ignorespaces An NSL expert demonstrating the signed form of a phrase for reference recording}}{57}{figure.caption.36}%
+\contentsline {figure}{\numberline {A.1}{\ignorespaces The project team with the NSL consultant following a gloss consultation session}}{60}{figure.caption.36}%
+\contentsline {figure}{\numberline {A.2}{\ignorespaces Reviewing a recorded demonstration with the consultant to confirm the reference form of a phrase}}{60}{figure.caption.37}%
+\contentsline {figure}{\numberline {A.3}{\ignorespaces An NSL expert demonstrating the signed form of a phrase for reference recording}}{61}{figure.caption.38}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {B.1}{\ignorespaces A signer recording the \textit {Call the police} phrase, showing live pose and hand landmark overlays alongside the signer identity and phrase selection}}{59}{figure.caption.37}%
-\contentsline {figure}{\numberline {B.2}{\ignorespaces The recorder during an active recording, showing hand landmarks in detail and the running per-class clip counts on disk}}{60}{figure.caption.38}%
+\contentsline {figure}{\numberline {B.1}{\ignorespaces A signer recording the \textit {Call the police} phrase, showing live pose and hand landmark overlays alongside the signer identity and phrase selection}}{63}{figure.caption.39}%
+\contentsline {figure}{\numberline {B.2}{\ignorespaces The recorder during an active recording, showing hand landmarks in detail and the running per-class clip counts on disk}}{64}{figure.caption.40}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {C.1}{\ignorespaces The shared dataset repository, with raw and processed directories tracked separately and a commit history showing contributions merged from several signers}}{61}{figure.caption.39}%
-\contentsline {figure}{\numberline {C.2}{\ignorespaces The raw directory after merging, with one subfolder per phrase class holding the contributions of all signers}}{61}{figure.caption.40}%
-\contentsline {figure}{\numberline {C.3}{\ignorespaces Local directory layout: raw clips organised by phrase class, alongside the processed output directory}}{62}{figure.caption.41}%
-\contentsline {figure}{\numberline {C.4}{\ignorespaces Contents of the processed directory: the compiled tensors alongside the manifest and the sequence-length metadata}}{62}{figure.caption.42}%
+\contentsline {figure}{\numberline {C.1}{\ignorespaces The shared dataset repository, with raw and processed directories tracked separately and a commit history showing contributions merged from several signers}}{65}{figure.caption.41}%
+\contentsline {figure}{\numberline {C.2}{\ignorespaces The raw directory after merging, with one subfolder per phrase class holding the contributions of all signers}}{65}{figure.caption.42}%
+\contentsline {figure}{\numberline {C.3}{\ignorespaces Local directory layout: raw clips organised by phrase class, alongside the processed output directory}}{66}{figure.caption.43}%
+\contentsline {figure}{\numberline {C.4}{\ignorespaces Contents of the processed directory: the compiled tensors alongside the manifest and the sequence-length metadata}}{66}{figure.caption.44}%
 \addvspace {10\p@ }
 \addvspace {10\p@ }
 \addvspace {10\p@ }
