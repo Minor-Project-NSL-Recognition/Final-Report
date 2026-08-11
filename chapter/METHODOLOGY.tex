@@ -162,7 +162,7 @@ The classifier is a bidirectional LSTM built with TensorFlow and Keras:
     \end{tabular}
 \end{table}
 
-\noindent The network has 192{,}007 trainable parameters, which is small enough to train on a laptop CPU in minutes. The layer sizes above are not asserted. Section~\ref{sec:ablation} compares this architecture against six variants of it, under the evaluation protocol of Section~\ref{sec:archcompare}.
+\noindent The network has 192{,}007 trainable parameters, which is small enough to train on a laptop CPU in minutes. The layer sizes above are not asserted. Section~\ref{sec:ablation} compares this architecture against five variants of it, under the evaluation protocol of Section~\ref{sec:archcompare}.
 
 \subsection{Why This Model and Not a Larger Pretrained One}
 
@@ -219,9 +219,9 @@ A stratified 70/15/15 random split is also trained and reported. It is not an ad
 \subsection{The Architecture Comparison}
 \label{sec:archcompare}
 
-The architecture in Table~\ref{tab:architecture} fixes several numbers --- two recurrent widths, a dense width, a dropout rate, and the choice of LSTM over GRU --- that were settled before any accuracy had been measured. A comparison across seven variants of it is therefore also run and reported. Like the random-split contrast, it is not an additional performance measure; its purpose is to establish whether those numbers were a defensible choice rather than an arbitrary one.
+The architecture in Table~\ref{tab:architecture} fixes several numbers --- two recurrent widths, a dense width, a dropout rate, and the number of recurrent layers --- that were settled before any accuracy had been measured. A comparison across six variants of it is therefore also run and reported. Like the random-split contrast, it is not an additional performance measure; its purpose is to establish whether those numbers were a defensible choice rather than an arbitrary one.
 
-The seven candidates vary one aspect of the design at a time: a smaller network (32/16/16 units), a larger one (128/64/64), a single recurrent layer instead of two, the removal of the dense head, dropout raised from 0.3 to 0.5, and the LSTM cells replaced with GRU cells. The seventh candidate is the shipped architecture itself, reconstructed to the same specification, so that it is measured on equal footing with the alternatives instead of being compared against a figure obtained some other way.
+The six candidates vary one aspect of the design at a time: a smaller network (32/16/16 units), a larger one (128/64/64), a single recurrent layer instead of two, the removal of the dense head, and dropout raised from 0.3 to 0.5. The sixth is the shipped architecture itself, reconstructed to the same specification, so that it is measured on equal footing with the alternatives instead of being compared against a figure obtained some other way. Every candidate uses bidirectional LSTM cells; the comparison is over the size and arrangement of the layers, not over the choice of recurrent unit.
 
 Every candidate is evaluated over the same eight leave-one-signer-out folds described above, with the same seed, the same stratified validation split, the same class weights, and the same early-stopping and learning-rate schedule. Only the architecture changes, so any difference in accuracy is attributable to it and not to a different training regime. The results are given in Section~\ref{sec:ablation}.
 
