@@ -17,6 +17,7 @@ The riskiest unknown was addressed first. Before any large-scale recording, a sm
 \end{figure}
 
 \section{Phase 0: Establishing the Signed Form of Each Phrase}
+\label{sec:phase0}
 
 No standard published gloss exists for the six target emergency phrases, so the natural signed form of each had to be established with the Deaf community before recording could begin. Two consultations were held in person in Bhaktapur: with Yojana Sakha and colleagues at the Rehabilitation Centre for the Rural Deaf, and with a resource person at the National Federation of the Deaf Nepal.
 
@@ -119,7 +120,7 @@ An observation from the same metadata turned out to matter more than expected. T
 
 Each clip is normalised and then standardised to \textsc{seq\_len}, in that order.
 
-Normalisation applies the dual-anchor scheme of Section~2.4.3 to each frame, treating the three landmark blocks independently. The pose block is re-centred on the shoulder midpoint and divided by shoulder width; each hand block is re-centred on its wrist and divided by the wrist-to-middle-knuckle distance. Normalising per block keeps the position of a hand relative to the body while removing the signer's position and distance from the camera.
+Normalisation applies the dual-anchor scheme of Section~\ref{sec:normalisation} to each frame, treating the three landmark blocks independently. The pose block is re-centred on the shoulder midpoint and divided by shoulder width; each hand block is re-centred on its wrist and divided by the wrist-to-middle-knuckle distance. Normalising per block keeps the position of a hand relative to the body while removing the signer's position and distance from the camera.
 
 Standardisation then forces the clip to exactly 137 frames in one of three ways. A clip already at 137 frames is used unchanged. A longer clip is subsampled at 137 evenly spaced positions spanning its full duration, so the whole performance is represented instead of the first 137 frames. A shorter clip is zero-padded at the end, and a boolean mask records which frames are real.
 
@@ -201,7 +202,7 @@ Reproducibility required more than fixing the random seed. TensorFlow's parallel
 \subsection{Fitting the Open-Set Rejection Gate}
 \label{sec:oodgate}
 
-After the deployable model is trained, the rejection gate of Section~2.4.8 is fitted on the same data. Every clip is passed through the network to obtain its 32-dimensional embedding. One prototype is computed per class as the mean embedding of that class, and a single covariance matrix shared across classes is estimated from the within-class deviations using Ledoit--Wolf shrinkage \cite{ledoit2004shrinkage}. The rejection threshold is set at the 99th percentile of the resulting in-distribution Mahalanobis distances, which for the committed model is 15.34. By construction, one per cent of genuine training clips fall beyond it.
+After the deployable model is trained, the rejection gate of Section~\ref{sec:opensettheory} is fitted on the same data. Every clip is passed through the network to obtain its 32-dimensional embedding. One prototype is computed per class as the mean embedding of that class, and a single covariance matrix shared across classes is estimated from the within-class deviations using Ledoit--Wolf shrinkage \cite{ledoit2004shrinkage}. The rejection threshold is set at the 99th percentile of the resulting in-distribution Mahalanobis distances, which for the committed model is 15.34. By construction, one per cent of genuine training clips fall beyond it.
 
 The gate is then checked against out-of-distribution inputs, which is harder than it sounds because no dataset of things-that-are-not-NSL-emergency-phrases exists. Three hundred synthetic inputs are fabricated from the real clips instead. Half are time-shuffled, with the frame order randomised so the poses are individually valid but the motion is destroyed. The other half are cross-class splices, taking the first half of one phrase and the second half of a different one, which produces a clip that is locally plausible everywhere and globally not a sign. The separation between genuine and synthetic distances is measured as an AUROC.
 

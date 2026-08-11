@@ -115,6 +115,7 @@ Facial expression carries grammatical meaning in sign languages generally. Inclu
 The landmark representation was chosen for three reasons. A model over 225 coordinates per frame can be learned from a few hundred clips, where a pixel-based network would need far more. Landmarks discard background, lighting, and appearance, which are the factors that cause a pixel-trained model to fail in a room it has not seen. The resulting model is small enough to train on a laptop and to run without a GPU.
 
 \subsection{Dual-Anchor Landmark Normalisation}
+\label{sec:normalisation}
 Raw landmark coordinates depend on where the signer stands and how far they are from the camera. Neither changes the meaning of the phrase, so both are removed before the data reaches the model.
 
 \subsubsection{Hand Normalisation}
@@ -170,6 +171,7 @@ The predicted class is $\hat{k} = \arg\max_k p_k$ and $\max_k p_k$ is the confid
 At inference the system emits a phrase only when the confidence exceeds a threshold and stays silent otherwise. For a tool that announces emergencies, a wrong announcement is worse than no announcement, so the asymmetry is deliberate.
 
 \subsection{Open-Set Recognition}
+\label{sec:opensettheory}
 Confidence thresholding alone does not solve the underlying problem. A softmax over seven classes is closed-world: it distributes probability across the seven classes it knows and has no way to express that the input belongs to none of them \cite{scheirer2013openset}. A network will frequently assign high confidence to inputs unlike anything it was trained on, so a threshold on softmax probability is a weak filter \cite{hendrycks2017baseline}.
 
 The system therefore adds a second, independent check in the network's feature space, following the framework of Lee et al.\ \cite{lee2018mahalanobis}. The penultimate layer of the classifier produces a 32-dimensional embedding of each clip. During training, one prototype is computed per class as the mean embedding of that class's clips, together with a single covariance matrix shared across classes. At inference, the Mahalanobis distance from an input's embedding $\mathbf{z}$ to each prototype $\boldsymbol{\mu}_c$ is measured,

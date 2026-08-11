@@ -21,7 +21,10 @@ Then copy the regenerated \texttt{seq\_len\_hist.png}, \texttt{training\_curves.
 \texttt{img/}, and update every number in this chapter, in the abstract, and in
 Chapter~6 from the new \texttt{results/metrics.json} and \texttt{results/model\_meta.json}.
 Step 3 prints the two open-set figures marked \fillin{re-run train\_model.py} in
-Table~\ref{tab:ood}.}
+Table~\ref{tab:ood}.\\[3pt]
+The rejection threshold is also \textbf{contradictory between chapters}: Section~\ref{sec:oodgate}
+states 15.34 while Section~\ref{sec:openset} and Table~\ref{tab:ood} state 14.17. Take the value
+from the regenerated \texttt{results/model\_meta.json} and make both agree.}
 
 This chapter reports what the system achieves and where it fails. The dataset is described first, then the recognition results under the signer-independent protocol, then the rejection gate, the deployment measurements, and a discussion of the remaining weaknesses.
 
@@ -343,6 +346,7 @@ reference by eight people, four of whom built the system. A wider vocabulary, na
 signing, or continuous input would each lower it.
 
 \section{Open-Set Rejection}
+\label{sec:openset}
 
 The rejection gate was fitted on the deployable model as described in Section~\ref{sec:oodgate}. One prototype per class was computed in the 32-dimensional embedding space, with a shared covariance estimated under Ledoit--Wolf shrinkage. The 99th percentile of in-distribution Mahalanobis distances gives a rejection threshold of 14.17, which by construction refuses one per cent of genuine training clips.
 
