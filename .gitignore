@@ -1,0 +1,19 @@
+# LaTeX build artifacts — regenerated on every compile, never hand-edited.
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.synctex(busy)
+*.toc
+*.xdv
+
+# Compiled output — share separately (e.g. as a release asset) instead of committing.
+main.pdf
