@@ -12,7 +12,7 @@
 \contentsline {figure}{\numberline {4.6}{\ignorespaces Class and module diagram. Solid arrows are use relationships; dashed arrows are imports of the shared package.}}{33}{figure.caption.15}%
 \contentsline {figure}{\numberline {4.7}{\ignorespaces Activity diagram for one recognition attempt}}{34}{figure.caption.16}%
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {5.1}{\ignorespaces Distribution of raw clip frame counts across the 840 recorded clips, with the 95th-percentile cutoff that fixes the sequence length at 137 frames}}{37}{figure.caption.18}%
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Distribution of raw clip frame counts across the 840 recorded clips, with the 95th-percentile cutoff that fixes the sequence length at 146 frames}}{36}{figure.caption.18}%
 \contentsline {figure}{\numberline {5.2}{\ignorespaces Accuracy per epoch for each leave-one-signer-out fold. Training and validation curves are drawn from signers inside the training set; the dashed line marks the held-out signer's score.}}{38}{figure.caption.20}%
 \contentsline {figure}{\numberline {5.3}{\ignorespaces Loss per epoch for each fold. Validation loss is the quantity early stopping monitors.}}{38}{figure.caption.21}%
 \contentsline {figure}{\numberline {5.4}{\ignorespaces Confusion matrix pooled over all eight leave-one-signer-out folds}}{41}{figure.caption.24}%

@@ -7,8 +7,8 @@
 \addvspace {10\p@ }
 \contentsline {table}{\numberline {4.1}{\ignorespaces Software used, and the role of each component}}{26}{table.caption.9}%
 \addvspace {10\p@ }
-\contentsline {table}{\numberline {5.1}{\ignorespaces Clips by class and signer in the final dataset}}{36}{table.caption.17}%
-\contentsline {table}{\numberline {5.2}{\ignorespaces How the 840 clips were standardised to 137 frames}}{37}{table.caption.19}%
+\contentsline {table}{\numberline {5.1}{\ignorespaces Clips by class and signer in the final dataset}}{35}{table.caption.17}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces How the 840 clips were standardised to 146 frames}}{37}{table.caption.19}%
 \contentsline {table}{\numberline {5.3}{\ignorespaces Leave-one-signer-out results. Each fold trains on seven signers and tests on the eighth.}}{39}{table.caption.22}%
 \contentsline {table}{\numberline {5.4}{\ignorespaces Per-class performance, pooled over all eight folds}}{40}{table.caption.23}%
 \contentsline {table}{\numberline {5.5}{\ignorespaces Pooled confusion matrix. Rows are the true class, columns the prediction.}}{41}{table.caption.25}%

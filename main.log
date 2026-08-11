@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999998 (MiKTeX 26.5) (preloaded format=xelatex 2026.8.11)  11 AUG 2026 16:35
+This is XeTeX, Version 3.141592653-2.6-0.999998 (MiKTeX 26.5) (preloaded format=xelatex 2026.8.11)  11 AUG 2026 16:57
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -1043,83 +1043,74 @@ Underfull \hbox (badness 1817) in paragraph at lines 423--423
 
 [32]) (chapter/results.tex [33] [34]
 Chapter 5.
-
-Underfull \hbox (badness 4254) in paragraph at lines 22--22
-\TU/LatinModernRoman(0)/m/n/10.95 Then copy the regenerated \TU/lmtt/m/n/10.95 seq_len_hist.png\TU/LatinModernRoman(0)/m/n/10.95 , \TU/lmtt/m/n/10.95 training_curves.png\TU/LatinModernRoman(0)/m/n/10.95 ,
- []
-
 [35
 
 ]
 File: img/seqlenhist.png Graphic file (type bmp)
 <img/seqlenhist.png>
-[36] [37]
+[36]
 File: img/trainingcurves.png Graphic file (type bmp)
 <img/trainingcurves.png>
+[37]
 File: img/traininglosscurves.png Graphic file (type bmp)
 <img/traininglosscurves.png>
 [38] [39]
 File: img/confusionmatrix.png Graphic file (type bmp)
 <img/confusionmatrix.png>
 [40] [41]
-Overfull \hbox (13.29971pt too wide) in paragraph at lines 216--217
-[]\TU/LatinModernRoman(0)/m/sc/12 Six errors are one emergency phrase confused with another. Four are \TU/lmtt/m/n/12 call_police
- []
-
-
-Overfull \hbox (11.92241pt too wide) in paragraph at lines 231--240
+Overfull \hbox (11.92241pt too wide) in paragraph at lines 213--222
  [][] 
  []
 
 [42]
-Underfull \hbox (badness 1325) in paragraph at lines 265--265
+Underfull \hbox (badness 1325) in paragraph at lines 247--247
 []|\TU/LatinModernRoman(0)/m/n/10.95 a person absent from
  []
 
 [43]
-Overfull \hbox (55.4447pt too wide) in paragraph at lines 316--329
+Overfull \hbox (55.4447pt too wide) in paragraph at lines 298--311
  [][] 
  []
 
 File: img/architecturesweep.png Graphic file (type bmp)
 <img/architecturesweep.png>
 [44] [45] [46] [47]
-Underfull \hbox (badness 2035) in paragraph at lines 511--512
+Underfull \hbox (badness 2035) in paragraph at lines 488--489
 []|\TU/LatinModernRoman(0)/m/n/10.95 Confirmed MediaPipe produces stable land-
  []
 
 
-Underfull \hbox (badness 4048) in paragraph at lines 513--513
+Underfull \hbox (badness 4048) in paragraph at lines 490--490
 []|\TU/LatinModernRoman(0)/m/n/10.95 Dataset collection and
  []
 
 [48] [49] [50]
-Underfull \hbox (badness 10000) in paragraph at lines 597--597
+Underfull \hbox (badness 10000) in paragraph at lines 574--574
 []|\TU/LatinModernRoman(0)/m/n/10.95 Face-dependent distinc-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 597--597
+Underfull \hbox (badness 10000) in paragraph at lines 574--574
 \TU/LatinModernRoman(0)/m/n/10.95 tions become unrepre-
  []
 
 
-Underfull \hbox (badness 7685) in paragraph at lines 597--598
+Underfull \hbox (badness 7685) in paragraph at lines 574--575
 []|\TU/LatinModernRoman(0)/m/n/10.95 Add the face block, at
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 599--599
+Underfull \hbox (badness 10000) in paragraph at lines 576--576
 \TU/LatinModernRoman(0)/m/n/10.95 plus one consultation
  []
 
 
-Underfull \hbox (badness 1371) in paragraph at lines 601--601
+Underfull \hbox (badness 1371) in paragraph at lines 578--578
 \TU/LatinModernRoman(0)/m/n/10.95 plement with the same
  []
 
 
-Underfull \hbox (badness 3364) in paragraph at lines 603--603
+Underfull \hbox (badness 3364) in paragraph at lines 580--580
 []|\TU/LatinModernRoman(0)/m/n/10.95 Correct predictions fall
  []
 
@@ -1127,10 +1118,10 @@ Underfull \hbox (badness 3364) in paragraph at lines 603--603
 Chapter 6.
 [54
 
-] [55]
+] [55] [56]
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <12> not available
 (Font)              Font shape `TU/lmtt/b/n' tried instead on input line 53.
-[56]) [57] (main.bbl
+) [57] (main.bbl
 Underfull \hbox (badness 10000) in paragraph at lines 39--42
 []\TU/LatinModernRoman(0)/m/sc/12 Humanity & Inclusion, “Sign language: a mother
  []
@@ -1224,12 +1215,12 @@ Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 6531EB1AE2111EC2BB7FA58856A03DDC;24616.
  ) 
 Here is how much of TeX's memory you used:
- 29426 strings out of 402628
- 604799 string characters out of 5439113
+ 29428 strings out of 402628
+ 604834 string characters out of 5439113
  1088505 words of memory out of 5000000
- 58000 multiletter control sequences out of 15000+600000
+ 58002 multiletter control sequences out of 15000+600000
  637894 words of font info for 126 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  84i,11n,104p,955b,972s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on main.xdv (83 pages, 1626988 bytes).
+Output written on main.xdv (83 pages, 1629876 bytes).

@@ -117,7 +117,7 @@ The system has three parts. An offline path builds the model, a server reproduce
     \node[lane] at (-2.2, 0) {OFFLINE};
     \node[box]   (rec)  at (0.6, 0)  {Recorder\\ \scriptsize webcam + Holistic};
     \node[store] (raw)  at (3.6, 0)  {\texttt{data/raw}\\ \scriptsize 840 clips, 8 signers};
-    \node[box]   (len)  at (6.6, 0)  {Frame-count analysis\\ \scriptsize p95 $\rightarrow$ 137};
+    \node[box]   (len)  at (6.6, 0)  {Frame-count analysis\\ \scriptsize p95 $\rightarrow$ 146};
     \node[shared](pre1) at (9.6, 0)  {Normalise\\ + standardise};
     \node[box]   (trn)  at (12.6, 0) {Train BiLSTM};
     \node[store] (art)  at (15.6, 0) {\texttt{model.tflite}};
@@ -235,7 +235,7 @@ Figure~\ref{fig:dfd1} decomposes the system into the processes that carry out re
     \draw[arr] (d1) -- node[above] {constants} (p3);
 
     % ---- row transition ----
-    \draw[arr] (p3.south) -- (13.7,-2.4) -- node[above] {$137 \times 225$ tensor} (4.3,-2.4) -- (p4.north);
+    \draw[arr] (p3.south) -- (13.7,-2.4) -- node[above] {$146 \times 225$ tensor} (4.3,-2.4) -- (p4.north);
 
     \draw[arr] (p4) -- node[above] {status, phrase} (p5);
     \draw[arr] (p5) -- node[above] {text, speech} (hear);
@@ -449,7 +449,7 @@ Figure~\ref{fig:activity} shows the control flow of one recognition attempt, inc
     \node[dia]  (d1)  at (0,-4.7)   {frame due\\ at 15.7 fps?};
     \node[act]  (a3)  at (0,-6.6)   {Extract 225 landmark\\ values, append to clip};
     \node[dia]  (d2)  at (0,-8.6)   {user still signing?};
-    \node[act]  (a4)  at (0,-10.5)  {Normalise, standardise\\ to 137 frames};
+    \node[act]  (a4)  at (0,-10.5)  {Normalise, standardise\\ to 146 frames};
     \node[act]  (a5)  at (0,-12.0)  {Forward pass:\\ class probabilities};
     \node[dia]  (d4)  at (0,-14.0)  {confidence $\geq 0.75$?};
     \node[act]  (a6)  at (0,-15.9)  {Display phrase\\ and speak it};
