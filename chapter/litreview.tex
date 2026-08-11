@@ -5,9 +5,6 @@ Sign language recognition sits at the intersection of computer vision and sequen
 
 \section{Review of Related Works}
 
-\subsection{NSL Dictionary (Acharya and Sharma, 2003)}
-Acharya and Sharma \cite{acharya2003nsldict} compiled the \textit{Nepali Sign Language Dictionary} for the National Federation of the Deaf Nepal. It remains the standard reference for the NSL gesture set. Being a printed reference it offers no recognition capability, and it does not cover the multi-sign emergency phrases this project targets, which is why the signed form of each phrase had to be established directly with Deaf experts.
-
 \subsection{ASL Character Recognition Using CNN (Masood et al., 2018)}
 Masood et al. \cite{masood2018aslchar} trained a convolutional neural network on raw images for American Sign Language character recognition and reported strong accuracy on a large image dataset. The work shows that convolutional networks handle static fingerspelling well when data is plentiful. It also illustrates how much data a pixel-based model needs, and it does not address motion.
 
@@ -17,17 +14,11 @@ In a companion paper, Masood et al. \cite{masood2018slword} combined a convoluti
 \subsection{NSL Translation Using CNN (Mali et al., 2018)}
 Mali et al. \cite{mali2018nsl} built one of the earliest NSL recognition systems, a convolutional translator over a very small vocabulary. The signer was required to wear red gloves at test time, which limits practical use, and the system handled only static gestures.
 
-\subsection{MediaPipe Hands (Zhang et al., 2020)}
-Zhang et al. \cite{zhang2020mediapipe} introduced MediaPipe Hands, a pretrained pipeline that converts each video frame into 21 three-dimensional hand keypoints in real time on ordinary hardware. By discarding background, lighting, and skin appearance it makes compact and data-efficient gesture representations possible. MediaPipe performs no classification of its own; it is the enabling technology on which this project's representation is built.
-
 \subsection{Deep Learning for NSL Gesture Recognition (Ligal and Baral, 2022)}
 Ligal and Baral \cite{ligal2022nsl} explored deep architectures for NSL gesture recognition, pairing a convolutional network with a recurrent network in one variant and with a Vision Transformer in another. The work confirms research interest in NSL. It follows the pixel-based formulation and does not target emergency communication or deployment on modest hardware.
 
 \subsection{ISL Recognition Using MediaPipe Holistic (Goyal and Velmathi, 2023)}
 Goyal and Velmathi \cite{goyal2023isl} applied MediaPipe Holistic to Indian Sign Language and used LSTMs for dynamic signs and convolutional networks for static ones. This is the closest published work in method to the approach taken here and supports the landmark-plus-temporal-model direction. It targets Indian Sign Language, and it produces no audio output.
-
-\subsection{The NSL23 Dataset (Sunuwar et al., 2024)}
-Sunuwar et al. \cite{sunuwar2024nsl23} released NSL23, the first public NSL dataset, containing 630 videos of the 49 alphabet characters performed by 14 volunteers. It is distributed as video because some NSL signs are defined by motion. NSL23 demonstrates that landmark-friendly NSL video can be collected from a modest number of signers, which is useful evidence for a project that had to record its own data. It covers the alphabet only.
 
 \subsection{NSL Letter Detection Using MediaPipe and CNN (Shrestha et al., 2024)}
 Shrestha et al. \cite{shrestha2024nsl} present the closest prior landmark-based NSL system. MediaPipe landmarks are re-rendered as skeleton images and a convolutional network is trained on those images, with high reported accuracy. Two observations matter here. The work confirms that MediaPipe extracts usable NSL hand geometry. It also converts the numeric landmark geometry back into pixels instead of feeding the sequence to a temporal model, and its evaluation does not separate signers between training and test, so the reported accuracy does not establish how the system behaves on a person it has not seen.
@@ -47,21 +38,15 @@ Table~\ref{tab:reviewmatrix} summarises the reviewed works against the goal of t
         \hline
         \textbf{Author (Year)} & \textbf{Approach / Focus} & \textbf{Limitation for this project's goal} \\
         \hline
-        Acharya \& Sharma (2003) \cite{acharya2003nsldict} & Printed dictionary of the standard NSL gesture set & Reference only; no recognition; no emergency phrases \\
-        \hline
         Masood et al.\ (2018) \cite{masood2018aslchar} & CNN on raw images for ASL characters & Static only; large data requirement; not NSL \\
         \hline
         Masood et al.\ (2018) \cite{masood2018slword} & CNN and RNN on video for word-level gestures & Compute-heavy; not NSL; no audio output \\
         \hline
         Mali et al.\ (2018) \cite{mali2018nsl} & CNN-based NSL translator & Very small vocabulary; red gloves required; static only \\
         \hline
-        Zhang et al.\ (2020) \cite{zhang2020mediapipe} & MediaPipe Hands real-time landmark tracking & Tracking only; performs no sign classification \\
-        \hline
         Ligal \& Baral (2022) \cite{ligal2022nsl} & CNN+RNN and CNN+ViT for NSL gestures & Pixel-based and compute-heavy; not emergency-focused \\
         \hline
         Goyal \& Velmathi (2023) \cite{goyal2023isl} & MediaPipe Holistic with temporal models for ISL & Targets ISL; no audio output \\
-        \hline
-        Sunuwar et al.\ (2024) \cite{sunuwar2024nsl23} & NSL23: first public NSL alphabet video dataset & Alphabet only; a dataset, not a system \\
         \hline
         Shrestha et al.\ (2024) \cite{shrestha2024nsl} & MediaPipe landmarks rasterised to images; CNN & Static only; not signer-independent; no temporal model \\
         \hline

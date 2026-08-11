@@ -7,7 +7,7 @@
 % Compiled with XeLaTeX (not pdflatex) so that \nepali{} can render Devanagari.
 \usepackage{fontspec}
 \setmainfont{Latin Modern Roman}
-\newfontfamily\devanagarifont{Nirmala UI}
+\newfontfamily\devanagarifont{Nirmala UI}[Script=Devanagari, Scale=MatchLowercase]
 \newcommand{\nepali}[1]{{\devanagarifont #1}}
 
 % ── Page Layout ───────────────────────────────────────────────────────────────
