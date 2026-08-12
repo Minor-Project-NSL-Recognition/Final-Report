@@ -176,8 +176,8 @@ The system has three parts. An offline path builds the model, the phone reproduc
     \draw[arr] (srv) -- node[above, font=\sffamily\scriptsize, text=dgrey] {result} (dcs);
 
     % ---------------- shared core annotation ----------------
-    \draw[dline, dashed, thick] (pre1) -- node[sloped, above, font=\sffamily\scriptsize, text=dgrey]
-        {one definition, pinned by fixtures} (pre2);
+    \draw[dline, dashed, thick] (pre1.south) -- ++(0, -0.9) -| node[pos=0.25, above, font=\sffamily\scriptsize, text=dgrey]
+        {one definition, pinned by fixtures} (pre2.north);
 
     \end{tikzpicture}%
     }
