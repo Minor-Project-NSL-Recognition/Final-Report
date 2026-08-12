@@ -166,6 +166,13 @@ The classifier is a bidirectional LSTM built with TensorFlow and Keras:
     \end{tabular}
 \end{table}
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{img/architecture_illustration.png}
+    \caption{BiLSTM architecture for NSL phrase classification}
+    \label{fig:architecture}
+\end{figure}
+
 \noindent The network has 192{,}007 trainable parameters, which is small enough to train on a laptop CPU in minutes. The layer sizes above are not asserted. Section~\ref{sec:ablation} compares this architecture against six variants of it, under the evaluation protocol of Section~\ref{sec:archcompare}.
 
 \subsection{Why This Model and Not a Larger Pretrained One}
