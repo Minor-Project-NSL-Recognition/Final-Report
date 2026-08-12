@@ -109,7 +109,7 @@ Figure~\ref{fig:usecase} shows the actors and their interactions. The Deaf Signe
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.9\textwidth]{img/usecase.png}
-    \caption{Use case diagram of the NSL emergency-phrase recognition system}
+    \caption{Use case diagram}
     \label{fig:usecase}
 \end{figure}
 
@@ -179,7 +179,7 @@ The system has three parts. An offline path builds the model, the phone reproduc
 
     \end{tikzpicture}%
     }
-    \caption{System block diagram. The offline path builds the model; the phone reproduces the same preprocessing and runs the classifier; the server offers the same path over a network as a fallback. The two shaded boxes are the same preprocessing definition.}
+    \caption{System block diagram}
     \label{fig:blockdiagram}
 \end{figure}
 
@@ -476,7 +476,7 @@ Figure~\ref{fig:classdiagram} shows the principal modules and classes. The Pytho
     \draw[dep] (gl.east) -- node[above, sloped] {pins} (np.south west);
     \end{tikzpicture}%
     }
-    \caption{Class and module diagram. Solid arrows are use relationships; dashed arrows are imports or verification relationships. The heavier box on the right is the client's port of the Python preprocessing contract, pinned to it by generated fixtures.}
+    \caption{Class and module diagram.}
     \label{fig:classdiagram}
 \end{figure}
 

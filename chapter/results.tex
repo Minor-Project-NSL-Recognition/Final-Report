@@ -52,7 +52,7 @@ Frame counts across the 840 clips range from 30 to 217, with a median of 89.5 an
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.75\textwidth]{img/seqlenhist.png}
-    \caption{Distribution of raw clip frame counts across the 840 recorded clips, with the 95th-percentile cutoff that fixes the sequence length at 146 frames}
+    \caption{Distribution of raw clip frame counts with 95th percentile cuttoff}
     \label{fig:seqlen}
 \end{figure}
 
@@ -86,14 +86,14 @@ Figure~\ref{fig:curves} shows accuracy per epoch for all eight folds and Figure~
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{img/trainingcurves.png}
-    \caption{Accuracy per epoch for each leave-one-signer-out fold. Training and validation curves are drawn from signers inside the training set; the dashed line marks the held-out signer's score.}
+    \caption{Accuracy per epoch for each LOSO fold.}
     \label{fig:curves}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{img/traininglosscurves.png}
-    \caption{Loss per epoch for each fold. Validation loss is the quantity early stopping monitors.}
+    \caption{Loss per epoch for each fold. }
     \label{fig:losscurves}
 \end{figure}
 
@@ -103,7 +103,7 @@ All eight signers were eligible for holdout, since removing any one of them left
 
 \begin{table}[H]
     \centering
-    \caption{Leave-one-signer-out results. Each fold trains on seven signers and tests on the eighth.}
+    \caption{Leave-one-signer-out results.}
     \label{tab:folds}
     \begin{tabular}{lccc}
         \toprule
@@ -166,7 +166,7 @@ Errors are easiest to read from the pooled confusion matrix in Figure~\ref{fig:c
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.62\textwidth]{img/confusionmatrix_cropped.png}
-    \caption{Confusion matrix pooled over all eight leave-one-signer-out folds. Rows are the true class, columns the prediction.}
+    \caption{Confusion matrix pooled over all eight LOSO folds.}
     \label{fig:confusion}
 \end{figure}
 
@@ -214,7 +214,7 @@ what the question turns on.
 
 \begin{table}[H]
     \centering
-    \caption{The three levels of accuracy, and what the gap between each pair means}
+    \caption{The three levels of accuracy}
     \label{tab:threelevels}
     \small
     \begin{tabular}{|p{3.3cm}|p{4.0cm}|p{5.4cm}|}
@@ -285,7 +285,7 @@ and no conclusion below rests on them.
 
 \begin{table}[H]
     \centering
-    \caption{Architecture variants under the leave-one-signer-out protocol, ranked by mean accuracy. Units are given as first recurrent layer / second recurrent layer / dense head; a dash marks a layer the variant does not have.}
+    \caption{Architecture variants under the LOSO protocol, ranked by mean accuracy.}
     \label{tab:ablation}
     \small
     \begin{tabular}{lcccccc}
@@ -331,7 +331,7 @@ against a standard error of 1.9 on the difference.
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{img/architecturesweep.png}
-    \caption{Mean leave-one-signer-out accuracy for each architecture variant, with 95\% confidence intervals over the eight folds. The vertical rule marks the shipped model's mean; every interval crosses it.}
+    \caption{Mean LOSO accuracy for each architecture variant}
     \label{fig:ablation}
 \end{figure}
 

@@ -7,14 +7,14 @@ The signed form of each of the six emergency phrases was established in person w
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.72\textwidth]{img/consult1.jpg}
-    \caption{The project team with the NSL consultant following a gloss consultation session}
+    \caption{The project team with the NSL consultant}
     \label{fig:consult-group}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.72\textwidth]{img/consult2.jpg}
-    \caption{Reviewing a recorded demonstration with the consultant to confirm the reference form of a phrase}
+    \caption{Reviewing a recorded demonstration with the consultant}
     \label{fig:consult-review}
 \end{figure}
 
@@ -34,14 +34,14 @@ Clips were recorded with a purpose-built tool that runs MediaPipe Holistic on a 
 \begin{figure}[H]
     \centering
     \includegraphics[height=2.3in]{img/recorder1.jpg}
-    \caption{A signer recording the \textit{Call the police} phrase, showing live pose and hand landmark overlays alongside the signer identity and phrase selection}
+    \caption{A signer recording the \textit{Call the police} phrase}
     \label{fig:recorder-a}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.62\textwidth]{img/recorder2.png}
-    \caption{The recorder during an active recording, showing hand landmarks in detail and the running per-class clip counts on disk}
+    \caption{The recorder during an active recording}
     \label{fig:recorder-b}
 \end{figure}
 
@@ -54,14 +54,14 @@ The eight signers recorded independently on separate machines. Contributions wer
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.88\textwidth]{img/Githubdataset.png}
-    \caption{The shared dataset repository, with raw and processed directories tracked separately and a commit history showing contributions merged from several signers}
+    \caption{The shared dataset repository}
     \label{fig:merge-repo}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.88\textwidth]{img/more_github.png}
-    \caption{The raw directory after merging, with one subfolder per phrase class holding the contributions of all signers}
+    \caption{The raw directory after merging}
     \label{fig:merge-raw}
 \end{figure}
 
@@ -88,7 +88,7 @@ data/
     `-- none/
         `-- ... (120 clips)
     \end{Verbatim}
-    \caption{Local directory layout: raw clips organised into one subfolder per phrase class, each holding 120 clips named \texttt{<phrase>\_\_<signer>\_\_<index>.npy}}
+    \caption{Local directory layout}
     \label{fig:dirs-raw}
 \end{figure}
 
@@ -104,7 +104,7 @@ data/
     |-- seq_len_hist.png
     `-- y.npy
     \end{Verbatim}
-    \caption{Contents of the processed directory: the compiled label array, padding mask, manifest, and sequence-length metadata produced from the raw clips}
+    \caption{Contents of the processed directory}
     \label{fig:dirs-processed}
 \end{figure}
 
@@ -152,7 +152,7 @@ This appendix traces one clip through the preprocessing pipeline, to make the nu
         \draw[brc] ($(pose.south west)+(0,-3pt)$) -- ($(rhand.south east)+(0,-3pt)$)
             node[midway, below=6pt, lbl] {225-value feature vector, one frame};
     \end{tikzpicture}
-    \caption{The 225-value feature vector as a single row, sliced into its three landmark blocks}
+    \caption{The 225-value feature vector as a single row}
     \label{fig:vectorslice}
 \end{figure}
 
@@ -235,7 +235,7 @@ Figure~\ref{fig:padslice} shows this same $(146, 225)$ array as a row of frames,
         \draw[dgrey, dashed] (real.south) -- (mreal.north);
         \draw[dgrey, dashed] (pad.south)  -- (mpad.north);
     \end{tikzpicture}
-    \caption{The standardised clip as a single row of 146 frames, sliced into the real and zero-padded spans, with the boolean mask that marks the same split}
+    \caption{The standardised clip as a single row of 146 frames}
     \label{fig:padslice}
 \end{figure}
 
@@ -253,7 +253,7 @@ The desktop recogniser imports the training-time preprocessing module rather tha
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{img/cant_breathe.png}
-    \caption{The desktop recogniser accepting \textit{I can't breathe} at full confidence, with live pose and hand landmark overlays on the camera feed. The panel reports the phrase, its category, the confidence, and the three most probable classes; the footer shows the sequence length of 146 frames and the 75\% acceptance threshold in force}
+    \caption{The desktop application}
     \label{fig:ui-desktop}
 \end{figure}
 
@@ -279,7 +279,7 @@ The client presents one of three outcomes for every attempt: an accepted phrase,
         \caption{\textit{I need an ambulance}, accepted at 100\%}
         \label{fig:ui-client-ambulance}
     \end{subfigure}
-    \caption{The Android client recognising two phrases on the device with the network disabled. Each banner carries the phrase, its category, the top three class probabilities, and the frame counts before and after temporal resampling}
+    \caption{The Android client}
     \label{fig:ui-client}
 \end{figure}
 
