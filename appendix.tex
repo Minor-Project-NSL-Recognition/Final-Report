@@ -4,23 +4,20 @@
 
 The signed form of each of the six emergency phrases was established in person with Deaf experts before any data collection began, as described in Section~\ref{sec:phase0}. Consultations were held at the Rehabilitation Centre for the Rural Deaf in Bhaktapur and at the National Federation of the Deaf Nepal in Ranibari Marga, Samakhushi, Kathmandu. The images below are reproduced with the consent of those photographed.
 
-\begin{figure}[H]
+% The two landscape photographs are paired on one row, matched by height, so
+% that all three fit on this page instead of stranding the third on its own.
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.72\textwidth]{img/consult1.jpg}
-    \caption{The project team with the NSL consultant}
+    \mbox{\includegraphics[height=4.3cm]{img/consult1.jpg}%
+          \hspace{3mm}%
+          \includegraphics[height=4.3cm]{img/consult2.jpg}}
+    \caption{The project team with the NSL consultant (left), and reviewing a recorded demonstration with the consultant (right)}
     \label{fig:consult-group}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.72\textwidth]{img/consult2.jpg}
-    \caption{Reviewing a recorded demonstration with the consultant}
-    \label{fig:consult-review}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.72\textwidth]{img/consult3.jpg}
+    \includegraphics[width=0.62\textwidth]{img/consult3.jpg}
     \caption{An NSL expert demonstrating the signed form of a phrase for reference recording}
     \label{fig:consult-demo}
 \end{figure}
@@ -31,16 +28,16 @@ The signed form of each of the six emergency phrases was established in person w
 
 Clips were recorded with a purpose-built tool that runs MediaPipe Holistic on a live webcam feed and saves the 225-value landmark vector for each frame. The operator selects a signer identity and a phrase, then starts and stops each recording explicitly. Landmark overlays are drawn live, so a failed detection is visible during recording instead of afterwards.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[height=2.3in]{img/recorder1.jpg}
+    \includegraphics[height=2.7in]{img/recorder1.jpg}
     \caption{A signer recording the \textit{Call the police} phrase}
     \label{fig:recorder-a}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.62\textwidth]{img/recorder2.png}
+    \includegraphics[width=0.72\textwidth]{img/recorder2.png}
     \caption{The recorder during an active recording}
     \label{fig:recorder-b}
 \end{figure}
@@ -51,21 +48,21 @@ Clips were recorded with a purpose-built tool that runs MediaPipe Holistic on a 
 
 The eight signers recorded independently on separate machines. Contributions were merged through a shared Git repository instead of by hand, which gave a reviewable history of what each signer added and caught duplicate and misnamed clips before they entered the combined dataset.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.88\textwidth]{img/Githubdataset.png}
+    \includegraphics[width=\textwidth]{img/Githubdataset.png}
     \caption{The shared dataset repository}
     \label{fig:merge-repo}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.88\textwidth]{img/more_github.png}
+    \includegraphics[width=\textwidth]{img/more_github.png}
     \caption{The raw directory after merging}
     \label{fig:merge-raw}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \begin{Verbatim}[frame=single, fontsize=\small, xleftmargin=1em, xrightmargin=1em]
 data/
@@ -92,7 +89,7 @@ data/
     \label{fig:dirs-raw}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \begin{Verbatim}[frame=single, fontsize=\small, xleftmargin=1em, xrightmargin=1em]
 data/
@@ -116,7 +113,7 @@ This appendix traces one clip through the preprocessing pipeline, to make the nu
 
 \section{Feature Vector Layout}
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Layout of the 225-value feature vector}
     \label{tab:featurelayout}
@@ -135,7 +132,7 @@ This appendix traces one clip through the preprocessing pipeline, to make the nu
 
 \noindent Figure~\ref{fig:vectorslice} shows the same layout as a single 225-value row, sliced into its three blocks.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \begin{tikzpicture}[
         blk/.style={draw=dgrey, thick, minimum height=1cm, align=center, font=\footnotesize},
@@ -160,7 +157,7 @@ This appendix traces one clip through the preprocessing pipeline, to make the nu
 
 The first five pose landmarks of the clip's first frame, in the normalised image coordinates MediaPipe reports:
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Raw pose landmarks 0 to 4, first frame}
     \label{tab:rawvalues}
@@ -183,7 +180,7 @@ The first five pose landmarks of the clip's first frame, in the normalised image
 
 The same five landmarks after dual-anchor normalisation, now expressed relative to the shoulder midpoint and scaled by shoulder width:
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Normalised pose landmarks 0 to 4, first frame}
     \label{tab:normvalues}
@@ -208,6 +205,8 @@ The clip has 42 frames, fewer than the sequence length of 146, so it is zero-pad
 
 Figure~\ref{fig:padslice} shows this same $(146, 225)$ array as a row of frames, sliced against the boolean mask computed alongside it.
 
+% Kept in place: this is the last float of the appendix, so letting it float
+% would strand it alone on a page of its own instead of beside its text.
 \begin{figure}[H]
     \centering
     \begin{tikzpicture}[
@@ -250,7 +249,7 @@ Two applications present a recognition result to a user. The desktop recogniser 
 
 The desktop recogniser imports the training-time preprocessing module rather than reimplementing it, so the numbers reaching the model are the same ones the reported accuracy was measured with. That is what makes it the reference the on-device path of Section~\ref{sec:ondevice} was checked against.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.95\textwidth]{img/cant_breathe.png}
     \caption{The desktop application}
@@ -264,16 +263,16 @@ The desktop recogniser imports the training-time preprocessing module rather tha
 
 The client presents one of three outcomes for every attempt: an accepted phrase, which is displayed in Nepali and English and spoken from the bundled Nepali recording; an unrecognised result, when the classifier positively identifies the input as not being one of the six phrases; or a low-confidence result, when the top class is a phrase but the model will not commit to it. Only the first produces speech, and only the first displays any phrase text at all. Figure~\ref{fig:ui-client} shows two accepted results, one from each of two phrase categories.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \begin{subfigure}[t]{0.375\textwidth}
+    \begin{subfigure}[t]{0.47\textwidth}
         \centering
         \includegraphics[width=\textwidth]{img/mobile_app_house_on_fire.jpeg}
         \caption{\textit{The building is on fire}, accepted at 97\%}
         \label{fig:ui-client-fire}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[t]{0.375\textwidth}
+    \begin{subfigure}[t]{0.47\textwidth}
         \centering
         \includegraphics[width=\textwidth]{img/mobile_app_need_ambulance.jpeg}
         \caption{\textit{I need an ambulance}, accepted at 100\%}
@@ -293,12 +292,12 @@ The frame counts in the banners make the temporal correction visible. The fire c
 
 The fallback inference server exposes the endpoints in Table~\ref{tab:endpoints}. The streaming endpoint is the path the client uses when on-device recognition is switched off; the two prediction endpoints exist so that the served decision can be checked against the offline pipeline without needing a phone at all, which is what keeps this path useful as a reference even when nothing uses it in production.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Server endpoints}
     \label{tab:endpoints}
     \small
-    \begin{tabular}{|l|l|c|p{6.1cm}|}
+    \begin{tabularx}{\textwidth}{|l|l|c|X|}
         \hline
         \textbf{Method} & \textbf{Path} & \textbf{Key} & \textbf{Purpose} \\
         \hline
@@ -312,17 +311,17 @@ The fallback inference server exposes the endpoints in Table~\ref{tab:endpoints}
         \hline
         WS   & \texttt{/ws/stream}         & yes & Live frames to a decision, the path the client uses \\
         \hline
-    \end{tabular}
+    \end{tabularx}
 \end{table}
 
 \noindent The health endpoint is deliberately unauthenticated so that container health checks and the client's reachability test keep working when a key is configured. Every other endpoint requires the key, compared with a constant-time function so that a wrong key cannot be narrowed down by timing the response.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Messages on the streaming endpoint}
     \label{tab:wsmessages}
     \small
-    \begin{tabular}{|l|l|p{7.3cm}|}
+    \begin{tabularx}{\textwidth}{|l|l|X|}
         \hline
         \textbf{Direction} & \textbf{Message} & \textbf{Meaning} \\
         \hline
@@ -340,7 +339,7 @@ The fallback inference server exposes the endpoints in Table~\ref{tab:endpoints}
         \hline
         Client & \texttt{ping}      & Keepalive, sent while idle between signs \\
         \hline
-    \end{tabular}
+    \end{tabularx}
 \end{table}
 
 \noindent The on-device path carries no protocol, but it produces the same result structure (status, phrase, confidence, and the top three classes), so the presentation logic in the client is identical whichever path produced the decision. Switching between them changes where the computation happens and nothing the user sees.

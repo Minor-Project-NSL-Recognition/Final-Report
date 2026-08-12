@@ -20,6 +20,16 @@
 \usepackage{float}
 \usepackage{fancyvrb}
 
+% Float placement. Large diagrams may take most of a page so that the text
+% keeps flowing instead of leaving a hole under a figure that did not fit.
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.75}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.70}
+\setcounter{topnumber}{2}
+\setcounter{bottomnumber}{1}
+\setcounter{totalnumber}{3}
+
 % ── Diagrams ──────────────────────────────────────────────────────────────────
 \usepackage{tikz}
 \usetikzlibrary{positioning, fit, arrows.meta, shapes.geometric, shapes.multipart,
@@ -36,6 +46,7 @@
 
 % ── Tables ────────────────────────────────────────────────────────────────────
 \usepackage{array}
+\usepackage{tabularx}   % X columns absorb the leftover width exactly
 \usepackage{longtable}
 \usepackage{booktabs}
 \usepackage{multirow}
@@ -46,9 +57,23 @@
 \usepackage{url}
 \let\cleardoublepage\clearpage
 \usepackage{placeins}
-\setlength{\parskip}{0pt}
+
+% Block paragraphs: no first-line indent anywhere, separated by a little
+% vertical space instead. Without the space, two paragraphs run together
+% whenever the first one happens to fill its last line.
+% JustifyingParindent is ragged2e's copy of \parindent, captured when the
+% package loaded; it has to be zeroed too or \justifying puts the indent back.
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 1pt minus 1pt}
+\setlength{\JustifyingParindent}{0pt}
+
 \renewcommand{\baselinestretch}{1.5}
 \raggedbottom
+
+% Long \texttt{} identifiers such as building_on_fire cannot be hyphenated, so
+% a line holding one can overrun the right margin. This lets TeX loosen such a
+% line instead; it only applies to lines that would otherwise be overfull.
+\setlength{\emergencystretch}{3em}
 
 % ── Section Title Formatting ──────────────────────────────────────────────────
 \usepackage{titlesec}

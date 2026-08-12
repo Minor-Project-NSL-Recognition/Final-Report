@@ -106,9 +106,11 @@ The interaction is two taps: one to begin signing and one to end. The system nee
 
 Figure~\ref{fig:usecase} shows the actors and their interactions. The Deaf Signer starts a session and performs an emergency phrase. The Hearing Person is the recipient of the output, reading the displayed phrase and hearing it spoken; they do not operate the system. The Developer role covers the offline work: recording and labelling the dataset, training and evaluating the model, and packaging the trained model into the application.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.9\textwidth]{img/usecase.png}
+    % trim removes the uneven blank border baked into the exported PNG, which
+    % otherwise makes the drawing sit left of centre
+    \includegraphics[width=0.70\textwidth, trim=21 43 66 12, clip]{img/usecase.png}
     \caption{Use case diagram}
     \label{fig:usecase}
 \end{figure}
@@ -117,7 +119,7 @@ Figure~\ref{fig:usecase} shows the actors and their interactions. The Deaf Signe
 
 The system has three parts. An offline path builds the model, the phone reproduces the offline preprocessing at inference time and runs the classifier, and a server offers the same path over a network for devices that cannot. Figure~\ref{fig:blockdiagram} shows all three and the preprocessing definition that connects them.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \resizebox{\textwidth}{!}{%
     \begin{tikzpicture}[
@@ -191,8 +193,9 @@ The system has three parts. An offline path builds the model, the phone reproduc
 
 Figure~\ref{fig:dfd0} shows the system as one process with its external entities. The signer supplies gestures and receives text and speech. The hearing recipient receives the same output. The developer supplies labelled recordings and the trained artefacts.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
+    \resizebox{0.95\textwidth}{!}{%
     \begin{tikzpicture}[
         ent/.style={rectangle, draw=dgrey, fill=dfill, text width=2.2cm,
                     align=center, font=\sffamily\scriptsize, minimum height=1cm},
@@ -209,9 +212,13 @@ Figure~\ref{fig:dfd0} shows the system as one process with its external entities
 
     \draw[arr] (sig) -- node[above, sloped] {gesture frames} (sys);
     \draw[arr] (sys) -- node[above, sloped] {phrase, confidence} (hear);
-    \draw[arr] (sys.west) -- node[below, sloped] {recognised phrase, status} (sig.south east);
+    % set over two lines: on one line this label is wider than the gap between
+    % the process circle and the entity, and it ran into the circle
+    \draw[arr] (sys.west) -- node[below, sloped, align=center]
+        {recognised phrase,\\ status} (sig.south east);
     \draw[arr] (dev) -- node[right] {labelled clips, trained model} (sys);
-    \end{tikzpicture}
+    \end{tikzpicture}%
+    }
     \caption{Level 0 data flow diagram}
     \label{fig:dfd0}
 \end{figure}
@@ -220,9 +227,9 @@ Figure~\ref{fig:dfd0} shows the system as one process with its external entities
 
 Figure~\ref{fig:dfd1} decomposes the system into the processes that carry out recognition, and shows the two data stores.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \resizebox{0.96\textwidth}{!}{%
+    \resizebox{\textwidth}{!}{%
     \begin{tikzpicture}[
         ent/.style={rectangle, draw=dgrey, fill=dfill, text width=1.9cm,
                     align=center, font=\sffamily\small, minimum height=0.95cm},
@@ -268,9 +275,9 @@ Figure~\ref{fig:dfd1} decomposes the system into the processes that carry out re
 
 Figure~\ref{fig:sequence} shows one recognition on the device, from the tap that starts it to the spoken result. The loop is the important part: frames are landmarked while the user is still signing, so the cost of extraction is paid during the sign and not after it. Only the two corrections, the normalisation, and the forward pass remain once the user stops.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \resizebox{0.95\textwidth}{!}{%
+    \resizebox{\textwidth}{!}{%
     \begin{tikzpicture}[
         font=\sffamily\scriptsize,
         head/.style={rectangle, draw=dgrey, fill=dfill, text width=2.1cm,
@@ -316,7 +323,7 @@ Figure~\ref{fig:sequence} shows one recognition on the device, from the tap that
 
 Figure~\ref{fig:classdiagram} shows the principal modules and classes. The Python package on the left is imported by both the training scripts and the fallback server. The client package on the right carries a port of the same preprocessing contract, drawn with a heavier outline, and the fixture generator that pins the port to the original is shown between them.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \resizebox{\textwidth}{!}{%
     \begin{tikzpicture}[
@@ -484,9 +491,11 @@ Figure~\ref{fig:classdiagram} shows the principal modules and classes. The Pytho
 
 Figure~\ref{fig:activity} shows the control flow of one recognition attempt, including the decision point that can end it without output.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \resizebox{0.62\textwidth}{!}{%
+    % this diagram is tall and narrow, so it is scaled by height rather than
+    % width; scaling by width left most of the page empty
+    \resizebox{!}{0.86\textheight}{%
     \begin{tikzpicture}[
         font=\sffamily\scriptsize,
         act/.style={rectangle, rounded corners=5pt, draw=dgrey, fill=dfill,

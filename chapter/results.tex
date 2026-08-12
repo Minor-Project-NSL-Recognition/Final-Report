@@ -15,7 +15,7 @@ The random seed was fixed at 42 for every run. Fixing the seed by itself proved 
 
 The final dataset holds 840 clips, distributed exactly evenly at 120 clips in each of the seven classes. Table~\ref{tab:composition} gives the breakdown by class and signer.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Clips by class and signer in the final dataset}
     \label{tab:composition}
@@ -49,7 +49,7 @@ Eight signers is a small number, and it is the principal limitation on how much 
 
 Frame counts across the 840 clips range from 30 to 217, with a median of 89.5 and a mean of 91.7. Figure~\ref{fig:seqlen} shows the distribution. The 95th percentile falls at 146 frames, which became the fixed sequence length.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.75\textwidth]{img/seqlenhist.png}
     \caption{Distribution of raw clip frame counts with 95th percentile cuttoff}
@@ -58,7 +58,7 @@ Frame counts across the 840 clips range from 30 to 217, with a median of 89.5 an
 
 \noindent At a capture rate of 15.7 frames per second, 146 frames corresponds to about 9.3 seconds of signing, and the median clip of 89.5 frames to about 5.7 seconds. Table~\ref{tab:stdmodes} shows how the standardisation step treated the clips.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{How the 840 clips were standardised to 146 frames}
     \label{tab:stdmodes}
@@ -83,14 +83,14 @@ Every fold converged and stopped on the early-stopping criterion before exhausti
 
 Figure~\ref{fig:curves} shows accuracy per epoch for all eight folds and Figure~\ref{fig:losscurves} the corresponding losses. Each accuracy panel carries a dashed line at that fold's held-out score. The gap between the training and validation curves, both drawn from signers inside the training set, and that dashed line is the cost of meeting a signer the model has never seen. Presenting all eight folds shows whether the folds behaved consistently, which a single representative curve cannot.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{img/trainingcurves.png}
     \caption{Accuracy per epoch for each LOSO fold.}
     \label{fig:curves}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{img/traininglosscurves.png}
     \caption{Loss per epoch for each fold. }
@@ -101,7 +101,7 @@ Figure~\ref{fig:curves} shows accuracy per epoch for all eight folds and Figure~
 
 All eight signers were eligible for holdout, since removing any one of them left every class present in the remainder. Table~\ref{tab:folds} gives the result of each fold.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Leave-one-signer-out results.}
     \label{tab:folds}
@@ -134,7 +134,7 @@ No fold needs a caveat attached to it. Every signer contributes clips in all sev
 
 Table~\ref{tab:perclass} gives precision, recall, and F1 for each class, pooled over all folds.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Per-class performance, pooled over all eight folds}
     \label{tab:perclass}
@@ -163,7 +163,7 @@ That asymmetry is expected. The six phrases are each a specific, repeatable perf
 
 Errors are easiest to read from the pooled confusion matrix in Figure~\ref{fig:confusion}.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.62\textwidth]{img/confusionmatrix_cropped.png}
     \caption{Confusion matrix pooled over all eight LOSO folds.}
@@ -187,10 +187,11 @@ Under a stratified 70/15/15 random split, the same architecture and the same tra
 
 That gap is the point of reporting the number. Under a random split, clips from the same person appear in both training and test, so the model can score well by recognising the individual as much as the sign. The signer-independent protocol removes that possibility, and the accuracy falls. The 97.62\% figure describes how well the system recognises phrases performed by people it has already been trained on, which is not the situation any real user is in.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{The two evaluation protocols compared}
     \label{tab:protocols}
+    \setlength{\tabcolsep}{3pt}
     \begin{tabular}{lcc}
         \toprule
         \textbf{Protocol} & \textbf{Accuracy} & \textbf{What it measures} \\
@@ -212,7 +213,7 @@ training set, so whether it has done so is a question the evaluation has to answ
 than assume. Three accuracies are available for each fold, and the distance between them is
 what the question turns on.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{The three levels of accuracy}
     \label{tab:threelevels}
@@ -289,11 +290,12 @@ conclusion below rests on them. The eight tenths of a point between the two meas
 the same architecture is itself a useful floor on how finely any difference in this table can
 be read.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Architecture variants under the LOSO protocol, ranked by mean accuracy.}
     \label{tab:ablation}
     \small
+    \setlength{\tabcolsep}{4pt}
     \begin{tabular}{lcccccc}
         \toprule
         \textbf{Architecture} & \textbf{Units} & \textbf{Dropout} & \textbf{Params} & \textbf{Mean} & \textbf{95\% CI} & \textbf{Epochs} \\
@@ -308,21 +310,6 @@ be read.
     \end{tabular}
 \end{table}
 
-\mustdo{%
-Table~\ref{tab:ablation} and Figure~\ref{fig:ablation} come from the corrected dataset, so
-the mismatch previously flagged here is resolved. One difference remains: the sweep was run
-through \texttt{scripts/sweep\_parallel.py} (a separate process per candidate with four
-intra-op threads) rather than the single-process path that produced
-Table~\ref{tab:folds}, which is why the \texttt{current} row reads 0.960 where
-Table~\ref{tab:folds} reads 0.9518. The paragraph above the table states this, so the chapter
-is defensible as it stands.
-
-To remove the discrepancy entirely, re-run \texttt{python -u scripts/sweep\_architectures.py}
-single-process on the current \texttt{data/processed/}, which takes roughly ninety minutes,
-then refresh \texttt{img/architecturesweep.png} and this table from the new
-\texttt{architecture\_sweep.csv}. That run also emits a seventh variant that swaps the
-recurrent cell, which this table deliberately omits since the text holds the cell type fixed
-at LSTM; keep it omitted. Then delete this box.}
 
 \noindent No candidate is distinguishable from any other. The means span 0.921 to 0.961, but
 with only eight folds the standard error on each one is between 0.9 and 2.4 percentage
@@ -330,7 +317,7 @@ points, and every confidence interval in the table overlaps every other. Even th
 separation in the set, between the highest-dropout variant and the largest one, is 4.0 points
 against a standard error of 2.5 on the difference.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{img/architecturesweep.png}
     \caption{Mean LOSO accuracy for each architecture variant}
@@ -434,7 +421,7 @@ The trained model was converted to TensorFlow Lite for deployment, reducing it f
 
 A conversion fault would be indistinguishable from a model that simply performs slightly worse, so the export is verified against the original instead of trusted. Both models were run on 30 real clips and their outputs compared. The largest absolute difference in any predicted probability was $1.2 \times 10^{-7}$, and the two models agreed on the predicted class for all 30 clips. The export step refuses to write its output if this check fails.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{TensorFlow Lite export verification}
     \label{tab:export}
@@ -459,7 +446,7 @@ The cost profile of a single recognition is dominated by one operation on both p
 
 The difference between the two paths is where the extraction runs, and the phone is the slower of the two. That is precisely why the temporal resampling of Section~\ref{sec:ondevice} exists: the phone cannot be made fast enough, so the clip it produces is corrected to the timescale the model expects instead.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Measured costs on the fallback server path}
     \label{tab:latency}
@@ -481,7 +468,7 @@ The difference between the two paths is where the extraction runs, and the phone
 
 The application was built and installed on a physical device, and recognition works end to end with the network disabled: the user taps to begin, performs a phrase, taps to finish, and the recognised phrase appears on screen and is spoken in Nepali from the bundled recording. The client reports its own costs as it runs, so the quantities in Table~\ref{tab:clientmeasurements} are read from the device rather than estimated.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{On-device measurements, read from the client's own telemetry on a physical device}
     \label{tab:clientmeasurements}
@@ -509,7 +496,7 @@ Landmark extraction on the phone is therefore about four times the cost of the s
 
 The work proceeded in nine increments, each delivering a module that could be exercised before the next began. Table~\ref{tab:sprints} records what each produced and what it changed about the plan, since several increments revised decisions made earlier.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Development increments}
     \label{tab:sprints}
@@ -600,7 +587,7 @@ be recalibrated on validation data at each vocabulary, not carried forward.
 
 Table~\ref{tab:scaling} collects these effects.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Predicted effect of a larger vocabulary on each component}
     \label{tab:scaling}

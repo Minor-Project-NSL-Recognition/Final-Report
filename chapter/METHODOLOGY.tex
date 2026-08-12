@@ -9,7 +9,7 @@ Agile incremental development was adopted because several parameters could not b
 
 The riskiest unknown was addressed first. Before any large-scale recording, a small set of clips was captured to confirm that MediaPipe Holistic produces stable landmarks for multi-sign NSL phrases performed at natural speed. Had it not, the entire landmark-based approach would have needed reconsideration while there was still time to change it.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.7\textwidth]{img/sdlc.png}
     \caption{Agile incremental development approach}
@@ -27,7 +27,7 @@ The consultants were also asked directly whether facial expression changes or ad
 
 Table~\ref{tab:phrases} lists the six phrases and the situation each covers. Phrase 6 was changed during the project after consultation with the experts: they advised that a request to use the toilet is a far more frequent communication failure for deaf people in institutional settings than the earthquake phrase originally planned, and the change was made on that basis.
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Target emergency phrases and their categories}
     \label{tab:phrases}
@@ -139,7 +139,7 @@ The compiled dataset is stored as three aligned arrays: the normalised sequences
 
 The classifier is a bidirectional LSTM built with TensorFlow and Keras:
 
-\begin{table}[H]
+\begin{table}[htbp]
     \centering
     \caption{Classifier architecture}
     \label{tab:architecture}
