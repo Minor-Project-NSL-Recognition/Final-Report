@@ -1,0 +1,74 @@
+% ══════════════════════════════════════════════════════════════════════════════
+% CERTIFICATE OF APPROVAL
+% This page is printed on college letterhead, so a band at the top is left
+% blank. \letterheadspace is that band, measured from the paper's top edge:
+% 1in of it is this page's top margin and the \vspace* below supplies the rest.
+% Raise it if the letterhead is taller than the space it leaves. About 2.5in is
+% the most that fits before the page spills onto a second one; at the 2in set
+% here the first line of text sits 2.52in down, so a 2in letterhead clears the
+% title by half an inch.
+%
+% NOTE: \newgeometry is deliberately not paired with \restoregeometry, which is
+% how the original template behaved. It therefore also sets the page geometry
+% for every page after this one; adding \restoregeometry here would reflow the
+% whole report.
+% ══════════════════════════════════════════════════════════════════════════════
+\newgeometry{top=1in}
+\pagenumbering{gobble}
+
+\newlength{\letterheadspace}
+\setlength{\letterheadspace}{2in}
+\vspace*{\dimexpr\letterheadspace - 1in\relax}
+
+\begin{center}
+\large{\textbf{CERTIFICATE OF APPROVAL}}
+\end{center}
+\vspace{1cm}
+
+\begin{sloppypar}
+\noindent
+This is to certify that this minor project work entitled \textbf{``Nepali Sign Language Recognition for Emergency Phrases''}, submitted by Asul Limbu (KCE080BCT005), Dipesh Singh (KCE080BCT008), Manee Das Shrestha (KCE080BCT013) and Sajan Sahikarmi (KCE080BCT035) has been examined and accepted as the partial fulfillment of the requirements for the degree of Bachelor in Computer Engineering. The project was carried out under special supervision and within the time frame prescribed by the syllabus.
+\end{sloppypar}
+
+\vspace{3cm}
+
+% A signature image laid over the dotted rule. The raisebox is declared with
+% zero height and depth, so a signed column keeps the same height as an
+% unsigned one and the rules of the two columns stay level. The trim strips the
+% uneven blank border in the PNG, which would otherwise throw off the centring.
+\newcommand{\signedrule}[1]{%
+    \makebox[\linewidth][c]{%
+        \makebox[0pt][c]{\raisebox{1.5mm}[0pt][0pt]{%
+            \includegraphics[width=2.6cm, trim=46 15 59 24, clip]{#1}}}%
+        \makebox[0pt][c]{..........................................}%
+    }%
+}
+
+\noindent
+\begin{minipage}[t]{0.45\textwidth}
+\centering
+..........................................\\
+\textbf{Er. Surendra KC} \\
+External Examiner \\
+Director of Engineering \\
+Infinite Software Services
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\textwidth}
+\centering
+\signedrule{img/supervisor_signature.png}\\
+\textbf{Er. Prakash Chandra Prasad} \\
+Project Supervisor \\
+Assistant Professor \\
+IoE, Pulchowk Campus
+\end{minipage}
+
+\vspace{2cm}
+\begin{center}
+..........................................\\
+\textbf{Er. Dinesh Gothe}\\
+Head of Department\\
+Department of Computer and Electronics Engineering\\
+Khwopa College of Engineering
+\end{center}
+\newpage

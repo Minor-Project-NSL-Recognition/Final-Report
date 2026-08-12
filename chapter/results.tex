@@ -126,7 +126,14 @@ All eight signers were eligible for holdout, since removing any one of them left
 
 \noindent Mean accuracy across folds is 95.18\% with a standard deviation of 1.74 percentage points. Pooling all 840 predictions, each made by a model that had not seen its signer, gives 95.36\%.
 
-The spread between folds is more informative than the mean. The best fold reaches 98.57\% and the worst 92.86\%, a range of 5.7 points, with four of the eight folds sitting together at 94.29\%. Since each fold differs only in which signer was withheld, that spread is a direct measurement of how much recognition quality depends on the individual. Reporting the mean alone would hide this; a system deployed to the public will meet signers at both ends of that range.
+The spread between folds is more informative than the mean. Figure~\ref{fig:losopersigner} shows the eight fold accuracies side by side. The best fold reaches 98.57\% and the worst 92.86\%, a range of 5.7 points, with four of the eight folds sitting together at 94.29\%. Since each fold differs only in which signer was withheld, that spread is a direct measurement of how much recognition quality depends on the individual. Reporting the mean alone would hide this; a system deployed to the public will meet signers at both ends of that range.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.75\textwidth]{img/losopersigner_cropped.png}
+    \caption{Leave-one-signer-out accuracy for each held-out signer}
+    \label{fig:losopersigner}
+\end{figure}
 
 No fold needs a caveat attached to it. Every signer contributes clips in all seven classes in the same proportions, so each fold is scored on the same problem and the accuracies in Table~\ref{tab:folds} can be compared against one another directly. Signer 07 at 92.86\% is the worst case and signer 03 at 98.57\% the best, and both are measured on the full seven-way task. The one fold that stands out on a different axis is signer 06, which needed 71 epochs to converge against a median of 38; it still lands on the same 94.29\% as three others, so the slower convergence cost accuracy nothing.
 
