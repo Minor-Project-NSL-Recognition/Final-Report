@@ -247,7 +247,7 @@ Third, the per-fold spread is contained. Eight independently trained models, eac
 different signer, produce accuracies between 0.9286 and 0.9857 with a standard deviation
 of 1.74 percentage points. A model that had memorised its training signers would be
 expected to collapse on some folds and not others; the worst fold here is 5.7 points below
-the best, not thirty. That range is still wider than the 2.1 points separating the best and
+the best, not thirty. That range is still wider than the 4.0 points separating the best and
 worst architectures in Section~\ref{sec:ablation}, which is the finding this chapter keeps
 returning to.
 
@@ -276,12 +276,18 @@ size and depth of the network and nothing else. Table~\ref{tab:ablation} gives t
 Figure~\ref{fig:ablation} shows the same numbers as intervals.
 
 One caveat applies to the whole table before any of its rows are read. The sweep was run on
-the dataset as it stood before the \texttt{none} row of Table~\ref{tab:composition} was
-evened out, and through a parallel runner rather than the single-process one that produced
-Table~\ref{tab:folds}. Every row of Table~\ref{tab:ablation} was produced the same way as
+the same corrected dataset as every other result in this chapter, but through a parallel
+runner that gives each candidate its own process and a restricted thread pool, rather than
+the single-process path that produced Table~\ref{tab:folds}. The shipped architecture
+therefore appears twice in this chapter at slightly different values: 0.960 in
+Table~\ref{tab:ablation} against 0.9518 in Table~\ref{tab:folds}. Section~\ref{sec:experimentsetup}
+records why, in that TensorFlow's parallel reductions move per-fold accuracy when the thread
+configuration changes. Every row of Table~\ref{tab:ablation} was produced the same way as
 every other, so the comparison between architectures, which is what this section is for,
-holds. The absolute values are not directly comparable against Table~\ref{tab:folds},
-and no conclusion below rests on them.
+holds. The absolute values are not directly comparable against Table~\ref{tab:folds}, and no
+conclusion below rests on them. The eight tenths of a point between the two measurements of
+the same architecture is itself a useful floor on how finely any difference in this table can
+be read.
 
 \begin{table}[H]
     \centering
@@ -292,41 +298,37 @@ and no conclusion below rests on them.
         \toprule
         \textbf{Architecture} & \textbf{Units} & \textbf{Dropout} & \textbf{Params} & \textbf{Mean} & \textbf{95\% CI} & \textbf{Epochs} \\
         \midrule
-        bigger                 & 128/64/64  & 0.3 & 535{,}559 & 0.965 & [0.947, 0.983] & 43 \\
-        \textbf{current}       & 64/32/32   & 0.3 & 192{,}007 & 0.961 & [0.944, 0.978] & 42 \\
-        single\_layer          & 64/--/32   & 0.3 & 152{,}839 & 0.960 & [0.939, 0.980] & 43 \\
-        no\_dense\_head        & 64/32/--   & 0.3 & 190{,}151 & 0.952 & [0.930, 0.974] & 40 \\
-        high\_dropout          & 64/32/32   & 0.5 & 192{,}007 & 0.947 & [0.925, 0.970] & 50 \\
-        smaller                & 32/16/16   & 0.3 & 77{,}063  & 0.944 & [0.911, 0.976] & 51 \\
+        high\_dropout          & 64/32/32   & 0.5 & 192{,}007 & 0.961 & [0.943, 0.978] & 44 \\
+        \textbf{current}       & 64/32/32   & 0.3 & 192{,}007 & 0.960 & [0.943, 0.977] & 47 \\
+        smaller                & 32/16/16   & 0.3 & 77{,}063  & 0.958 & [0.937, 0.979] & 45 \\
+        single\_layer          & 64/--/32   & 0.3 & 152{,}839 & 0.945 & [0.912, 0.977] & 43 \\
+        no\_dense\_head        & 64/32/--   & 0.3 & 190{,}151 & 0.939 & [0.900, 0.979] & 42 \\
+        bigger                 & 128/64/64  & 0.3 & 535{,}559 & 0.921 & [0.874, 0.967] & 40 \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 \mustdo{%
-Table~\ref{tab:ablation} and Figure~\ref{fig:ablation} are the only results in this chapter
-that have \emph{not} been regenerated from the corrected dataset. They come from
-\texttt{results/architecture\_sweep.csv}, which was produced before the \texttt{none} row of
-Table~\ref{tab:composition} was evened out, and by
-\texttt{scripts/sweep\_parallel.py} (a separate process per candidate with four intra-op
-threads, against the single-process \texttt{train\_eval.py} that produced
-Table~\ref{tab:folds}). Both differences push the same way: the sweep's \texttt{current} row
-reads 0.961 $\pm$ 0.024 where Table~\ref{tab:folds} reads 0.9518 $\pm$ 0.0174.
+Table~\ref{tab:ablation} and Figure~\ref{fig:ablation} come from the corrected dataset, so
+the mismatch previously flagged here is resolved. One difference remains: the sweep was run
+through \texttt{scripts/sweep\_parallel.py} (a separate process per candidate with four
+intra-op threads) rather than the single-process path that produced
+Table~\ref{tab:folds}, which is why the \texttt{current} row reads 0.960 where
+Table~\ref{tab:folds} reads 0.9518. The paragraph above the table states this, so the chapter
+is defensible as it stands.
 
-The paragraph added above Table~\ref{tab:ablation} states this in the text, so the chapter
-is defensible as it stands. The better fix is to re-run the sweep on the current
-\texttt{data/processed/} through \texttt{scripts/sweep\_architectures.py} single-process, so
-that the \texttt{current} row reproduces Table~\ref{tab:folds} exactly. That run also emits a
-\texttt{gru} variant which this table deliberately omits, since the text claims the cell type
-is held fixed at LSTM. Keep it omitted, or say why it is there. Then refresh
-\texttt{img/architecturesweep.png}, update this table, the 2.1-point span quoted twice
-below, the 0.024--0.047 range, and the four-tenths-of-a-point figure in
-Section~\ref{sec:archcompare}'s discussion in Chapter~3. Then delete this box.}
+To remove the discrepancy entirely, re-run \texttt{python -u scripts/sweep\_architectures.py}
+single-process on the current \texttt{data/processed/}, which takes roughly ninety minutes,
+then refresh \texttt{img/architecturesweep.png} and this table from the new
+\texttt{architecture\_sweep.csv}. That run also emits a seventh variant that swaps the
+recurrent cell, which this table deliberately omits since the text holds the cell type fixed
+at LSTM; keep it omitted. Then delete this box.}
 
-\noindent No candidate is distinguishable from any other. The means span 0.944 to 0.965, but
-with only eight folds the standard error on each one is between 0.9 and 1.7 percentage
+\noindent No candidate is distinguishable from any other. The means span 0.921 to 0.961, but
+with only eight folds the standard error on each one is between 0.9 and 2.4 percentage
 points, and every confidence interval in the table overlaps every other. Even the widest
-separation in the set, between the largest variant and the smallest one, is 2.1 points
-against a standard error of 1.9 on the difference.
+separation in the set, between the highest-dropout variant and the largest one, is 4.0 points
+against a standard error of 2.5 on the difference.
 
 \begin{figure}[H]
     \centering
@@ -336,19 +338,30 @@ against a standard error of 1.9 on the difference.
 \end{figure}
 
 \noindent The comparison that matters more is against the spread within each candidate. The
-fold-to-fold standard deviation of a single architecture ranges from 0.024 to 0.047, which
-is larger than every difference between architectures in the table. Which signer is held
+largest gap between any two architectures in the table is 4.0 points, while the fold-to-fold
+standard deviation within a single architecture runs as high as 6.7. Which signer is held
 out affects the result more than which architecture is trained. That is the substantive
 finding of this section, and Section~\ref{sec:discussion} returns to it.
 
-Three conclusions do follow from the table. Capacity is not the bottleneck: the largest
-variant carries 535{,}559 parameters, 2.8 times the shipped model, and gains four tenths of
-a point for them. A dropout rate of 0.3 is the right setting, since raising it to 0.5 is
-nominally worse and needs 50 epochs to converge instead of 42. And the smallest variant is
-the only one that looks genuinely handicapped, not for its mean, which is within noise of
-the rest, but for a fold-to-fold standard deviation of 0.047, nearly twice the shipped
-model's, and the slowest convergence in the set. A network of 32 and 16 units is too small
-to behave consistently from one held-out signer to the next.
+The clearest single reading of the table is that capacity is not the bottleneck, and past a
+point it is a liability. The largest variant carries 535{,}559 parameters, 2.8 times the
+shipped model, and finishes last: 3.9 points below it, with a fold-to-fold standard
+deviation of 0.067, nearly three times the shipped model's 0.025, and the widest confidence
+interval in the set. The smallest variant makes the same case from the other end. At 77{,}063
+parameters, two fifths of the shipped model, it is 0.18 of a point behind, which is
+indistinguishable. Nothing in the range from 77 thousand to half a million parameters buys
+accuracy on this data, and the upper end of that range costs stability.
+
+The two structural removals behave alike. Dropping the second recurrent layer costs 1.5
+points and dropping the dense head costs 2.1, both well inside the noise on their means, but
+both roughly double the fold-to-fold spread, to 0.047 and 0.057 against 0.025. Their value
+is better read as consistency across signers than as accuracy, which is not something the
+means alone would have shown.
+
+One candidate the sweep does not settle is the dropout rate. Raising it from 0.3 to 0.5
+changes the mean by nine hundredths of a point, the closest pair in the table, and converges
+in slightly fewer epochs. The comparison establishes that 0.3 is not harmful; it does not
+establish that it is better than 0.5, and this report does not claim it.
 
 Two properties of the comparison limit what can be read from it. Each candidate was trained
 once per fold from a single seed, so run-to-run variation from weight initialisation is not
@@ -357,11 +370,11 @@ resolve differences of one or two points whatever statistical test is applied to
 is a property of the design and not of the analysis.
 
 The shipped architecture is therefore retained, not because it measurably outperforms the
-alternatives, but because no alternative measurably outperforms it, and it sits at the
-smaller end of the range over which accuracy has already saturated. The single-layer variant
-is the one worth revisiting should the deployment target ever impose a size budget this model
-misses: it carries 20\% fewer parameters for a difference of one tenth of a point, which is
-well inside the noise, though its fold-to-fold spread is slightly wider.
+alternatives, but because no alternative measurably outperforms it, and it sits in the range
+over which accuracy has already saturated while keeping the narrowest fold-to-fold spread in
+the table. Should the deployment target ever impose a size budget this model misses, the
+smallest variant is the one to revisit first: two fifths of the parameters for a difference
+of two tenths of a point.
 
 \section{Why the Accuracy Is High}
 \label{sec:whyhigh}
@@ -633,7 +646,7 @@ The evaluation protocol is the part of this work most worth carrying forward. Th
 
 Every accuracy in this chapter rests on eight people, four of whom are the authors. The standard deviation across folds is 1.74 points and the range is 5.7, which means the estimate of performance on a new signer is itself uncertain. A ninth signer with an unusual signing style could plausibly score below any fold reported here.
 
-The architecture comparison in Section~\ref{sec:ablation} puts this on a firmer footing than an assertion. Across six architectures spanning 77{,}063 to 535{,}559 parameters, no variant is distinguishable from any other, and the fold-to-fold spread within each one is larger than every difference between them. What limits this system is not the model that was chosen but the number of people it has been measured on.
+The architecture comparison in Section~\ref{sec:ablation} puts this on a firmer footing than an assertion. Across six architectures spanning 77{,}063 to 535{,}559 parameters, no variant is distinguishable from any other, and the widest gap between any two of them is narrower than the range across held-out signers within a single one. What limits this system is not the model that was chosen but the number of people it has been measured on.
 
 Four of the eight signers are also not fluent NSL users. Signers 01 to 04 are the project members, who learned each phrase from the consultants' reference and reproduced it; signers 05 to 08 are the Deaf experts who set that reference in the first place. The dataset therefore contains a mixture of fluent and learned performances, and the accuracy above is an accuracy on that mixture, not on fluent signing alone.
 

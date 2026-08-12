@@ -196,9 +196,12 @@ not model expressiveness.
 
 Both halves of that judgement were tested afterwards rather than left as reasoning.
 Widening the recurrent layers to 128 and 64 units and the dense head to 64, which is
-2.8 times the parameter count, moves leave-one-signer-out accuracy by four tenths of a
-percentage point, while the spread between held-out signers is several times that.
-The measurements are reported in Section~\ref{sec:ablation}.
+2.8 times the parameter count, buys no accuracy at all: the larger network finishes last of
+the six variants compared, 3.9 percentage points below the shipped one and with nearly three
+times its fold-to-fold spread. That difference is inside the noise of an eight-fold
+comparison and is not evidence that the larger model is worse, but it is firmly not evidence
+that the parameters were worth adding. The measurements are reported in
+Section~\ref{sec:ablation}.
 
 \subsection{Training Configuration}
 
