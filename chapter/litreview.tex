@@ -30,7 +30,7 @@ Its strength is breadth: it surveys several modern architectures on NSL rather t
 \subsection{ISL Recognition Using MediaPipe Holistic (Goyal and Velmathi, 2023)}
 Goyal and Velmathi \cite{goyal2023isl} applied MediaPipe Holistic to Indian Sign Language, using LSTMs for dynamic signs and convolutional networks for static ones.
 
-This is the closest published work in method to the approach taken here, and its strength is the direct support it gives that direction: landmarks from a pretrained extractor, fed to a temporal model, are sufficient for dynamic signs. Its limitations for this project's purposes are that it targets a different language and produces no audio output. This project differs on four counts. It targets NSL rather than ISL, recognises whole emergency phrases rather than individual signs, evaluates on held-out signers, and delivers spoken Nepali alongside the text.
+Its strength is the support it gives to the landmark-plus-temporal-model direction: landmarks from a pretrained extractor, fed to a temporal model, are sufficient for dynamic signs. Its limitations for this project's purposes are that it targets a well-resourced language at individual-sign level, reports no signer-held-out protocol, and produces no audio output. This project applies the same direction where none of those conditions hold. NSL had no dynamic dataset to work from, the unit of recognition is a whole emergency phrase rather than a single sign, every accuracy is measured on an unseen signer, and the result is spoken aloud in Nepali.
 
 \subsection{NSL Letter Detection Using MediaPipe and CNN (Shrestha et al., 2024)}
 Shrestha et al. \cite{shrestha2024nsl} present the closest prior landmark-based NSL system. MediaPipe landmarks are re-rendered as skeleton images and a convolutional network is trained on those images, with high reported accuracy.
@@ -63,7 +63,7 @@ Table~\ref{tab:reviewmatrix} summarises the reviewed works against the goal of t
         \hline
         Ligal \& Baral (2022) \cite{ligal2022nsl} & CNN+RNN and CNN+ViT for NSL gestures & Surveys several modern architectures on NSL rather than one & Pixel-based and compute-heavy; not emergency-focused \\
         \hline
-        Goyal \& Velmathi (2023) \cite{goyal2023isl} & MediaPipe Holistic with temporal models for ISL & Closest in method; supports landmarks plus a temporal model & Targets ISL; no audio output \\
+        Goyal \& Velmathi (2023) \cite{goyal2023isl} & MediaPipe Holistic with temporal models for ISL & Supports the landmark-plus-temporal-model direction for dynamic signs & Targets ISL; closed-set only; no signer-held-out protocol \\
         \hline
         Shrestha et al.\ (2024) \cite{shrestha2024nsl} & MediaPipe landmarks rasterised to images; CNN & Confirms MediaPipe extracts usable NSL hand geometry & Static only; not signer-independent; no temporal model \\
         \hline
