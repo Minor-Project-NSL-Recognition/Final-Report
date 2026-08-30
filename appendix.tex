@@ -1,5 +1,5 @@
 % ================= Appendix A =================
-\chapter{Field Consultation with NSL Experts}
+\chapter{Field Consultation with Deaf Experts}
 \label{app:fieldwork}
 
 The signed form of each of the six emergency phrases was established in person with Deaf experts before any data collection began, as described in Section~\ref{sec:phase0}. Consultations were held at the Rehabilitation Centre for the Rural Deaf in Bhaktapur and at the National Federation of the Deaf Nepal in Ranibari Marga, Samakhushi, Kathmandu. The images below are reproduced with the consent of those photographed.
@@ -18,7 +18,7 @@ The signed form of each of the six emergency phrases was established in person w
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.62\textwidth]{img/consult3.jpg}
-    \caption{An NSL expert demonstrating the signed form of a phrase for reference recording}
+    \caption{A Deaf expert demonstrating the signed form of a phrase for reference recording}
     \label{fig:consult-demo}
 \end{figure}
 
@@ -26,7 +26,7 @@ The signed form of each of the six emergency phrases was established in person w
 \chapter{Data Collection Tool}
 \label{app:recorder}
 
-Clips were recorded with a purpose-built tool that runs MediaPipe Holistic on a live webcam feed and saves the 225-value landmark vector for each frame. The operator selects a signer identity and a phrase, then starts and stops each recording explicitly. Landmark overlays are drawn live, so a failed detection is visible during recording instead of afterwards.
+Clips were recorded with a purpose-built tool that runs MediaPipe Holistic on a live webcam feed and saves the 225-value feature vector for each frame. The operator selects a signer identity and a phrase, then starts and stops each recording explicitly. Landmark overlays are drawn live, so a failed detection is visible during recording instead of afterwards.
 
 \begin{figure}[htbp]
     \centering
@@ -109,7 +109,7 @@ data/
 \chapter{Sample Landmark Data}
 \label{app:sampledata}
 
-This appendix traces one clip through the preprocessing pipeline, to make the numeric effect of each step concrete. The clip is \texttt{call\_police\_\_signer01\_\_001.npy}, stored as a $(42, 225)$ array of 32-bit floats: 42 recorded frames, each holding one 225-value landmark vector.
+This appendix traces one clip through the preprocessing pipeline, to make the numeric effect of each step concrete. The clip is \texttt{call\_police\_\_signer01\_\_001.npy}, stored as a $(42, 225)$ array of 32-bit floats: 42 recorded frames, each holding one 225-value feature vector.
 
 \section{Feature Vector Layout}
 
@@ -261,7 +261,7 @@ The desktop recogniser imports the training-time preprocessing module rather tha
 \section{Android Client}
 \label{app:ui-client}
 
-The client presents one of three outcomes for every attempt: an accepted phrase, which is displayed in Nepali and English and spoken from the bundled Nepali recording; an unrecognised result, when the classifier positively identifies the input as not being one of the six phrases; or a low-confidence result, when the top class is a phrase but the model will not commit to it. Only the first produces speech, and only the first displays any phrase text at all. Figure~\ref{fig:ui-client} shows two accepted results, one from each of two phrase categories.
+The client presents one of three outcomes for every attempt. An accepted phrase is displayed in Nepali and English and spoken from the bundled Nepali recording. An unrecognised result means the classifier positively identified the input as not being one of the six phrases. A low-confidence result means the top class is a phrase, but the model will not commit to it. Only the first produces speech, and only the first displays any phrase text at all. Figure~\ref{fig:ui-client} shows two accepted results, one from each of two phrase categories.
 
 \begin{figure}[htbp]
     \centering
@@ -282,7 +282,7 @@ The client presents one of three outcomes for every attempt: an accepted phrase,
     \label{fig:ui-client}
 \end{figure}
 
-\noindent The row of indicators between the camera preview and the result reports what the recogniser observed while the clip was being captured: whether pose and hands were detected, the sustained frame rate, the per-frame conversion and landmark extraction costs, the source and working frame sizes, and how many frames were dropped because a conversion was still in flight. A failure during use can therefore be attributed rather than guessed at, which is what the two distortions of Section~\ref{sec:ondevice} required to locate.
+\noindent The row of indicators between the camera preview and the result reports what the recogniser observed while the clip was being captured. It covers whether pose and hands were detected, the sustained frame rate, the per-frame conversion and landmark extraction costs, and the source and working frame sizes. It also reports how many frames were dropped because a conversion was still in flight. A failure during use can therefore be attributed rather than guessed at, which is what locating the two distortions of Section~\ref{sec:ondevice} required.
 
 The frame counts in the banners make the temporal correction visible. The fire clip was captured as 46 frames and resampled to 125 before padding; the ambulance clip, 56 to 139. Both were captured well below the rate of the training data, and without the resampling of Section~\ref{sec:ondevice} the model would have read the shortfall as a different sign rather than a slower camera.
 
@@ -290,7 +290,7 @@ The frame counts in the banners make the temporal correction visible. The fire c
 \chapter{Server Interface}
 \label{app:protocol}
 
-The fallback inference server exposes the endpoints in Table~\ref{tab:endpoints}. The streaming endpoint is the path the client uses when on-device recognition is switched off; the two prediction endpoints exist so that the served decision can be checked against the offline pipeline without needing a phone at all, which is what keeps this path useful as a reference even when nothing uses it in production.
+The fallback server exposes the endpoints in Table~\ref{tab:endpoints}. The streaming endpoint is the path the client uses when on-device recognition is switched off; the two prediction endpoints exist so that the served decision can be checked against the offline pipeline without needing a phone at all, which is what keeps this path useful as a reference even when nothing uses it in production.
 
 \begin{table}[htbp]
     \centering

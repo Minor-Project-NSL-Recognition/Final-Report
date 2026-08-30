@@ -1,54 +1,100 @@
 \chapter{CONCLUSION}
 \label{ch:conclusion}
 
+\section{Objectives Achieved}
+\label{sec:objectivesachieved}
+
+The objective stated in Section~\ref{sec:objectives} names four things the system was to do. Table~\ref{tab:objachieved} takes each in turn and states what was delivered against it.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Each objective, what was delivered against it}
+    \label{tab:objachieved}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabularx}{\textwidth}{|p{4.2cm}|Y|}
+        \hline
+        \textbf{Objective} & \textbf{What was delivered}\\
+        \hline
+        Establish the signed form of six NSL emergency phrases with NSL experts
+        & Two in-person consultations, at the Rehabilitation Centre for the Rural Deaf and the National Federation of the Deaf Nepal. The form of each phrase was fixed and recorded before any data was collected, and phrase 6 was changed on the consultants' advice.\\
+        \hline
+        Build a custom landmark-based dataset from multiple signers
+        & 840 clips from eight signers across seven classes, balanced at exactly 120 per class. Landmarks only; no video of any signer was stored.\\
+        \hline
+        Train and evaluate a BiLSTM classifier on signers absent from training
+        & Eight leave-one-signer-out folds giving 95.18\% mean accuracy ($\pm$1.74) and 95.36\% pooled, with per-class F1 between 0.946 and 0.988 on the six phrases. Achieved, and it is the primary contribution of this work.\\
+        \hline
+        Deploy in a mobile application that recognises on-device and outputs text and speech
+        & An Android application carrying a TensorFlow Lite model verified against the original to $1.2 \times 10^{-7}$. Recognition runs end to end on a physical device with the network disabled, displaying the phrase in Nepali and English and speaking it in Nepali.\\
+        \hline
+    \end{tabularx}
+\end{table}
+
+\noindent Every clause of the objective was met. The one qualification, which belongs with the fourth row rather than against it, is that the accuracies in the third row were measured on the recorded landmark path and not on the deployed one. The application runs; what it scores as installed has not been measured. That is the first limitation below and the first item of future work.
+
 \section{Conclusion}
 
-This project built a working recogniser for six Nepali Sign Language emergency phrases and delivered it as an application that displays the recognised phrase and speaks it in Nepali.
+This project built a working recogniser for six Nepali Sign Language emergency phrases and delivered it as an Android application that displays the recognised phrase and speaks it in Nepali.
 
-The signed form of every phrase was established in person with Deaf experts at the Rehabilitation Centre for the Rural Deaf and the National Federation of the Deaf Nepal before any data was recorded, so the system recognises real NSL and not an approximation of it. Eight signers then contributed 840 clips, balanced at exactly 120 per class across the six phrases and a negative class for non-signing motion. No public dataset of NSL emergency phrases existed at the start of this work, and this one is the project's most durable output.
+Two outputs will outlast the application. The first is the dataset. No public collection of NSL emergency phrases existed at the start of this work. The signed form of every phrase in this one was established in person with Deaf experts before any recording began, so it records real NSL rather than an approximation. The second is the evaluation protocol. Every clip carries the identity of the person who recorded it, and every accuracy reported here was produced by a model trained without that person. That gives 95.18\% mean across eight folds and 95.36\% pooled, against 97.62\% for the same architecture under a random split. The 2.3-point difference is a measurement of how much a random split flatters a model when clips from one person sit on both sides of it. Published NSL results are generally reported without this separation, so the lower figure is the one that any future work adopting the same protocol can be compared against.
 
-Representing each frame as 225 pose and hand landmarks instead of pixels is what made a dataset of this size sufficient. Normalising against the shoulder midpoint and each wrist removes the signer's position and distance from the camera, and standardising every clip to 146 frames, the 95th percentile of the measured frame-count distribution, gives the classifier a fixed input without discarding the shape of the motion. A bidirectional LSTM of 192{,}007 parameters classifies the result and trains in minutes on a laptop processor.
+The method is what made a dataset of this size sufficient. Each frame is reduced to a 225-value feature vector of pose and hand landmarks rather than pixels, normalised against the shoulder midpoint and each wrist, and standardised to 146 frames. A bidirectional LSTM of 192{,}007 parameters classifies the result and trains in minutes on a laptop processor. It exports to TensorFlow Lite at 881 kilobytes and runs on the phone that captured the frames, with no network connection at any point.
 
-Under leave-one-signer-out evaluation the system reaches 95.18\% mean accuracy across eight folds and 95.36\% pooled, with per-class F1 between 0.946 and 0.988 for the six emergency phrases. The same architecture reaches 97.62\% under a random split, and reporting both is deliberate: the difference of 2.3 percentage points is a measurement of how much a random split overstates performance when clips from one person can appear on both sides of it. Published NSL recognition results are generally reported without this separation, so the lower figure here is the more comparable one to any future work that adopts the same protocol.
-
-Because a six-way classifier would name a phrase for any input at all, the system trains a seventh, negative class on non-signing motion, reports a prediction of that class as unrecognised rather than announcing it, and requires the softmax confidence to clear a threshold before announcing anything else. For a tool whose output is a spoken emergency announcement, the ability to stay silent is a feature of the same standing as accuracy.
-
-The trained model was exported to TensorFlow Lite, verified against the original to a largest probability difference of $1.2 \times 10^{-7}$, and shipped inside an Android application that extracts landmarks and classifies them on the device. Recognition works end to end on a physical device with the network disabled, which is the property that matters most for a tool meant to be used in an emergency. A streaming inference server, built earlier in the project, is retained as a fallback for phones that cannot extract landmarks quickly enough.
+The system can also decline to answer. A seventh class trained on non-signing motion gives it somewhere to put an input that is not one of the six phrases, and a confidence threshold holds back anything the model is unsure of. For a tool whose output is a spoken emergency announcement, staying silent is worth as much as being right.
 
 \section{Limitations}
 
+The limitations fall into two kinds. The first three bound what the reported numbers mean. The remaining five bound what the system can do.
+
+\subsection{Limitations on What the Numbers Mean}
+
 \begin{enumerate}
-    \item \textbf{The deployed accuracy has not been measured directly.} Every figure in this report was obtained on landmarks extracted by MediaPipe Holistic through a webcam. The phone uses a different extractor and a ported implementation of the preprocessing, so the numbers describe the method rather than the delivered application. The port is pinned to the original by generated fixtures and two on-device distortions were found and corrected, but no experiment in this report establishes what the system scores as installed. This is the most consequential limitation in this list, and the measurement that would settle it is the first item in the future work below.
+    \item \textbf{The deployed accuracy has not been measured directly.} Every figure in this report was obtained on landmarks extracted by MediaPipe Holistic through a webcam. The phone uses a different extractor and a ported implementation of the preprocessing. The numbers therefore describe the method rather than the delivered application. The port is pinned to the original by generated fixtures, and two on-device distortions were found and corrected. But no experiment in this report establishes what the system scores as installed. This is the most consequential limitation in the list, and the measurement that would settle it is the first item of future work.
 
-    \item \textbf{Eight signers, four of them the authors.} Every accuracy reported rests on eight people. The standard deviation across folds is 1.74 percentage points and the range is 5.7, so the estimate of performance on a new signer carries real uncertainty. Signers 01 to 04 are the four project members, who are not fluent NSL users and reproduced the consultants' reference performance; signers 05 to 08 are the Deaf experts who set that reference. The reported accuracy is therefore an accuracy on a mixture of fluent and learned signing, and the four author folds average 1.1 points above the other four.
+    \item \textbf{Eight signers, four of them the authors.} Every accuracy reported rests on eight people. The standard deviation across folds is 1.74 percentage points and the range is 5.7, so the estimate of performance on a new signer carries real uncertainty. Signers 01 to 04 are the four project members, who are not fluent NSL users and reproduced the consultants' reference performance. Signers 05 to 08 are the Deaf experts who set that reference. The reported accuracy is an accuracy on a mixture of fluent and learned signing, and the four author folds average 1.1 points above the other four.
 
-    \item \textbf{Six phrases.} The vocabulary is fixed and small. The system cannot express anything outside it, and a user with a need not on the list has no way to convey it.
+    \item \textbf{The negative class is the weakest class.} Recall on \texttt{none} is 0.833, and twenty non-signs were classified as emergency phrases. Each is a case where the system would announce an emergency that nobody signed. These are just over half of all errors, and more than twice the nine cases in which one phrase is confused with another. The fix is a broader negative class rather than a stricter threshold, though how many of the twenty cleared the threshold has not been measured.
+\end{enumerate}
 
-    \item \textbf{The negative class is the weakest class.} Recall on \texttt{none} is 0.833, and twenty non-signs were classified as emergency phrases, each a case where the system would announce an emergency that nobody signed. These are just over half of all errors, and more than twice the nine cases in which one phrase is confused with another. The fix is a broader negative class rather than a stricter threshold, though how many of the twenty cleared the threshold has not been measured.
+\subsection{Limitations on What the System Can Do}
+
+\begin{enumerate}
+    \setcounter{enumi}{3}
+    \item \textbf{Six phrases.} The vocabulary is fixed and small. A user with a need not on the list has no way to convey it.
+
+    \item \textbf{One sign at a time.} The system recognises a single complete phrase per interaction. It does not segment continuous signing or handle more than one person in frame.
+
+    \item \textbf{Facial expression is ignored.} The consultants confirmed no phrase in this set depends on it. The exclusion is safe for these six phrases and would not hold for a larger vocabulary.
 
     \item \textbf{Duration is only encoded below 146 frames.} Clips longer than the sequence length are uniformly subsampled, so signing longer than about 9.3 seconds is scale-normalised rather than measured.
-
-    \item \textbf{Facial expression is ignored.} The consultants confirmed no phrase in this set depends on it, so the exclusion is safe for these six phrases and would not hold for a larger vocabulary.
-
-    \item \textbf{One sign at a time.} The system recognises a single complete phrase per interaction and does not segment continuous signing or handle more than one person in frame.
 
     \item \textbf{Recognition speed depends on the phone.} Landmark extraction on a phone processor does not reach the capture rate of the training data, and the temporal resampling of Section~\ref{sec:ondevice} exists to absorb that. It restores the timescale but not the motion detail a low frame rate never sampled, so a slower device gives the model a coarser version of the same sign.
 \end{enumerate}
 
 \section{Future Work}
 
+The first three items need no new recordings and could be carried out on the data and code that already exist. The remaining four require new data or new consultation, and are ordered by what they would buy.
+
+\subsection{Immediate: No New Data Required}
+
 \begin{enumerate}
-    \item \textbf{Measure the on-device path against the recorded one.} Inference already runs on the phone, but with a different landmark extractor than the dataset was recorded with, so no number in this report describes the installed system directly. The comparison that would fix this is implemented in the codebase and has not been run: it requires recording roughly 35 clips through both extraction paths at once, which isolates the landmark source from the signer, the framing and the session because the frames are the same. That measurement is the correct next step, since it either confirms the deployed accuracy or identifies what re-recording would cost.
+    \item \textbf{Measure the on-device path against the recorded one.} Inference already runs on the phone, but with a different landmark extractor than the dataset was recorded with. No number in this report describes the installed system directly. The comparison that would fix this is implemented in the codebase and has not been run. It requires recording roughly 35 clips through both extraction paths at once, which isolates the landmark source from the signer, the framing, and the session, because the frames are the same. This is the correct next step: it either confirms the deployed accuracy or identifies what re-recording would cost.
 
-    \item \textbf{Broaden the negative class.} Recording more varied non-signing motion, targeted at the kind of motion the twenty misclassified clips resemble, is the direct route to reducing false announcements, and it addresses just over half of the errors the system currently makes.
+    \item \textbf{Measure how often a false announcement clears the threshold.} The confidence carried by each of the twenty misclassified negatives is not recorded in the saved metrics. That number decides whether the threshold has anything left to give. Obtaining it needs no new data, only an extra column in the evaluation output.
 
-    \item \textbf{Recruit more signers, prioritising fluent ones.} The clearest route to a more trustworthy accuracy figure is more people, and specifically more fluent NSL users. Doubling the signer count would narrow the confidence in the leave-one-signer-out estimate more than any change to the model. Section~\ref{sec:ablation} supports that ordering with a measurement rather than an argument: six architectures spanning a sevenfold range of parameter counts differ from one another by less than the spread between signers, so architecture search has little left to give while signer coverage has a great deal.
+    \item \textbf{Investigate the two directional phrase confusions.} Seven of the nine phrase-to-phrase errors fall on two pairs that leak in one direction only. \texttt{cant\_breathe} is read as \texttt{call\_police} and \texttt{need\_ambulance} as \texttt{building\_on\_fire}, never the reverse. A one-directional error is a clue rather than noise, since it suggests one signed form contains an opening the other shares. Reviewing the recordings of those four classes against the consultants' reference would establish whether the cause lies in the signs, in a subset of the signers, or in the representation. It costs review time rather than new data.
+\end{enumerate}
+
+\subsection{Requires New Recording or Consultation}
+
+\begin{enumerate}
+    \setcounter{enumi}{3}
+    \item \textbf{Recruit more signers, prioritising fluent ones.} The clearest route to a more trustworthy accuracy figure is more people, and specifically more fluent NSL users. Doubling the signer count would narrow the confidence in the leave-one-signer-out estimate more than any change to the model. Section~\ref{sec:ablation} supports that ordering with a measurement rather than an argument: six architectures spanning a sevenfold range of parameter counts differ from one another by less than the spread between signers. Architecture search has little left to give; signer coverage has a great deal.
+
+    \item \textbf{Broaden the negative class.} Recording more varied non-signing motion, targeted at the kind of motion the twenty misclassified clips resemble, is the direct route to reducing false announcements. It addresses just over half of the errors the system currently makes.
 
     \item \textbf{Extend the vocabulary.} The pipeline is not specific to these six phrases. Adding a phrase requires the consultation step, clip recordings, a spoken Nepali recording for the announcement, and a retrain, with no change to the preprocessing or the architecture.
 
-    \item \textbf{Handle continuous signing.} Recognising a phrase within a stream, with no taps to mark its boundaries, would remove the need for the user to mark the boundaries and is the main step from a proof of concept toward something usable without instruction.
-
-    \item \textbf{Investigate the two directional phrase confusions.} Seven of the nine phrase-to-phrase errors fall on two pairs that leak in one direction only: \texttt{cant\_breathe} is read as \texttt{call\_police} and \texttt{need\_ambulance} as \texttt{building\_on\_fire}, never the reverse. A one-directional error is a clue rather than noise: it suggests one signed form contains an opening the other shares. Reviewing the recordings of those four classes against the consultants' reference would establish whether the cause is in the signs, in a subset of the signers, or in the representation, and it costs review time rather than new data.
-
-    \item \textbf{Measure how often a false announcement clears the threshold.} The confidence carried by each of the twenty misclassified negatives is not recorded in the saved metrics. That number decides whether the threshold has anything left to give, and obtaining it needs no new data, only an extra column in the evaluation output.
+    \item \textbf{Handle continuous signing.} Recognising a phrase within a stream, with no taps to mark its boundaries, is the main step from a proof of concept toward something usable without instruction.
 \end{enumerate}

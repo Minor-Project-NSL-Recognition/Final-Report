@@ -51,6 +51,11 @@
 \usepackage{booktabs}
 \usepackage{multirow}
 
+% Ragged-right variant of tabularx's X column. In a narrow column, justification
+% stretches the inter-word gaps far enough to be distracting; these columns hold
+% short phrases, so a ragged edge reads better than an even one.
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+
 % ── Text & Formatting ─────────────────────────────────────────────────────────
 \usepackage{ragged2e}
 \usepackage{emptypage}

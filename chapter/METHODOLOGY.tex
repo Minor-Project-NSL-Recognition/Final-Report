@@ -4,8 +4,9 @@
 This chapter describes how the system was built, in the order the work was carried out. The pipeline runs from establishing the signed form of each phrase with Deaf experts, through recording and preprocessing a custom dataset, to training the classifier, evaluating it, and deploying it. The evaluation protocol and the deployment path are described at the end, since both differ from what the proposal anticipated.
 
 \section{Software Development Approach}
+\label{sec:agile}
 
-Agile incremental development was adopted because several parameters could not be fixed in advance. The sequence length depended on how long signers actually took to perform each phrase, the normalisation scheme had to be validated against real recordings, and the deployment target changed once the recognition results were in hand. Each increment delivered a working module: phrase verification, the recorder, the preprocessing core, the trained model, the inference server, the mobile client, and finally the on-device recognition path that replaced the server on the delivered system.
+Agile incremental development was adopted because several parameters could not be fixed in advance. The sequence length depended on how long signers actually took to perform each phrase, the normalisation scheme had to be validated against real recordings, and the deployment target changed once the recognition results were in hand. Each increment delivered a working module: phrase verification, the recorder, the preprocessing core, the trained model, the fallback server, the Android client, and finally the on-device recognition path that replaced the server on the delivered system.
 
 The riskiest unknown was addressed first. Before any large-scale recording, a small set of clips was captured to confirm that MediaPipe Holistic produces stable landmarks for multi-sign NSL phrases performed at natural speed. Had it not, the entire landmark-based approach would have needed reconsideration while there was still time to change it.
 
@@ -57,6 +58,8 @@ Table~\ref{tab:phrases} lists the six phrases and the situation each covers. Phr
     \end{tabular}
 \end{table}
 
+\noindent The category column is what the table is for. The six phrases were chosen to span medical, fire, crime, and basic-need situations rather than to be visually distinct from one another. Nothing required signed forms drawn from four different situations to look different, but they do, and Section~\ref{sec:whyhigh} counts that among the reasons the reported accuracy is as high as it is.
+
 \subsection{The Negative Class}
 
 The seventh class was added during development and is not in the original proposal. A classifier over six phrases assigns one of those six to every input it receives, so a signer adjusting their glasses would be reported as an emergency. For a system whose output is a spoken emergency announcement, that is the worst available failure mode.
@@ -64,12 +67,13 @@ The seventh class was added during development and is not in the original propos
 The \texttt{none} class holds deliberate non-examples: resting, idle movement, gestures outside the target set, and partial or abandoned signs. Giving the model explicit negatives lets it learn a decision boundary around the six real phrases instead of partitioning the whole input space among them, so the confidence threshold of Section~\ref{sec:decisionrule} has a class to fall back on instead of being forced to choose one of six emergency phrases for every input.
 
 \section{Phase 1: Dataset Collection}
+\label{sec:datasetcollection}
 
 Because no public dataset of NSL emergency phrases exists, one was recorded from scratch. This was the most consequential phase of the project: the ceiling on recognition accuracy is set by the quality and variety of the recordings.
 
 \subsection{The Recorder Application}
 
-A purpose-built recorder was written for the task. It runs MediaPipe Holistic live on a webcam feed and, for every frame, extracts a 225-value vector: 33 pose landmarks, 21 left-hand landmarks, and 21 right-hand landmarks, each with $x$, $y$, and $z$ coordinates. The operator selects a signer identity and a phrase, then starts and stops each recording explicitly, so every clip corresponds to one deliberate performance of one phrase.
+A purpose-built recorder was written for the task. It runs MediaPipe Holistic live on a webcam feed and, for every frame, extracts a 225-value feature vector: 33 pose landmarks, 21 left-hand landmarks, and 21 right-hand landmarks, each with $x$, $y$, and $z$ coordinates. The operator selects a signer identity and a phrase, then starts and stops each recording explicitly, so every clip corresponds to one deliberate performance of one phrase.
 
 Every frame is mirrored horizontally before detection. This is recorded here because it is a constraint on everything downstream: the landmarks in the dataset describe a mirrored image, and any inference path that does not reproduce the same flip will present the model with the signer's hands swapped. Screenshots of the recorder in use appear in Appendix~\ref{app:recorder}.
 
@@ -103,7 +107,7 @@ After aggregation the dataset held 840 clips: exactly 120 in each of the seven c
 
 \section{Phase 2: Feature Extraction}
 
-Every frame of every clip is reduced to the same 225-dimensional vector, concatenated in a fixed order:
+Every frame of every clip is reduced to the same 225-value feature vector, concatenated in a fixed order:
 
 \begin{itemize}
     \item 33 pose landmarks $\times\ (x, y, z)$ = 99 values, at indices 0 to 98.
@@ -111,13 +115,13 @@ Every frame of every clip is reduced to the same 225-dimensional vector, concate
     \item 21 right-hand landmarks $\times\ (x, y, z)$ = 63 values, at indices 162 to 224.
 \end{itemize}
 
-\noindent A clip is therefore a $(n_{\text{frames}}, 225)$ array of 32-bit floats, with $n_{\text{frames}}$ varying between clips. This layout, the normalisation anchors, and the sequence length are held as constants in a single module that both the training code and the inference server import, so the two cannot drift apart.
+\noindent A clip is therefore a $(n_{\text{frames}}, 225)$ array of 32-bit floats, with $n_{\text{frames}}$ varying between clips. This layout, the normalisation anchors, and the sequence length are held as constants in a single module that both the training code and the fallback server import, so the two cannot drift apart.
 
 \section{Phase 3: Determining the Sequence Length}
 
 The classifier requires a fixed number of time steps, but raw clip lengths vary because signers take different amounts of time. The value was measured from the data rather than chosen.
 
-Across the 840 clips, frame counts ranged from 30 to 217, with a median of 89.5 and a mean of 91.7. The 95th percentile of this distribution gives $\textsc{seq\_len} = 146$ frames. The distribution and the cutoff are shown in Figure~\ref{fig:seqlen} in Chapter~\ref{ch:results}. The value is written to a metadata file that every later stage reads, so no stage recomputes or assumes it. Nothing in the training code, the export, or the mobile client hardcodes it; the sequence length has moved twice as recordings were added, and each time the change propagated without a code edit.
+Across the 840 clips, frame counts ranged from 30 to 217, with a median of 89.5 and a mean of 91.7. The 95th percentile of this distribution gives $\textsc{seq\_len} = 146$ frames. The distribution and the cutoff are shown in Figure~\ref{fig:seqlen} in Chapter~\ref{ch:results}. The value is written to a metadata file that every later stage reads, so no stage recomputes or assumes it. Nothing in the training code, the export, or the Android client hardcodes it; the sequence length has moved twice as recordings were added, and each time the change propagated without a code edit.
 
 An observation from the same metadata turned out to matter more than expected. The recorder never locked a frame rate; it ran as fast as the interface and MediaPipe allowed, giving a median capture rate of 15.7 frames per second across a range of 10.8 to 21.2. Since the model receives a fixed-length sequence with no explicit time axis, it reads frame count as duration. The capture rate is therefore a property of the training data that any real-time path has to reproduce, and Section~\ref{sec:framerate} describes how.
 
@@ -173,7 +177,7 @@ The classifier is a bidirectional LSTM built with TensorFlow and Keras:
     \label{fig:architecture}
 \end{figure}
 
-\noindent The network has 192{,}007 trainable parameters, which is small enough to train on a laptop CPU in minutes. The layer sizes above are not asserted. Section~\ref{sec:ablation} compares this architecture against six variants of it, under the evaluation protocol of Section~\ref{sec:archcompare}.
+\noindent The table describes a deliberately small network. Its 192{,}007 trainable parameters train on a laptop processor in minutes, and the masking layer at the top is what allows a fixed 146-step input to hold clips of different real lengths without the padding being read as signal. The layer sizes above are not asserted. Section~\ref{sec:ablation} compares this architecture against six variants of it, under the evaluation protocol of Section~\ref{sec:archcompare}.
 
 \subsection{Why This Model and Not a Larger Pretrained One}
 
@@ -202,8 +206,8 @@ additional parameters, because the quantity in short supply is variation between
 not model expressiveness.
 
 Both halves of that judgement were tested afterwards rather than left as reasoning.
-Widening the recurrent layers to 128 and 64 units and the dense head to 64, which is
-2.8 times the parameter count, buys no accuracy at all: the larger network finishes last of
+Widening the recurrent layers to 128 and 64 units and the dense head to 64 raises the
+parameter count 2.8 times and buys no accuracy at all. The larger network finishes last of
 the six variants compared, 3.9 percentage points below the shipped one and with nearly three
 times its fold-to-fold spread. That difference is inside the noise of an eight-fold
 comparison and is not evidence that the larger model is worse, but it is firmly not evidence
@@ -260,7 +264,7 @@ The proposal specified a browser application built with Next.js, running the mod
 
 The first is the choice of device. A phone is what a person has with them when an emergency happens; a laptop with a browser open is not. For a tool whose value depends on being available at the moment of need, the phone is the correct target, and this was decided on those grounds. The browser route was not attempted. The change was recorded as a task deviation in the project log and accepted by the supervisor before the client was built.
 
-The second decision concerns where inference runs, and it was revised once during development. MediaPipe Holistic, the exact landmark extractor the dataset was recorded with, exists only as a Python pipeline and has no mobile build. Running recognition on the device therefore meant reimplementing the 225-feature extraction and the dual-anchor normalisation against a different landmark source, and a numerical difference between two such implementations does not raise an error. It produces confident wrong answers, because the model receives numbers unlike anything it was trained on. On that reasoning the first working system served the model from Python over a network, so that the inference path imported the same preprocessing module the reported accuracy was measured with.
+The second decision concerns where inference runs, and it was revised once during development. MediaPipe Holistic, the exact landmark extractor the dataset was recorded with, exists only as a Python pipeline and has no mobile build. Running recognition on the device therefore meant reimplementing the 225-value feature extraction and the dual-anchor normalisation against a different landmark source, and a numerical difference between two such implementations does not raise an error. It produces confident wrong answers, because the model receives numbers unlike anything it was trained on. On that reasoning the first working system served the model from Python over a network, so that the inference path imported the same preprocessing module the reported accuracy was measured with.
 
 That system worked, but it made an emergency tool depend on a network connection, which the proposal had stated it would not. The on-device path was therefore built as well, and Section~\ref{sec:ondevice} describes what it took to make the two landmark sources agree closely enough for the trained model to survive the substitution. The delivered application runs on the device by default and needs no network at all. The server is retained as a selectable fallback for a phone too slow to extract landmarks in real time, and as the verification path described in Appendix~\ref{app:protocol}.
 
@@ -281,7 +285,7 @@ The second is temporal. Pose and hand landmarking on a phone processor does not 
 
 \subsection{Model Export}
 
-The trained model is converted to TensorFlow Lite \cite{tflite2024}, which is what allows it to run on the phone at all and, on the fallback server, to run without a full TensorFlow installation, reducing that deployed image from about three gigabytes to one. The conversion required a workaround: on the pinned TensorFlow and Keras versions used here, the standard converter entry points abort the host process inside the compiler backend instead of raising a catchable exception. Freezing the model's variables to constants before conversion avoids the failure.
+The trained model is converted to TensorFlow Lite \cite{tflite2024}, which is what allows it to run on the phone at all. On the fallback server the same conversion removes the need for a full TensorFlow installation, reducing that deployed image from about three gigabytes to one. The conversion required a workaround: on the pinned TensorFlow and Keras versions used here, the standard converter entry points abort the host process inside the compiler backend instead of raising a catchable exception. Freezing the model's variables to constants before conversion avoids the failure.
 
 Because a silent conversion error would be indistinguishable from a model that simply performs worse, the export is verified and not assumed. The converted model and the original are run on 30 real clips and compared; the export is rejected if they disagree. The measured agreement is reported in Section~\ref{sec:exportverify}.
 
@@ -302,13 +306,13 @@ A network client can capture faster than the training data: at 30 frames per sec
 
 On the device the problem is the reverse: landmark extraction is the bottleneck and the phone captures more slowly than the training data, so there is nothing to discard. The correction there is the temporal resampling of Section~\ref{sec:ondevice}, applied to the finished clip against its measured duration. Both paths therefore deliver a clip whose frame count means what it meant during recording, which is the property the model actually depends on.
 
-\subsection{Mobile Client}
+\subsection{The Android Client}
 
 The Android client captures camera frames, converts them, runs the recogniser, and speaks the result in Nepali. In the fallback server mode it encodes and transmits frames instead of recognising them, and speaks the result the same way.
 
 Frame conversion is the client's bottleneck, since it is pure Dart. Colour conversion, rotation, mirroring, and downscaling are folded into a single pass over the output pixels, avoiding the intermediate full-resolution buffers a naive implementation allocates. The work runs on a persistent background isolate. When a frame is already in flight the next one is dropped instead of queued, since a queue would only add latency to a result the user is waiting for. On the on-device path each frame becomes a 480-pixel-wide raw image handed to the landmarkers; on the server path it is downscaled to 320 pixels and encoded as JPEG with chroma subsampling, on the grounds that landmarks are derived from luminance structure and not chroma resolution.
 
-Two details are recorded because they are easy to get wrong. The application is locked to portrait orientation and rotates each frame by the camera's sensor orientation, because Android delivers frames in sensor orientation and MediaPipe detects nothing at all in an image of a person lying sideways. Every frame is mirrored to match the horizontal flip the recorder applied, and the mirror is applied for both front and rear cameras: the lens faces the signer either way, so the signer's right hand appears on the image-left in both cases, and making the mirror depend on the camera would swap the two hand blocks in the feature vector for one of them. On the server path the frames go unmirrored with a flag instructing the server to apply the same flip, which keeps the single implementation of it on the side that owns the feature vector.
+Two details are recorded because they are easy to get wrong. The application is locked to portrait orientation and rotates each frame by the camera's sensor orientation, because Android delivers frames in sensor orientation and MediaPipe detects nothing at all in an image of a person lying sideways. Every frame is mirrored to match the horizontal flip the recorder applied. The mirror is applied for both front and rear cameras, because the lens faces the signer either way and the signer's right hand appears on the image-left in both cases. Making the mirror depend on which camera is in use would swap the two hand blocks in the feature vector for one of them. On the server path the frames go unmirrored with a flag instructing the server to apply the same flip, which keeps the single implementation of it on the side that owns the feature vector.
 
 The client also writes the raw landmark clip for each attempt to device storage. The recorder saved landmarks so that a bad recording could be inspected afterwards; the phone originally did not, and that is precisely what made the two distortions of Section~\ref{sec:ondevice} difficult to locate. Both were diagnosed by pulling a clip off the device and running it through the Python pipeline beside a recorded one.
 
@@ -319,11 +323,11 @@ An accepted phrase is spoken in Nepali from a recording bundled with the applica
 
 Each clip is named by its class key, so the file name is the mapping and no label string sits between the classifier and the audio. The negative class has no clip, and both the phone and the desktop demonstration skip the key explicitly as well, so there is no path by which a rejected input can be announced aloud. The Nepali and English wording of every phrase lives in the same file that defines the class list for the Python code and the client, which is what keeps the text on screen, the text in Table~\ref{tab:phrases}, and the words in the recordings from drifting apart.
 
-The recordings were made on a phone and are prepared for shipping by a build script rather than by hand, because two of the steps are tedious to do repeatably and invisible when skipped. Silence is trimmed from both ends, since leading silence is pure added latency between the sign finishing and the phrase being heard. Loudness is then normalised to $-16$ LUFS, the usual target for speech on mobile, from a two-pass EBU R128 measurement: the first four takes spanned 11 loudness units, \texttt{call\_police} at $-28.4$ against \texttt{building\_on\_fire} at $-17.0$, which in an emergency application means one phrase is inaudible in exactly the situations that matter. Peak normalisation would not have fixed it, as the quiet take also had a low peak. A speech-levelling filter is applied before the measurement, because a phrase recorded on a handset carries a crest factor of roughly 18 decibels and every take hit the peak ceiling two to four decibels short of the loudness target, the gain for the whole clip being rationed on behalf of two plosives.
+The recordings were made on a phone and are prepared for shipping by a build script rather than by hand, because two of the steps are tedious to do repeatably and invisible when skipped. Silence is trimmed from both ends, since leading silence is pure added latency between the sign finishing and the phrase being heard. Loudness is then normalised to $-16$ LUFS, the usual target for speech on mobile, from a two-pass EBU R128 measurement. The correction was needed: the first four takes spanned 11 loudness units, \texttt{call\_police} at $-28.4$ against \texttt{building\_on\_fire} at $-17.0$. In an emergency application that means one phrase is inaudible in exactly the situations that matter. Peak normalisation would not have fixed it, as the quiet take also had a low peak. A speech-levelling filter is applied before the measurement, because a phrase recorded on a handset carries a crest factor of roughly 18 decibels and every take hit the peak ceiling two to four decibels short of the loudness target, the gain for the whole clip being rationed on behalf of two plosives.
 
-The output format is 16-bit mono PCM at 48 kilohertz, about 1.4 megabytes for the six phrases, and it is dictated by the players rather than chosen for quality. The phone recordings arrive as Opus in Ogg, which iOS decodes in neither container nor codec, and the desktop demonstration plays audio through a standard-library module that accepts uncompressed WAV and nothing else; one format therefore serves every target without adding a decoder dependency. A test in the client suite pins the whole contract, since every way it can break is silent at run time: that each class the model can emit has wording, that only the negative class lacks Nepali text and a clip, and that every clip is uncompressed mono 48 kilohertz.
+The output format is 16-bit mono PCM at 48 kilohertz, about 1.4 megabytes for the six phrases, and it is dictated by the players rather than chosen for quality. The phone recordings arrive as Opus in Ogg, which iOS decodes in neither container nor codec. The desktop demonstration plays audio through a standard-library module that accepts uncompressed WAV and nothing else. One format therefore serves every target without adding a decoder dependency. A test in the client suite pins the whole contract, since every way it can break is silent at run time: that each class the model can emit has wording, that only the negative class lacks Nepali text and a clip, and that every clip is uncompressed mono 48 kilohertz.
 
-Playback itself is arranged around three failure modes. All clips are decoded when the page opens, so the first phrase of a session is no slower to speak than the rest. The audio session is configured as speech, which makes the phrase audible on iOS when the ringer switch is muted, the moment at which a user is most likely to be relying on the application, and takes transient focus on Android so that other audio ducks rather than competes. A phrase arriving while another is still playing restarts rather than overlaps, and playback is not awaited, so the interface is not blocked for the few seconds of audio. A phrase whose recording is missing displays its text and stays silent instead of preventing the application from starting, and the client reports which keys are missing, because silence is otherwise indistinguishable from the model declining to answer.
+Playback itself is arranged around three failure modes. All clips are decoded when the page opens, so the first phrase of a session is no slower to speak than the rest. The audio session is configured as speech. On iOS this makes the phrase audible when the ringer switch is muted, which is a moment at which a user is likely to be relying on the application. On Android it takes transient focus, so other audio ducks rather than competes. A phrase arriving while another is still playing restarts rather than overlaps, and playback is not awaited, so the interface is not blocked for the few seconds of audio. A phrase whose recording is missing displays its text and stays silent instead of preventing the application from starting, and the client reports which keys are missing, because silence is otherwise indistinguishable from the model declining to answer.
 
 \subsection{The Decision Rule}
 \label{sec:decisionrule}

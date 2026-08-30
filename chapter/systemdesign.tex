@@ -5,7 +5,7 @@ This chapter records the requirements the system was built against, the feasibil
 
 \section{Requirement Specification}
 
-The requirements are separated by what each one constrains. The software and hardware subsections record what the system depends on, and they distinguish the offline stages, which ran on the team's own laptops, from what a user's device has to supply at the moment of use. The functional subsection states what the system does; the non-functional subsection states the properties it has to hold while doing it, and two of those --- silence in place of a wrong answer, and preprocessing that is identical in training and in deployment --- shaped the design more than any functional entry did. Each requirement is phrased so that it names something checkable against the evidence in Chapter~\ref{ch:results} rather than an intention.
+The requirements are separated by what each one constrains. The software and hardware subsections record what the system depends on, and they distinguish the offline stages, which ran on the team's own laptops, from what a user's device has to supply at the moment of use. The functional subsection states what the system does. The non-functional subsection states the properties it has to hold while doing it. Two of those properties shaped the design more than any functional entry did: silence in place of a wrong answer, and preprocessing that is identical in training and in deployment. Each requirement is phrased so that it names something checkable against the evidence in Chapter~\ref{ch:results} rather than an intention.
 
 \subsection{Software Requirements}
 
@@ -28,9 +28,9 @@ The requirements are separated by what each one constrains. The software and har
         \endfoot
         \hline
         \endlastfoot
-        Python 3.11 & Recording, preprocessing, training, and the inference server. The version is pinned because MediaPipe and TensorFlow resolve to a compatible set only on 3.11. \\
+        Python 3.11 & Recording, preprocessing, training, and the fallback server. The version is pinned because MediaPipe and TensorFlow resolve to a compatible set only on 3.11. \\
         \hline
-        MediaPipe Holistic & Pretrained pose and hand tracking. Produces the 225 landmark values per frame, offline during recording and again on the fallback server at inference. \\
+        MediaPipe Holistic & Pretrained pose and hand tracking. Produces the 225-value feature vector for each frame, offline during recording and again on the fallback server at inference. \\
         \hline
         MediaPipe Pose and Hand Landmarker & The mobile-supported successors to Holistic. Produce the same 225 values on the phone, since Holistic has no mobile build. \\
         \hline
@@ -46,7 +46,7 @@ The requirements are separated by what each one constrains. The software and har
         \hline
         TensorFlow Lite & The deployed model format. Runs on the phone, and on the fallback server through a runtime that does not require full TensorFlow. \\
         \hline
-        FastAPI and Uvicorn & The fallback inference service and its WebSocket endpoint. \\
+        FastAPI and Uvicorn & The fallback server and its WebSocket endpoint. \\
         \hline
         Docker & Packaging the server with its model and runtime so deployment does not depend on the host environment. \\
         \hline
@@ -54,7 +54,7 @@ The requirements are separated by what each one constrains. The software and har
         \hline
         FFmpeg & Preparing the Nepali voice recordings: silence trimming, loudness normalisation, and conversion to the single audio format every playback target accepts. Used offline by a build script, not at run time. \\
         \hline
-        Kotlin & The Android bridge that runs the two landmark models and assembles the 225-vector on the device. \\
+        Kotlin & The Android bridge that runs the two landmark models and assembles the 225-value vector on the device. \\
         \hline
         Git and GitHub & Version control for the code, and the mechanism by which eight signers' recordings were merged into one dataset. \\
 \end{longtable}
@@ -62,18 +62,18 @@ The requirements are separated by what each one constrains. The software and har
 
 \subsection{Hardware Requirements}
 
-Training and evaluation ran on an ordinary laptop with no GPU. The model has 192{,}007 parameters and each evaluation fold completes in minutes on a processor alone, so no accelerator was required at any stage. Data collection needed only a webcam. At use time the system needs an Android phone with a camera and roughly 18 megabytes of storage for the bundled models, and nothing else: no network connection, no server, and no accelerator, since the landmarkers fall back to the processor when no GPU delegate is available. The fallback server path additionally needs a machine to run the container and a network the phone can reach.
+Training and evaluation ran on an ordinary laptop with no GPU. The model has 192{,}007 parameters and each evaluation fold completes in minutes on a processor alone, so no accelerator was required at any stage. Data collection needed only a webcam. At use time the system needs an Android phone with a camera and roughly 18 megabytes of storage for the bundled models, and nothing else. There is no network connection, no server, and no accelerator, since the landmarkers fall back to the processor when no GPU delegate is available. The fallback server path additionally needs a machine to run the container and a network the phone can reach.
 
 \subsection{Functional Requirements}
 
 \begin{enumerate}
-    \item \textbf{Dataset recording.} The system shall record clips of each target phrase, extract 225 landmark values per frame, and store each clip with its class, signer identity, frame count, and per-block detection rates.
+    \item \textbf{Dataset recording.} The system shall record clips of each target phrase, extract the 225-value feature vector for each frame, and store each clip with its class, signer identity, frame count, and per-block detection rates.
     \item \textbf{Preprocessing.} The system shall normalise every clip against the shoulder-midpoint and wrist anchors and standardise it to the fixed sequence length, by a definition held in one place, with any reimplementation of it verified against that definition rather than trusted.
     \item \textbf{Phrase recognition.} Given a captured sequence, the system shall produce a probability distribution over the seven classes.
     \item \textbf{On-device operation.} The system shall perform landmark extraction and classification on the user's phone, so that recognition does not depend on a network connection at the moment of use.
-    \item \textbf{Rejection of unknown input.} The system shall be trained with an explicit negative class covering non-signing motion, so that an input unlike any of the six target phrases has a class to be assigned to instead of being forced into one of them, and shall report such an input as unrecognised rather than announcing it.
+    \item \textbf{Rejection of unknown input.} The system shall be trained with an explicit negative class covering non-signing motion. An input unlike any of the six target phrases then has a class to be assigned to, instead of being forced into one of them. The system shall report such an input as unrecognised rather than announcing it.
     \item \textbf{Confidence thresholding.} The system shall emit a phrase only when confidence reaches the configured threshold, and shall remain silent otherwise.
-    \item \textbf{Text and speech output.} On an accepted recognition the system shall display the phrase on screen in English and Nepali and play the recorded Nepali phrase aloud, using audio bundled with the application so that output does not depend on a voice being installed on the device.
+    \item \textbf{Text and speech output.} On an accepted recognition the system shall display the phrase on screen in English and Nepali and play the recorded Nepali phrase aloud. The audio shall be bundled with the application, so that output does not depend on a voice being installed on the device.
     \item \textbf{Live capture.} The client shall process frames while the user signs and present the result when signing ends, without the user needing to time or trim the recording.
     \item \textbf{Evaluation reporting.} The system shall report signer-independent accuracy, a pooled confusion matrix, and per-class precision, recall, and F1.
 \end{enumerate}
@@ -97,7 +97,7 @@ Training and evaluation ran on an ordinary laptop with no GPU. The model has 192
 Every component is free and open-source. Development used laptops the team already owned, and no GPU, paid dataset, or cloud service was purchased at any point. Because recognition runs on the phone, the delivered system has no recurring cost at all: there is no server to keep running and no traffic to pay for. The optional fallback server, if deployed, is the only component that would carry one.
 
 \subsection{Technical Feasibility}
-The enabling technologies are mature. MediaPipe provides pretrained tracking that needs no training data of its own, on the desktop and on the phone alike, and the BiLSTM is a well-understood architecture for sequence classification. Reducing each frame to 225 coordinates lowers the dimensionality enough that a few hundred clips suffice, which is what made a custom dataset viable within the project timeline, and it leaves a classifier small enough to run on a phone. The principal risk was never the model; it was whether an authentic dataset could be collected at all, which depended on access to the Deaf community.
+The enabling technologies are mature. MediaPipe provides pretrained tracking that needs no training data of its own, on the desktop and on the phone alike, and the BiLSTM is a well-understood architecture for sequence classification. Reducing each frame to 225 values lowers the dimensionality enough that a few hundred clips suffice, which is what made a custom dataset viable within the project timeline, and it leaves a classifier small enough to run on a phone. The principal risk was never the model; it was whether an authentic dataset could be collected at all, which depended on access to the Deaf community.
 
 \subsection{Operational Feasibility}
 The interaction is two taps: one to begin signing and one to end. The system needs no specialised hardware on the user's side beyond a phone, no network at the moment of use, no account, and no configuration before the first recognition. It addresses a need the Deaf organisations consulted during this project confirmed is real, and can be demonstrated live. The main operational weakness is now the speed of landmark extraction on modest hardware, which is what the temporal correction of Section~\ref{sec:ondevice} exists to absorb and what the fallback server exists to escape.
@@ -256,7 +256,7 @@ Figure~\ref{fig:dfd1} decomposes the system into the processes that carry out re
 
     \draw[arr] (sig) -- node[above] {gesture} (p1);
     \draw[arr] (p1) -- node[above] {frames} (p2);
-    \draw[arr] (p2) -- node[above] {225-vectors} (p3);
+    \draw[arr] (p2) -- node[above] {225-value vectors} (p3);
     \draw[arr] (d1) -- node[above] {constants} (p3);
 
     % ---- row transition ----
@@ -305,7 +305,7 @@ Figure~\ref{fig:sequence} shows one recognition on the device, from the tap that
 
     \draw[arr] (3.4,-4.0) -- node[above] {camera frame} (7.4,-4.0);
     \draw[ret] (7.4,-4.7) -- node[above] {upright, mirrored, 480 px} (11.4,-4.7);
-    \draw[ret] (11.4,-5.5) -- node[above] {225 landmark values} (3.4,-5.5);
+    \draw[ret] (11.4,-5.5) -- node[above] {225 values} (3.4,-5.5);
     \draw[ret] (3.4,-6.3) -- node[above] {telemetry chips} (0,-6.3);
 
     \draw[arr] (0,-7.7) -- node[above] {tap to finish} (3.4,-7.7);
@@ -511,7 +511,7 @@ Figure~\ref{fig:activity} shows the control flow of one recognition attempt, inc
     \node[act]  (a1)  at (0,-1.4)   {Load models,\\ start duration timer};
     \node[act]  (a2)  at (0,-2.9)   {Capture and convert frame};
     \node[dia]  (d1)  at (0,-4.7)   {landmarker\\ busy?};
-    \node[act]  (a3)  at (0,-6.6)   {Extract 225 landmark\\ values, append to clip};
+    \node[act]  (a3)  at (0,-6.6)   {Extract the 225\\ values, append to clip};
     \node[dia]  (d2)  at (0,-8.6)   {user still signing?};
     \node[act]  (a4)  at (0,-10.4)  {Correct aspect, resample\\ to 15.7 fps};
     \node[act]  (a5)  at (0,-11.9)  {Normalise, standardise\\ to 146 frames};

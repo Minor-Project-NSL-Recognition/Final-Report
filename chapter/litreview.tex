@@ -5,58 +5,80 @@ Sign language recognition sits at the intersection of computer vision and sequen
 
 \section{Review of Related Works}
 
+Each work below is summarised in the same order: what it did, what it establishes, what it leaves open, and how this project differs from it.
+
 \subsection{ASL Character Recognition Using CNN (Masood et al., 2018)}
-Masood et al. \cite{masood2018aslchar} trained a convolutional neural network on raw images for American Sign Language character recognition and reported strong accuracy on a large image dataset. The work shows that convolutional networks handle static fingerspelling well when data is plentiful. It also illustrates how much data a pixel-based model needs, and it does not address motion.
+Masood et al. \cite{masood2018aslchar} trained a convolutional neural network on raw images for American Sign Language character recognition and reported strong accuracy on a large image dataset.
+
+Its strength is a clear demonstration that convolutional networks handle static fingerspelling well when data is plentiful. Its limitations are the corollary: it illustrates how much data a pixel-based model needs, and it does not address motion at all. This project differs in both respects. It classifies whole dynamic phrases rather than held handshapes, and it reaches the accuracies of Chapter~\ref{ch:results} from 840 clips because the landmark representation removes the appearance variation a pixel model must spend data learning to ignore.
 
 \subsection{Word-Level Sign Recognition Using CNN and RNN (Masood et al., 2018)}
-In a companion paper, Masood et al. \cite{masood2018slword} combined a convolutional network with a recurrent network to recognise word-level gestures from video. This established the pattern of pairing spatial feature extraction with temporal modelling for dynamic signs, which is the same principle applied here through a BiLSTM. The computational cost of running a convolutional network on every frame is the reason this project extracts landmarks instead.
+In a companion paper, Masood et al. \cite{masood2018slword} combined a convolutional network with a recurrent network to recognise word-level gestures from video.
+
+Its strength is the pattern it establishes: spatial feature extraction paired with temporal modelling for dynamic signs. That is the same principle applied here. Its limitation is cost, since a convolutional network runs on every frame. This project differs by moving the spatial half of that pairing into a pretrained landmark extractor, which is what leaves a classifier small enough to run on a phone.
 
 \subsection{NSL Translation Using CNN (Mali et al., 2018)}
-Mali et al. \cite{mali2018nsl} built one of the earliest NSL recognition systems, a convolutional translator over a very small vocabulary. The signer was required to wear red gloves at test time, which limits practical use, and the system handled only static gestures.
+Mali et al. \cite{mali2018nsl} built one of the earliest NSL recognition systems, a convolutional translator over a very small vocabulary.
+
+Its strength is priority. It established NSL recognition as a problem worth attempting and produced a working system for it. Its limitations are that the signer had to wear red gloves at test time and that only static gestures were handled. This project differs by requiring no gloves, markers, or depth sensors, and by recognising motion rather than posture.
 
 \subsection{Deep Learning for NSL Gesture Recognition (Ligal and Baral, 2022)}
-Ligal and Baral \cite{ligal2022nsl} explored deep architectures for NSL gesture recognition, pairing a convolutional network with a recurrent network in one variant and with a Vision Transformer in another. The work confirms research interest in NSL. It follows the pixel-based formulation and does not target emergency communication or deployment on modest hardware.
+Ligal and Baral \cite{ligal2022nsl} explored deep architectures for NSL gesture recognition, pairing a convolutional network with a recurrent network in one variant and with a Vision Transformer in another.
+
+Its strength is breadth: it surveys several modern architectures on NSL rather than committing to one, and confirms sustained research interest in the language. Its limitations are that it keeps the pixel-based formulation and targets neither emergency communication nor deployment on modest hardware. This project differs by fixing the architecture and varying the evaluation instead, and by treating the deployment target as a constraint on the model from the outset.
 
 \subsection{ISL Recognition Using MediaPipe Holistic (Goyal and Velmathi, 2023)}
-Goyal and Velmathi \cite{goyal2023isl} applied MediaPipe Holistic to Indian Sign Language and used LSTMs for dynamic signs and convolutional networks for static ones. This is the closest published work in method to the approach taken here and supports the landmark-plus-temporal-model direction. It targets Indian Sign Language, and it produces no audio output.
+Goyal and Velmathi \cite{goyal2023isl} applied MediaPipe Holistic to Indian Sign Language, using LSTMs for dynamic signs and convolutional networks for static ones.
+
+This is the closest published work in method to the approach taken here, and its strength is the direct support it gives that direction: landmarks from a pretrained extractor, fed to a temporal model, are sufficient for dynamic signs. Its limitations for this project's purposes are that it targets a different language and produces no audio output. This project differs on four counts. It targets NSL rather than ISL, recognises whole emergency phrases rather than individual signs, evaluates on held-out signers, and delivers spoken Nepali alongside the text.
 
 \subsection{NSL Letter Detection Using MediaPipe and CNN (Shrestha et al., 2024)}
-Shrestha et al. \cite{shrestha2024nsl} present the closest prior landmark-based NSL system. MediaPipe landmarks are re-rendered as skeleton images and a convolutional network is trained on those images, with high reported accuracy. Two observations matter here. The work confirms that MediaPipe extracts usable NSL hand geometry. It also converts the numeric landmark geometry back into pixels instead of feeding the sequence to a temporal model, and its evaluation does not separate signers between training and test, so the reported accuracy does not establish how the system behaves on a person it has not seen.
+Shrestha et al. \cite{shrestha2024nsl} present the closest prior landmark-based NSL system. MediaPipe landmarks are re-rendered as skeleton images and a convolutional network is trained on those images, with high reported accuracy.
+
+Its strength is the confirmation that MediaPipe extracts usable NSL hand geometry, which is the premise this project depends on. Two limitations follow from the design. It converts numeric landmark geometry back into pixels rather than feeding the sequence to a temporal model, which discards the ordering that a phrase is carried in. And its evaluation does not separate signers between training and test, so the reported accuracy does not establish how the system behaves on a person it has not seen. This project differs on exactly those two points. The landmark sequence goes to the model as numbers, and every accuracy in Chapter~\ref{ch:results} is measured on a signer absent from training. The second of these is the contribution stated in Section~\ref{sec:contributions}.
 
 \subsection{NSL Characters Recognition with Deep Learning (Poudel et al., 2025)}
-Poudel et al. \cite{poudel2025nsl} introduced a 36-class static image dataset and reported roughly 90\% accuracy with fine-tuned MobileNetV2 and ResNet50 networks. The work confirms continued activity in NSL recognition and the continued dominance of the static-image formulation, which leaves motion-based phrase signs unaddressed.
+Poudel et al. \cite{poudel2025nsl} introduced a 36-class static image dataset and reported roughly 90\% accuracy with fine-tuned MobileNetV2 and ResNet50 networks.
+
+Its strength is the dataset. Public NSL data is scarce, and a released 36-class set is a contribution independent of the accuracies reported on it. Its limitation is that the set is static images, which leaves motion-based phrase signs unaddressed. It is also the most recent work reviewed here, so it shows the static-image formulation still dominating NSL research in 2025. This project differs by recording a dynamic dataset instead, and by targeting the phrases a person would need under pressure rather than the alphabet.
 
 \section{Review Matrix}
-Table~\ref{tab:reviewmatrix} summarises the reviewed works against the goal of this project.
+Table~\ref{tab:reviewmatrix} summarises the reviewed works against the goal of this project, giving the strength and the limitation of each.
 
 \begin{table}[htbp]
     \centering
     \caption{Review matrix of related works}
     \label{tab:reviewmatrix}
-    \small
-    \begin{tabular}{|p{3.1cm}|p{4.5cm}|p{5.2cm}|}
+    \footnotesize
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabularx}{\textwidth}{|p{2.2cm}|Y|Y|Y|}
         \hline
-        \textbf{Author (Year)} & \textbf{Approach / Focus} & \textbf{Limitation for this project's goal} \\
+        \textbf{Author (Year)} & \textbf{Approach / Focus} & \textbf{Strength} & \textbf{Limitation for this project's goal} \\
         \hline
-        Masood et al.\ (2018) \cite{masood2018aslchar} & CNN on raw images for ASL characters & Static only; large data requirement; not NSL \\
+        Masood et al.\ (2018) \cite{masood2018aslchar} & CNN on raw images for ASL characters & Shows CNNs handle static fingerspelling well given plentiful data & Static only; large data requirement; not NSL \\
         \hline
-        Masood et al.\ (2018) \cite{masood2018slword} & CNN and RNN on video for word-level gestures & Compute-heavy; not NSL; no audio output \\
+        Masood et al.\ (2018) \cite{masood2018slword} & CNN and RNN on video for word-level gestures & Establishes spatial extraction plus temporal modelling for dynamic signs & Compute-heavy; not NSL; no audio output \\
         \hline
-        Mali et al.\ (2018) \cite{mali2018nsl} & CNN-based NSL translator & Very small vocabulary; red gloves required; static only \\
+        Mali et al.\ (2018) \cite{mali2018nsl} & CNN-based NSL translator & Earliest NSL recognition system; established the problem & Very small vocabulary; red gloves required; static only \\
         \hline
-        Ligal \& Baral (2022) \cite{ligal2022nsl} & CNN+RNN and CNN+ViT for NSL gestures & Pixel-based and compute-heavy; not emergency-focused \\
+        Ligal \& Baral (2022) \cite{ligal2022nsl} & CNN+RNN and CNN+ViT for NSL gestures & Surveys several modern architectures on NSL rather than one & Pixel-based and compute-heavy; not emergency-focused \\
         \hline
-        Goyal \& Velmathi (2023) \cite{goyal2023isl} & MediaPipe Holistic with temporal models for ISL & Targets ISL; no audio output \\
+        Goyal \& Velmathi (2023) \cite{goyal2023isl} & MediaPipe Holistic with temporal models for ISL & Closest in method; supports landmarks plus a temporal model & Targets ISL; no audio output \\
         \hline
-        Shrestha et al.\ (2024) \cite{shrestha2024nsl} & MediaPipe landmarks rasterised to images; CNN & Static only; not signer-independent; no temporal model \\
+        Shrestha et al.\ (2024) \cite{shrestha2024nsl} & MediaPipe landmarks rasterised to images; CNN & Confirms MediaPipe extracts usable NSL hand geometry & Static only; not signer-independent; no temporal model \\
         \hline
-        Poudel et al.\ (2025) \cite{poudel2025nsl} & Static image dataset; MobileNetV2 / ResNet50 & Static only; excludes motion-based phrase signs \\
+        Poudel et al.\ (2025) \cite{poudel2025nsl} & Static image dataset; MobileNetV2 / ResNet50 & Releases a 36-class public NSL dataset & Static only; excludes motion-based phrase signs \\
         \hline
-    \end{tabular}
+    \end{tabularx}
 \end{table}
 
+\noindent Read as a set rather than work by work, the matrix shows a field that has settled on one formulation. Six of the seven works classify a static handshape, and the one that models motion does so over pixels. Landmarks appear twice, and in the NSL case they are converted back into images before a model sees them. Not one of the seven separates signers between training and test, and not one produces spoken output or has any means of refusing an input that is not a sign.
+
+This project departs from that consensus on each of those points. It classifies motion rather than posture, feeds the numeric landmark sequence directly to a temporal model, tests every clip on a model that has never seen its signer, trains an explicit class for input that is not a target phrase, and speaks its result aloud in Nepali.
+
 \section{Research Gap}
-The reviewed literature leaves four gaps that together define this project:
+\label{sec:researchgap}
+The gap is therefore not that NSL recognition is unstudied, but that everything studied so far answers a different question from the one an emergency tool has to answer. Four specific gaps follow from the works above, and together they define this project:
 
 \begin{enumerate}
     \item No public NSL dataset or recognition system exists for emergency phrases. All published NSL work targets the fingerspelling alphabet or isolated characters.
@@ -65,12 +87,35 @@ The reviewed literature leaves four gaps that together define this project:
     \item No existing NSL system produces both text and spoken output, and none addresses what should happen when the input is not a known sign at all.
 \end{enumerate}
 
+\noindent Table~\ref{tab:gapresponse} sets each gap beside what this project does about it. The third row is the one that carries the primary contribution of Section~\ref{sec:contributions}, because it concerns not what the system does but what its reported accuracy is allowed to claim.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Each gap in the literature and this project's response to it}
+    \label{tab:gapresponse}
+    \small
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabularx}{\textwidth}{|c|Y|Y|}
+        \hline
+        \textbf{Gap} & \textbf{Left open by the literature} & \textbf{How this project addresses it} \\
+        \hline
+        1 & No NSL dataset or system for emergency phrases & 840 clips over six emergency phrases and a negative class, from eight signers, with each signed form fixed by Deaf experts first \\
+        \hline
+        2 & NSL recognition is static and pixel-based & The numeric landmark sequence is classified as a sequence by a bidirectional LSTM, so motion is what the model reads \\
+        \hline
+        3 & Accuracies reported without separating signers & Every clip is tagged with its signer and scored by a model trained without that person; the 2.3-point gap against a random split measures what the separation costs \\
+        \hline
+        4 & No text and speech output; no handling of non-signs & Recognised phrases are displayed in Nepali and English and spoken in Nepali; a trained negative class and a confidence threshold let the system stay silent \\
+        \hline
+    \end{tabularx}
+\end{table}
+
 \section{Related Theories}
 
 \subsection{Emergency Phrases as Dynamic, Multi-Sign Sequences}
 Fingerspelling spells a word letter by letter using held handshapes. An emergency phrase is a different object: a complete communicative act performed as a continuous movement. A phrase such as \textit{I can't breathe} or \textit{The building is on fire} involves both hands moving through characteristic trajectories, shifts in posture, and transitions between component signs, all spread across many frames. No single still image contains the phrase. The information is in the sequence, which is why each phrase is recorded as a short clip, converted to a sequence of per-frame vectors, and classified as a whole.
 
-The natural NSL form of a phrase is also not a word-for-word rendering of its English translation. \textit{I can't breathe} is not signed as three sequential signs for ``I'', ``can't'', and ``breathe''; it may be one or two signs. Establishing the natural form of each phrase with an NSL expert was therefore a prerequisite to recording anything, and the expert's performance became the reference that every signer reproduced.
+The natural NSL form of a phrase is also not a word-for-word rendering of its English translation. \textit{I can't breathe} is not signed as three sequential signs for ``I'', ``can't'', and ``breathe''; it may be one or two signs. Establishing the natural form of each phrase with a Deaf expert was therefore a prerequisite to recording anything, and the expert's performance became the reference that every signer reproduced.
 
 \subsection{Landmark Extraction with MediaPipe Holistic}
 The central design decision is to represent each frame as a compact vector of body and hand landmarks instead of raw pixels. MediaPipe Holistic \cite{zhang2020mediapipe, mediapipeholistic2020} is a pretrained pipeline that tracks several components in a single frame:
@@ -82,13 +127,13 @@ The central design decision is to represent each frame as a compact vector of bo
     \item Face: 468 landmarks, excluded from this project.
 \end{itemize}
 
-\noindent The three components that are used are concatenated in a fixed order to produce the 225-number feature vector used throughout the project:
+\noindent The three components that are used are concatenated in a fixed order to produce the 225-value feature vector used throughout the project:
 \[
     \mathbf{v} = [\underbrace{v_0,\dots,v_{98}}_{\text{pose (99)}},\;
                   \underbrace{v_{99},\dots,v_{161}}_{\text{left hand (63)}},\;
                   \underbrace{v_{162},\dots,v_{224}}_{\text{right hand (63)}}] \in \mathbb{R}^{225}.
 \]
-When a hand or the pose is not detected in a frame, that block is filled with zeros, so every frame produces exactly 225 numbers regardless of what was visible.
+When a hand or the pose is not detected in a frame, that block is filled with zeros, so every frame produces exactly 225 values regardless of what was visible.
 
 \subsubsection{Why Pose Landmarks Are Included}
 Several of the target phrases involve arm trajectories and upper-body posture that hand shape alone does not capture. A 21-point hand mesh would record the shape of the hand but not where the arm carried it, and a sweeping fire-reporting gesture would become difficult to separate from a distress call. Including the 33-point pose mesh gives the model the motion arc of the arms and torso.
@@ -97,7 +142,7 @@ Several of the target phrases involve arm trajectories and upper-body posture th
 Facial expression carries grammatical meaning in sign languages generally. Including all 468 face points would add roughly 1{,}400 numbers per frame and increase the feature vector more than sevenfold. Before the dataset was recorded, the NSL consultants were asked directly whether facial expression changes or adds meaning for any of the six target phrases. They confirmed it does not for this particular phrase set, so the face block was left out. This is a property of these six phrases and not a general claim about NSL.
 
 \subsubsection{Why Landmarks and Not Pixels}
-The landmark representation was chosen for three reasons. A model over 225 coordinates per frame can be learned from a few hundred clips, where a pixel-based network would need far more. Landmarks discard background, lighting, and appearance, which are the factors that cause a pixel-trained model to fail in a room it has not seen. The resulting model is small enough to train on a laptop and to run without a GPU.
+The landmark representation was chosen for three reasons. A model over 225 values per frame can be learned from a few hundred clips, where a pixel-based network would need far more. Landmarks discard background, lighting, and appearance, which are the factors that cause a pixel-trained model to fail in a room it has not seen. The resulting model is small enough to train on a laptop and to run without a GPU.
 
 \subsection{Dual-Anchor Landmark Normalisation}
 \label{sec:normalisation}
@@ -139,7 +184,7 @@ Figure~\ref{fig:anchors} shows the MediaPipe Holistic landmark layouts these anc
     \label{fig:anchors}
 \end{figure}
 
-\noindent Two anchors are used because one cannot do both jobs. The shoulder anchor preserves where a hand sits relative to the body, which distinguishes a sign made at the chest from one made at the side. The wrist anchor captures finger configuration independently of where the hand is. Normalising the whole 225-vector against a single anchor would lose one or the other.
+\noindent Two anchors are used because one cannot do both jobs. The shoulder anchor preserves where a hand sits relative to the body, which distinguishes a sign made at the chest from one made at the side. The wrist anchor captures finger configuration independently of where the hand is. Normalising the whole 225-value vector against a single anchor would lose one or the other.
 
 Both blocks map a zero input to a zero output, which matters later: an undetected block and a padded frame are both exactly zero and can be treated identically.
 
@@ -163,7 +208,7 @@ A Long Short-Term Memory network is a recurrent network designed to carry inform
     c_t &= f_t \odot c_{t-1} + i_t \odot \tilde{c}_t, \\
     h_t &= o_t \odot \tanh(c_t),
 \end{align}
-where $x_t \in \mathbb{R}^{225}$ is the normalised landmark vector at step $t$, $\sigma$ is the logistic sigmoid, $\odot$ is element-wise multiplication, and $W$, $U$, $b$ are learned.
+where $x_t \in \mathbb{R}^{225}$ is the normalised 225-value vector at step $t$, $\sigma$ is the logistic sigmoid, $\odot$ is element-wise multiplication, and $W$, $U$, $b$ are learned.
 
 A standard LSTM reads in one direction, so its representation at step $t$ depends only on the past. A bidirectional LSTM runs two such networks over the same sequence, one forward and one backward, and concatenates their hidden states \cite{graves2005bilstm}. This suits multi-sign phrases, where the end of a phrase often disambiguates its opening. Two phrases in this set begin with similar upward hand motion and separate only later; a forward-only model must commit to an interpretation of the opening before it has seen what follows.
 
@@ -179,6 +224,6 @@ At inference the system emits a phrase only when the confidence exceeds a thresh
 \subsection{Signer-Independent Evaluation}
 How a recognition system is evaluated determines what its accuracy means. If clips are split into training and test sets at random, clips from the same person appear on both sides. The model can then reach a high test score by recognising individuals rather than signs, and the number says nothing about a new user. This is a form of data leakage \cite{kohavi1995crossval}, and it is the weakness identified in the closest prior NSL work \cite{shrestha2024nsl}.
 
-The alternative used here is leave-one-signer-out evaluation. Every clip is tagged with the identity of the person who recorded it. For each signer in turn, the model is trained on all clips from the other signers and tested only on that signer's clips. Every clip is scored exactly once, by a model that never saw its signer. The mean across folds estimates accuracy on a new person, which is the quantity that matters for a tool intended for public use.
+The alternative used here is leave-one-signer-out (LOSO) evaluation. Every clip is tagged with the identity of the person who recorded it. For each signer in turn, the model is trained on all clips from the other signers and tested only on that signer's clips. Every clip is scored exactly once, by a model that never saw its signer. The mean across folds estimates accuracy on a new person, which is the quantity that matters for a tool intended for public use.
 
 A signer can be held out only if every class is still present after their clips are removed, since a model cannot be fairly scored on a class it never saw.
